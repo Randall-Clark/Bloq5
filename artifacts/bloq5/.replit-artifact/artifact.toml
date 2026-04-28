@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "bloq5 — Gestion Immobilière"
+version = "1.0.0"
+id = "artifacts/bloq5"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18839
+
+[services.development]
+run = "pnpm --filter @workspace/bloq5 run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/bloq5", "run", "build" ]
+publicDir = "artifacts/bloq5/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18839"
+BASE_PATH = "/"

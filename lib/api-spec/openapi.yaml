@@ -1,22 +1,37 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: bloq5 — Plateforme de gestion immobilière
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: properties
+    description: Property listings
+  - name: rental-requests
+    description: Rental requests
+  - name: favorites
+    description: User favorites
+  - name: visits
+    description: Property visits
+  - name: messages
+    description: Temporary messaging
+  - name: dashboard
+    description: Owner/manager dashboard
+  - name: managers
+    description: Property managers
+  - name: subscriptions
+    description: Owner subscriptions
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +39,555 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # --- PROPERTIES ---
+  /properties:
+    get:
+      operationId: listProperties
+      tags: [properties]
+      summary: List properties with filters
+      parameters:
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [house, apartment, co-living, commercial, office, industrial]
+        - in: query
+          name: city
+          schema:
+            type: string
+        - in: query
+          name: minPrice
+          schema:
+            type: number
+        - in: query
+          name: maxPrice
+          schema:
+            type: number
+        - in: query
+          name: bedrooms
+          schema:
+            type: integer
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 12
+      responses:
+        "200":
+          description: List of properties
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyListResponse"
+
+    post:
+      operationId: createProperty
+      tags: [properties]
+      summary: Create a new property listing (owner/manager)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePropertyBody"
+      responses:
+        "201":
+          description: Created property
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+
+  /properties/featured:
+    get:
+      operationId: getFeaturedProperties
+      tags: [properties]
+      summary: Get featured properties for homepage
+      responses:
+        "200":
+          description: Featured properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Property"
+
+  /properties/{id}:
+    get:
+      operationId: getProperty
+      tags: [properties]
+      summary: Get property details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Property details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      operationId: updateProperty
+      tags: [properties]
+      summary: Update property (owner/manager)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePropertyBody"
+      responses:
+        "200":
+          description: Updated property
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+
+    delete:
+      operationId: deleteProperty
+      tags: [properties]
+      summary: Delete property (owner only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /properties/{id}/available-dates:
+    get:
+      operationId: getPropertyAvailableDates
+      tags: [properties]
+      summary: Get available visit dates for a property
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Available dates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: date
+
+  # --- RENTAL REQUESTS ---
+  /rental-requests:
+    get:
+      operationId: listRentalRequests
+      tags: [rental-requests]
+      summary: Get current user rental requests
+      responses:
+        "200":
+          description: Rental requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RentalRequest"
+
+    post:
+      operationId: createRentalRequest
+      tags: [rental-requests]
+      summary: Create a rental request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRentalRequestBody"
+      responses:
+        "201":
+          description: Created rental request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RentalRequest"
+        "400":
+          description: Bad request (max 3 requests or payment required)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /rental-requests/{id}:
+    get:
+      operationId: getRentalRequest
+      tags: [rental-requests]
+      summary: Get a specific rental request detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Rental request detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RentalRequestDetail"
+
+  /rental-requests/{id}/status:
+    patch:
+      operationId: updateRentalRequestStatus
+      tags: [rental-requests]
+      summary: Update rental request status (owner/manager)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRentalRequestStatusBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RentalRequest"
+
+  # Requests by property (for owner/manager)
+  /properties/{id}/rental-requests:
+    get:
+      operationId: listPropertyRentalRequests
+      tags: [rental-requests]
+      summary: List rental requests for a property (owner/manager)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Rental requests for property
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RentalRequest"
+
+  # --- FAVORITES ---
+  /favorites:
+    get:
+      operationId: listFavorites
+      tags: [favorites]
+      summary: Get user favorites
+      responses:
+        "200":
+          description: Favorite properties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Property"
+
+    post:
+      operationId: addFavorite
+      tags: [favorites]
+      summary: Add property to favorites
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddFavoriteBody"
+      responses:
+        "201":
+          description: Added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /favorites/{propertyId}:
+    delete:
+      operationId: removeFavorite
+      tags: [favorites]
+      summary: Remove property from favorites
+      parameters:
+        - in: path
+          name: propertyId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
+
+  # --- VISITS ---
+  /visits:
+    get:
+      operationId: listVisits
+      tags: [visits]
+      summary: Get user scheduled visits
+      responses:
+        "200":
+          description: Visits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Visit"
+
+    post:
+      operationId: scheduleVisit
+      tags: [visits]
+      summary: Schedule a visit (physical or virtual)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScheduleVisitBody"
+      responses:
+        "201":
+          description: Visit scheduled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Visit"
+
+  # --- MESSAGES ---
+  /messages/conversation/{requestId}:
+    get:
+      operationId: getConversationMessages
+      tags: [messages]
+      summary: Get messages for a rental request conversation
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+
+  /messages:
+    post:
+      operationId: sendMessage
+      tags: [messages]
+      summary: Send a message in a rental request conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageBody"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+  /conversations/{requestId}:
+    delete:
+      operationId: endConversation
+      tags: [messages]
+      summary: End a conversation (owner/manager)
+      parameters:
+        - in: path
+          name: requestId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Conversation ended
+
+  # --- DASHBOARD ---
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get owner/manager dashboard KPI stats
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/properties:
+    get:
+      operationId: getDashboardProperties
+      tags: [dashboard]
+      summary: Get owner's properties with stats
+      responses:
+        "200":
+          description: Properties with stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PropertyWithStats"
+
+  # --- MANAGERS ---
+  /managers:
+    get:
+      operationId: listManagers
+      tags: [managers]
+      summary: List managers assigned by owner
+      responses:
+        "200":
+          description: Managers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Manager"
+
+    post:
+      operationId: addManager
+      tags: [managers]
+      summary: Add a manager (requires owner auth)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddManagerBody"
+      responses:
+        "201":
+          description: Manager added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Manager"
+
+  /managers/{id}:
+    delete:
+      operationId: removeManager
+      tags: [managers]
+      summary: Remove a manager
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
+
+  # --- SUBSCRIPTIONS ---
+  /subscriptions/plans:
+    get:
+      operationId: listSubscriptionPlans
+      tags: [subscriptions]
+      summary: List available subscription plans
+      responses:
+        "200":
+          description: Plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SubscriptionPlan"
+
+  /subscriptions/current:
+    get:
+      operationId: getCurrentSubscription
+      tags: [subscriptions]
+      summary: Get current subscription for authenticated owner
+      responses:
+        "200":
+          description: Current subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+
+  # --- PROFILE ---
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [dashboard]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+
+    put:
+      operationId: updateProfile
+      tags: [dashboard]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileBody"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +595,582 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required: [success]
+
+    Property:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [house, apartment, co-living, commercial, office, industrial]
+        address:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        price:
+          type: number
+        bedrooms:
+          type: ["integer", "null"]
+        bathrooms:
+          type: ["integer", "null"]
+        area:
+          type: ["number", "null"]
+        images:
+          type: array
+          items:
+            type: string
+        virtualTourUrl:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [available, rented, unavailable]
+        isFeatured:
+          type: boolean
+        views:
+          type: integer
+        requestsCount:
+          type: integer
+        ownerId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - type
+        - address
+        - city
+        - country
+        - price
+        - images
+        - status
+        - isFeatured
+        - views
+        - requestsCount
+        - ownerId
+        - createdAt
+
+    PropertyDetail:
+      allOf:
+        - $ref: "#/components/schemas/Property"
+        - type: object
+          properties:
+            amenities:
+              type: array
+              items:
+                type: string
+            floorPlan:
+              type: ["string", "null"]
+            nearbyPlaces:
+              type: array
+              items:
+                type: string
+            ownerName:
+              type: string
+            ownerEmail:
+              type: string
+            ownerPhone:
+              type: ["string", "null"]
+            availableDates:
+              type: array
+              items:
+                type: string
+          required:
+            - amenities
+            - nearbyPlaces
+            - ownerName
+            - ownerEmail
+            - availableDates
+
+    PropertyListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Property"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+      required: [data, total, page, limit, totalPages]
+
+    CreatePropertyBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [house, apartment, co-living, commercial, office, industrial]
+        address:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        price:
+          type: number
+        bedrooms:
+          type: ["integer", "null"]
+        bathrooms:
+          type: ["integer", "null"]
+        area:
+          type: ["number", "null"]
+        images:
+          type: array
+          items:
+            type: string
+        virtualTourUrl:
+          type: ["string", "null"]
+        amenities:
+          type: array
+          items:
+            type: string
+        availableDates:
+          type: array
+          items:
+            type: string
+        isFeatured:
+          type: boolean
+      required:
+        - title
+        - description
+        - type
+        - address
+        - city
+        - country
+        - price
+        - images
+
+    UpdatePropertyBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        status:
+          type: string
+          enum: [available, rented, unavailable]
+        images:
+          type: array
+          items:
+            type: string
+        virtualTourUrl:
+          type: ["string", "null"]
+        amenities:
+          type: array
+          items:
+            type: string
+        availableDates:
+          type: array
+          items:
+            type: string
+        isFeatured:
+          type: boolean
+
+    PropertyWithStats:
+      allOf:
+        - $ref: "#/components/schemas/Property"
+        - type: object
+          properties:
+            activeRequests:
+              type: integer
+            pendingRequests:
+              type: integer
+            revenue:
+              type: number
+          required: [activeRequests, pendingRequests, revenue]
+
+    RentalRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        propertyId:
+          type: integer
+        propertyTitle:
+          type: string
+        propertyImage:
+          type: string
+        userId:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_review, awaiting_documents, approved, rejected]
+        message:
+          type: string
+        applicantName:
+          type: string
+        applicantEmail:
+          type: string
+        applicantPhone:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - propertyId
+        - propertyTitle
+        - propertyImage
+        - userId
+        - status
+        - message
+        - applicantName
+        - applicantEmail
+        - createdAt
+        - updatedAt
+
+    RentalRequestDetail:
+      allOf:
+        - $ref: "#/components/schemas/RentalRequest"
+        - type: object
+          properties:
+            conversationEnded:
+              type: boolean
+            hasUnreadMessages:
+              type: boolean
+          required: [conversationEnded, hasUnreadMessages]
+
+    CreateRentalRequestBody:
+      type: object
+      properties:
+        propertyId:
+          type: integer
+        message:
+          type: string
+        applicantName:
+          type: string
+        applicantEmail:
+          type: string
+        applicantPhone:
+          type: ["string", "null"]
+      required: [propertyId, message, applicantName, applicantEmail]
+
+    UpdateRentalRequestStatusBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, in_review, awaiting_documents, approved, rejected]
+        note:
+          type: ["string", "null"]
+      required: [status]
+
+    Visit:
+      type: object
+      properties:
+        id:
+          type: integer
+        propertyId:
+          type: integer
+        propertyTitle:
+          type: string
+        propertyImage:
+          type: string
+        userId:
+          type: string
+        type:
+          type: string
+          enum: [physical, virtual]
+        scheduledDate:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [scheduled, completed, cancelled]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - propertyId
+        - propertyTitle
+        - propertyImage
+        - userId
+        - type
+        - scheduledDate
+        - status
+        - createdAt
+
+    ScheduleVisitBody:
+      type: object
+      properties:
+        propertyId:
+          type: integer
+        type:
+          type: string
+          enum: [physical, virtual]
+        scheduledDate:
+          type: string
+          format: date-time
+      required: [propertyId, type, scheduledDate]
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+        requestId:
+          type: integer
+        senderId:
+          type: string
+        senderName:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - requestId
+        - senderId
+        - senderName
+        - content
+        - createdAt
+        - expiresAt
+
+    SendMessageBody:
+      type: object
+      properties:
+        requestId:
+          type: integer
+        content:
+          type: string
+      required: [requestId, content]
+
+    DashboardStats:
+      type: object
+      properties:
+        totalProperties:
+          type: integer
+        totalViews:
+          type: integer
+        totalRequests:
+          type: integer
+        activeRequests:
+          type: integer
+        approvedRequests:
+          type: integer
+        estimatedRevenue:
+          type: number
+        propertiesAvailable:
+          type: integer
+        propertiesRented:
+          type: integer
+        occupancyRate:
+          type: number
+      required:
+        - totalProperties
+        - totalViews
+        - totalRequests
+        - activeRequests
+        - approvedRequests
+        - estimatedRevenue
+        - propertiesAvailable
+        - propertiesRented
+        - occupancyRate
+
+    Manager:
+      type: object
+      properties:
+        id:
+          type: integer
+        ownerId:
+          type: string
+        managerEmail:
+          type: string
+        managerName:
+          type: string
+        managerPhone:
+          type: ["string", "null"]
+        permissions:
+          type: array
+          items:
+            type: string
+        assignedProperties:
+          type: array
+          items:
+            type: integer
+        status:
+          type: string
+          enum: [pending, verified, rejected]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - ownerId
+        - managerEmail
+        - managerName
+        - permissions
+        - assignedProperties
+        - status
+        - createdAt
+
+    AddManagerBody:
+      type: object
+      properties:
+        managerEmail:
+          type: string
+        managerName:
+          type: string
+        managerPhone:
+          type: ["string", "null"]
+        ownerEmail:
+          type: string
+        ownerPhone:
+          type: ["string", "null"]
+        assignedProperties:
+          type: array
+          items:
+            type: integer
+      required: [managerEmail, managerName, ownerEmail]
+
+    SubscriptionPlan:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        price:
+          type: ["number", "null"]
+        currency:
+          type: string
+        interval:
+          type: string
+          enum: [month, year, custom]
+        maxProperties:
+          type: ["integer", "null"]
+        maxManagers:
+          type: ["integer", "null"]
+        features:
+          type: array
+          items:
+            type: string
+        isEnterprise:
+          type: boolean
+      required:
+        - id
+        - name
+        - currency
+        - interval
+        - features
+        - isEnterprise
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: integer
+        ownerId:
+          type: string
+        planId:
+          type: string
+        planName:
+          type: string
+        status:
+          type: string
+          enum: [active, cancelled, past_due, trialing]
+        currentPeriodEnd:
+          type: ["string", "null"]
+          format: date-time
+        propertiesUsed:
+          type: integer
+        managersUsed:
+          type: integer
+      required:
+        - id
+        - ownerId
+        - planId
+        - planName
+        - status
+        - propertiesUsed
+        - managersUsed
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: integer
+        clerkId:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [tenant, owner, manager]
+        avatarUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - clerkId
+        - firstName
+        - lastName
+        - email
+        - role
+        - createdAt
+
+    UpdateProfileBody:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [tenant, owner, manager]

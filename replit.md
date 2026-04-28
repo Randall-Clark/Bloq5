@@ -25,3 +25,28 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## Project: bloq5 — Gestion Immobilière (Phase 1 MVP)
+
+French-language real estate rental management platform.
+
+### Architecture
+- **Frontend**: React + Vite at `/` (port from `$PORT`) — artifact `bloq5`
+- **Backend**: Express 5 API at `/api` (port 8080) — artifact `api-server`
+- **Auth**: Clerk (dev keys)
+- **DB**: PostgreSQL + Drizzle ORM (`@workspace/db`)
+- **API codegen**: Orval from `lib/api-spec/openapi.yaml` → `lib/api-client-react`
+
+### Critical Routing Note
+The API server's `app.ts` uses `app.use(router)` (NOT `app.use("/api", router)`).
+All route handlers in `artifacts/api-server/src/routes/*.ts` include the `/api/` prefix themselves.
+Changing to `app.use("/api", router)` would cause all routes to 404.
+
+### API Response Shapes
+- `GET /api/properties` → `{ data: Property[], total, page, limit, totalPages }`
+- `GET /api/properties/featured` → `Property[]`
+- Other list endpoints: check generated client types for exact shape
+
+### Seed Data
+6 demo properties inserted (Paris, Bordeaux, Lyon, Nice, La Défense).
+Owner IDs are `demo_owner_1` and `demo_owner_2` (not real Clerk users).

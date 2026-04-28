@@ -1,0 +1,20 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "arjougvu7rfCo5NZLcrt6"
+uri = "file://artifacts/bloq5/public/images/hero-exterior.png"
+type = "image"
+title = "luxury parisian apartment exterior"
+
+[[generated]]
+id = "zfcWVGTjEwo_x70fkNrbQ"
+uri = "file://artifacts/bloq5/public/images/hero-interior.png"
+type = "image"
+title = "modern luxury interior living room"
+
+[[generated]]
+id = "gH1wtAEfVRniP_e63LGgT"
+uri = "file://artifacts/bloq5/public/images/property-office.png"
+type = "image"
+title = "premium office space interior"
