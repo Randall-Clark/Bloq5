@@ -77,11 +77,23 @@ function BuildingIllustration() {
 
 /* ── Static fallback cards ── */
 const TYPES = ["Appartement Studio", "Maison 4 pièces", "Appartement 2 pièces", "Studio meublé", "Appartement 3 pièces", "Chambre en colocation", "Appartement F3", "Bureau open-space", "Local commercial", "Appartement duplex", "Studio cosy"];
-const AREAS = [22, 110, 55, 20, 72, 15, 68, 120, 85, 90, 19];
-const ROOMS = [1, 4, 2, 1, 3, 1, 3, 1, 1, 4, 1];
-const BATHS = [1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1];
-const PRICES = [750, 2100, 1150, 620, 1380, 490, 1250, 3500, 1800, 1900, 680];
-const ARRONDISSEMENTS = ["Paris 11ème", "Paris 16ème", "Paris 5ème", "Paris 14ème", "Paris 7ème", "Paris 18ème", "Paris 3ème", "La Défense", "Paris 12ème", "Paris 8ème", "Paris 13ème"];
+const AREAS = [22, 110, 55, 20, 72, 15, 68, 120, 85, 90, 19, 48];
+const ROOMS = [1, 4, 2, 1, 3, 1, 3, 1, 1, 4, 1, 2];
+const BATHS = [1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1];
+
+/* Country-aware prices and neighborhoods */
+const PRICES_MAP: Record<string, number[]> = {
+  FR: [750, 2100, 1150, 620, 1380, 490, 1250, 3500, 1800, 1900, 680, 920],
+  CA: [1200, 3500, 1800, 950, 2200, 780, 2000, 5500, 2800, 3200, 1100, 1500],
+};
+const NEIGHBORHOODS_MAP: Record<string, string[]> = {
+  FR: ["Paris 11ème", "Paris 16ème", "Paris 5ème", "Paris 14ème", "Paris 7ème", "Paris 18ème", "Paris 3ème", "La Défense", "Paris 12ème", "Paris 8ème", "Paris 13ème", "Paris 9ème"],
+  CA: ["Plateau Mont-Royal", "Rosemont", "Verdun", "Côte-des-Neiges", "Villeray", "Outremont", "Griffintown", "Mile-End", "Saint-Laurent", "Laval", "Longueuil", "Westmount"],
+};
+const NEARBY_REGIONS_MAP: Record<string, string[]> = {
+  FR: ["Locations Hauts-de-Seine (92)", "Locations Seine-Saint-Denis (93)", "Locations Val-de-Marne (94)"],
+  CA: ["Locations Montérégie", "Locations Laurentides", "Locations Lanaudière"],
+};
 
 /* ── Property card ── */
 function PropCard({ idx, city, price, area, rooms, baths, arrond, title, currency }: {
@@ -172,6 +184,11 @@ export default function PropertiesPage() {
     setFilterType(v === filterType ? "all" : v);
     setCurrentPage(1);
   };
+
+  /* Country-aware fallback data */
+  const PRICES         = PRICES_MAP[country.code]       ?? PRICES_MAP.FR;
+  const ARRONDISSEMENTS = NEIGHBORHOODS_MAP[country.code] ?? NEIGHBORHOODS_MAP.FR;
+  const NEARBY_REGIONS = NEARBY_REGIONS_MAP[country.code] ?? NEARBY_REGIONS_MAP.FR;
 
   /* API call */
   const { data } = useListProperties({
@@ -447,20 +464,23 @@ export default function PropertiesPage() {
           </div>
           <div>
             <h5 className="font-bold text-sm mb-3" style={{ color: "#1A1A1A" }}>Locations à proximité</h5>
-            {["Boulogne-Billancourt", "Saint-Denis", "Montreuil", "Aubervilliers", "Issy-les-Moulineaux", "Levallois-Perret", "Ivry-sur-Seine"].map(l => (
-              <a key={l} href="#" className="seo-link">{l}</a>
-            ))}
+            {country.cities
+              .filter((c) => c.name !== city)
+              .slice(0, 7)
+              .map((c) => (
+                <a key={c.name} href={`/properties?city=${encodeURIComponent(c.name)}`} className="seo-link">{c.name}</a>
+              ))}
           </div>
           <div>
-            <h5 className="font-bold text-sm mb-3" style={{ color: "#1A1A1A" }}>Locations dans les départements</h5>
-            {["Locations Hauts-de-Seine (92)", "Locations Seine-Saint-Denis (93)", "Locations Val-de-Marne (94)"].map(l => (
+            <h5 className="font-bold text-sm mb-3" style={{ color: "#1A1A1A" }}>Locations par région</h5>
+            {NEARBY_REGIONS.map(l => (
               <a key={l} href="#" className="seo-link">{l}</a>
             ))}
           </div>
           <div>
             <h5 className="font-bold text-sm mb-3" style={{ color: "#1A1A1A" }}>Principales villes</h5>
-            {["Paris", "Lyon", "Marseille", "Lille", "Toulouse", "Bordeaux", "Montpellier"].map(l => (
-              <a key={l} href={`/properties?city=${l}`} className="seo-link">Location {l}</a>
+            {country.cities.map((c) => (
+              <a key={c.name} href={`/properties?city=${encodeURIComponent(c.name)}`} className="seo-link">Location {c.name}</a>
             ))}
           </div>
         </div>

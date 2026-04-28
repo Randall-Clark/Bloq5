@@ -27,22 +27,41 @@ function formatBudget(v: number, symbol: string) {
   return `${v} ${symbol}/mois`;
 }
 
-/* ── Static data ── */
+/* ── Static fallback data — per country ── */
+type StaticProp = { title: string; city: string; price: number; bedrooms: number; bathrooms: number; area: number; img: string };
 
-const STATIC_PROPS = [
-  { title: "Maison familiale – 5 pièces", city: "Bordeaux", price: 2100, bedrooms: 4, bathrooms: 2, area: 140, img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80" },
-  { title: "Appartement lumineux – centre-ville", city: "Lyon", price: 1200, bedrooms: 2, bathrooms: 1, area: 65, img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500&q=80" },
-  { title: "Studio meublé – proche campus", city: "Toulouse", price: 580, bedrooms: 1, bathrooms: 1, area: 24, img: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=500&q=80" },
-  { title: "Colocation – chambre privée", city: "Paris 11e", price: 750, bedrooms: 1, bathrooms: 1, area: 18, img: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=500&q=80" },
-  { title: "Bureau open-space – La Défense", city: "La Défense", price: 4500, bedrooms: 0, bathrooms: 2, area: 200, img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80" },
-  { title: "Local commercial – rez-de-chaussée", city: "Nice", price: 1800, bedrooms: 0, bathrooms: 1, area: 80, img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&q=80" },
-];
+const STATIC_PROPS_MAP: Record<string, StaticProp[]> = {
+  FR: [
+    { title: "Maison familiale – 5 pièces",        city: "Bordeaux",    price: 2100, bedrooms: 4, bathrooms: 2, area: 140, img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80" },
+    { title: "Appartement lumineux – centre-ville", city: "Lyon",        price: 1200, bedrooms: 2, bathrooms: 1, area: 65,  img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500&q=80" },
+    { title: "Studio meublé – proche campus",       city: "Toulouse",    price: 580,  bedrooms: 1, bathrooms: 1, area: 24,  img: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=500&q=80" },
+    { title: "Colocation – chambre privée",         city: "Paris 11e",   price: 750,  bedrooms: 1, bathrooms: 1, area: 18,  img: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=500&q=80" },
+    { title: "Bureau open-space – La Défense",      city: "La Défense",  price: 4500, bedrooms: 0, bathrooms: 2, area: 200, img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80" },
+    { title: "Local commercial – rez-de-chaussée",  city: "Nice",        price: 1800, bedrooms: 0, bathrooms: 1, area: 80,  img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&q=80" },
+  ],
+  CA: [
+    { title: "Condo moderne – Plateau Mont-Royal",  city: "Montréal",    price: 2400, bedrooms: 2, bathrooms: 1, area: 70,  img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500&q=80" },
+    { title: "Maison jumelée – banlieue sud",       city: "Toronto",     price: 3800, bedrooms: 3, bathrooms: 2, area: 120, img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80" },
+    { title: "Studio meublé – Vieux-Québec",        city: "Québec",      price: 1100, bedrooms: 1, bathrooms: 1, area: 32,  img: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=500&q=80" },
+    { title: "Colocation – chambre privée",         city: "Montréal",    price: 980,  bedrooms: 1, bathrooms: 1, area: 20,  img: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=500&q=80" },
+    { title: "Bureau open-space – Downtown",        city: "Vancouver",   price: 6500, bedrooms: 0, bathrooms: 2, area: 200, img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80" },
+    { title: "Local commercial – avenue principale",city: "Calgary",     price: 2800, bedrooms: 0, bathrooms: 1, area: 90,  img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&q=80" },
+  ],
+};
 
-const ARTICLES = [
-  { category: "Guide locataire", title: "Comment préparer un dossier de location solide ?", img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500&q=80" },
-  { category: "Marché", title: "Baromètre des loyers en France – 2025", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&q=80" },
-  { category: "City Guide", title: "Les meilleurs quartiers pour vivre à Lyon", img: "https://images.unsplash.com/photo-1569949261756-48d5e02a9e8b?w=500&q=80" },
-];
+type Article = { category: string; title: string; img: string };
+const ARTICLES_MAP: Record<string, Article[]> = {
+  FR: [
+    { category: "Guide locataire", title: "Comment préparer un dossier de location solide ?",     img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500&q=80" },
+    { category: "Marché",          title: "Baromètre des loyers en France – 2025",                 img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&q=80" },
+    { category: "City Guide",      title: "Les meilleurs quartiers pour vivre à Lyon",             img: "https://images.unsplash.com/photo-1569949261756-48d5e02a9e8b?w=500&q=80" },
+  ],
+  CA: [
+    { category: "Guide locataire", title: "Comment préparer un dossier de location solide ?",     img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500&q=80" },
+    { category: "Marché",          title: "Baromètre des loyers au Canada – 2025",                 img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&q=80" },
+    { category: "City Guide",      title: "Les meilleurs quartiers pour vivre à Montréal",         img: "https://images.unsplash.com/photo-1569949261756-48d5e02a9e8b?w=500&q=80" },
+  ],
+};
 
 const CATEGORIES = [
   { icon: Home,      label: "Maisons",      type: "house" },
@@ -94,6 +113,14 @@ export default function HomePage() {
   const { country } = useLocation_();
   const currency = country.currency;
   const { data: featured } = useGetFeaturedProperties();
+
+  /* Country-aware static data */
+  const STATIC_PROPS = STATIC_PROPS_MAP[country.code] ?? STATIC_PROPS_MAP.FR;
+  const ARTICLES     = ARTICLES_MAP[country.code]     ?? ARTICLES_MAP.FR;
+
+  /* Footer SEO: distribute cities across 4 columns */
+  const allCityNames   = country.cities.map((c) => c.name);
+  const footerCityCols = [0, 1, 2, 3].map((i) => allCityNames.filter((_, idx) => idx % 4 === i));
 
   /* Search state */
   const [budgetSlider, setBudgetSlider] = useState(BUDGET_STEPS);
@@ -655,16 +682,17 @@ export default function HomePage() {
           </div>
 
           <div className="border-t border-gray-800 pt-8 grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            {[
-              { title: "Location maison",       links: ["Paris", "Lyon", "Bordeaux", "Marseille"] },
-              { title: "Location appartement",  links: ["Toulouse", "Nice", "Lille", "Strasbourg"] },
-              { title: "Location colocation",   links: ["Grenoble", "Nantes", "Rennes", "Montpellier"] },
-              { title: "Location bureau",       links: ["La Défense", "Metz", "Nancy", "Rouen"] },
-            ].map((col) => (
-              <div key={col.title}>
-                <h5 className="text-xs font-semibold text-gray-400 mb-2">{col.title}</h5>
+            {["Location maison", "Location appartement", "Location colocation", "Location bureau"].map((title, colIdx) => (
+              <div key={title}>
+                <h5 className="text-xs font-semibold text-gray-400 mb-2">{title}</h5>
                 <ul className="space-y-1">
-                  {col.links.map(l => <li key={l}><a href="#" className="text-xs text-gray-600 hover:text-gray-400 transition-colors">{l}</a></li>)}
+                  {footerCityCols[colIdx].map((cityName) => (
+                    <li key={cityName}>
+                      <a href={`/properties?city=${encodeURIComponent(cityName)}`} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
+                        {cityName}
+                      </a>
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))}
