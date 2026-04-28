@@ -2,7 +2,8 @@ import { Link } from "wouter";
 import { useGetFeaturedProperties } from "@workspace/api-client-react";
 import {
   Search, ChevronDown, Bed, Bath, Maximize2, MapPin,
-  CheckCircle, FileText, PenLine, ClipboardList, ChevronRight
+  CheckCircle, FileText, PenLine, ClipboardList, ChevronRight,
+  SlidersHorizontal
 } from "lucide-react";
 
 const YELLOW = "#F5A623";
@@ -89,15 +90,15 @@ export default function HomePage() {
 
       {/* ─── HERO ─── */}
       <section
-        className="relative flex items-center justify-center"
+        className="relative flex flex-col items-center justify-center"
         style={{
           backgroundImage: "url(https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=1800&q=85)",
           backgroundSize: "cover",
           backgroundPosition: "center",
-          minHeight: "560px",
+          minHeight: "600px",
         }}
       >
-        <div className="absolute inset-0 bg-black/30" />
+        <div className="absolute inset-0 bg-black/45" />
 
         {/* "Vu au journal" badge bottom-left */}
         <div className="absolute bottom-5 left-6 z-10 bg-white/90 rounded-lg px-4 py-2 flex items-center gap-2 text-xs font-semibold text-gray-600 shadow-md">
@@ -105,61 +106,109 @@ export default function HomePage() {
           <span className="font-black text-gray-900">TF1 · M6</span>
         </div>
 
-        <div className="relative z-10 w-full max-w-xl mx-auto px-4 py-10">
-          <div className="bg-white rounded-2xl shadow-2xl px-8 py-8 text-center">
-            {/* Badge */}
-            <p className="text-xs text-gray-500 font-medium mb-4">
-              <span style={{ color: YELLOW }} className="mr-1 text-base">✳</span>
-              BLOQ5, votre plateforme de colocation 100% en ligne
-            </p>
+        {/* Content — no white card, floats over image */}
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 py-14 text-center">
+          {/* Badge */}
+          <p className="text-white/80 text-sm font-medium mb-5">
+            <span style={{ color: YELLOW }} className="mr-1 text-base">✳</span>
+            BLOQ5, votre plateforme de colocation 100% en ligne
+          </p>
 
-            {/* Title */}
-            <h1 className="text-3xl md:text-4xl font-bold leading-snug mb-6" style={{ color: "#1A1A1A" }}>
-              Visitez &{" "}
-              <span className="script-yellow" style={{ fontSize: "1.15em" }}>louez</span>
-              <br />
-              depuis chez vous !
-            </h1>
+          {/* Title */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-8">
+            Trouvez votre{" "}
+            <span className="script-yellow" style={{ fontSize: "1.1em" }}>Location Idéale</span>
+          </h1>
 
-            {/* Search */}
-            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden shadow-sm mb-5">
-              <div className="flex items-center flex-1 px-4 py-3">
-                <Search className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+          {/* Wide search bar with Filtres button */}
+          <div className="flex items-stretch bg-white rounded-xl overflow-hidden shadow-2xl mb-8 max-w-4xl mx-auto">
+            {/* Location input */}
+            <div className="flex items-center flex-1 px-5 py-4 border-r border-gray-200">
+              <MapPin className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide leading-none mb-0.5">Localisation</p>
                 <input
                   type="text"
-                  placeholder="Rechercher une ville, une école…"
-                  className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
+                  placeholder="Ville, quartier, code postal…"
+                  className="w-full text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
                 />
               </div>
-              <button className="text-white text-sm font-semibold px-5 py-3 flex-shrink-0 transition-opacity hover:opacity-85" style={{ background: YELLOW }}>
-                <Search className="w-4 h-4" />
-              </button>
             </div>
 
-            {/* City pills */}
-            <div className="flex flex-wrap justify-center gap-2 mb-6">
-              {["Paris", "Lyon", "Lille", "Bordeaux", "Toulouse", "Strasbourg"].map((c) => (
-                <Link key={c} href={`/properties?city=${c}`}>
-                  <span className="flex items-center gap-1 border border-gray-300 rounded-full px-3 py-1 text-xs text-gray-600 hover:border-gray-500 hover:text-gray-900 transition-colors cursor-pointer">
-                    <MapPin className="w-3 h-3" />{c}
+            {/* Type select */}
+            <div className="flex items-center px-5 py-4 border-r border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide leading-none mb-0.5">Type de bien</p>
+                <select className="text-sm text-gray-700 outline-none bg-transparent cursor-pointer pr-4">
+                  <option>Tous types</option>
+                  <option>Appartement</option>
+                  <option>Maison</option>
+                  <option>Colocation</option>
+                  <option>Studio</option>
+                  <option>Coliving</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Budget */}
+            <div className="flex items-center px-5 py-4 border-r border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors">
+              <div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide leading-none mb-0.5">Budget max.</p>
+                <select className="text-sm text-gray-700 outline-none bg-transparent cursor-pointer pr-4">
+                  <option>Sans limite</option>
+                  <option>500 €/mois</option>
+                  <option>700 €/mois</option>
+                  <option>1 000 €/mois</option>
+                  <option>1 500 €/mois</option>
+                  <option>2 000 €/mois</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Filtres button */}
+            <button className="flex items-center gap-2 px-5 py-4 border-r border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+              <SlidersHorizontal className="w-4 h-4" />
+              Filtres
+            </button>
+
+            {/* Search CTA */}
+            <button className="flex items-center gap-2 px-7 text-sm font-bold text-white transition-opacity hover:opacity-85 flex-shrink-0" style={{ background: YELLOW, color: "#1A1A1A" }}>
+              <Search className="w-5 h-5" />
+              Rechercher
+            </button>
+          </div>
+
+          {/* City tiles (carreaux) */}
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            {CITIES.slice(0, 6).map((city) => (
+              <Link key={city.name} href={`/properties?city=${city.name}`}>
+                <div className="relative w-24 h-16 rounded-xl overflow-hidden cursor-pointer group shadow-lg">
+                  <img
+                    src={city.img}
+                    alt={city.name}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors" />
+                  <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold drop-shadow">
+                    {city.name}
                   </span>
-                </Link>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Social proof */}
+          <div className="flex items-center justify-center gap-3 mt-8">
+            <div className="flex -space-x-2">
+              {[11, 12, 13, 14, 15].map((i) => (
+                <img key={i} src={`https://i.pravatar.cc/40?img=${i}`} alt="" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
               ))}
             </div>
-
-            {/* Social proof */}
-            <div className="flex items-center justify-center gap-3">
-              <div className="flex -space-x-2">
-                {[11, 12, 13, 14, 15].map((i) => (
-                  <img key={i} src={`https://i.pravatar.cc/40?img=${i}`} alt="" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
-                ))}
-              </div>
-              <span className="text-xs text-gray-500">
-                <span className="text-amber-400">★★★★</span>
-                <strong className="text-gray-800 ml-1">4.8</strong>
-                {" "}+1 200 avis
-              </span>
-            </div>
+            <span className="text-white/80 text-sm">
+              <span className="text-amber-400">★★★★</span>
+              <strong className="text-white ml-1">4.8</strong>
+              {" "}· +1 200 avis
+            </span>
           </div>
         </div>
       </section>
