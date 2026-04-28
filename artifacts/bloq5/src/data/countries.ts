@@ -150,3 +150,10 @@ export const COUNTRY_MAP: Record<string, CountryData> = Object.fromEntries(
 export function getCountryByCode(code: string): CountryData {
   return COUNTRY_MAP[code] ?? COUNTRY_MAP["FR"];
 }
+
+/** Countries that have full platform support */
+export const ACTIVE_COUNTRY_CODES = new Set(["FR", "CA"]);
+
+export function isActiveCountry(code: string): boolean {
+  return ACTIVE_COUNTRY_CODES.has(code);
+}

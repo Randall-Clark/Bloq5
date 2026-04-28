@@ -7,9 +7,10 @@ import { useEffect, useRef } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import { LocationProvider } from "@/context/location-context";
+import { LocationProvider, useLocation_ } from "@/context/location-context";
 import { LocationPopup } from "@/components/location-popup";
 import { CountryChangeBanner } from "@/components/country-change-banner";
+import { isActiveCountry } from "@/data/countries";
 
 // Pages
 import HomePage from "@/pages/home";
@@ -22,6 +23,7 @@ import ProfileFavoritesPage from "@/pages/profile-favorites";
 import ProfileVisitsPage from "@/pages/profile-visits";
 import ProPricingPage from "@/pages/pro-pricing";
 import CitiesPage from "@/pages/cities";
+import ComingSoonPage from "@/pages/coming-soon";
 import ProDashboardPage from "@/pages/pro-dashboard";
 import ProPropertiesPage from "@/pages/pro-properties";
 import ProPropertyNewPage from "@/pages/pro-property-new";
@@ -117,6 +119,19 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
+/* Redirects returning users with a non-active saved country to /coming-soon */
+function LocationGuard() {
+  const { isReady, country } = useLocation_();
+  const [location, navigate] = useLocation();
+  useEffect(() => {
+    const exempt = ["/coming-soon", "/sign-in", "/sign-up"];
+    if (isReady && !isActiveCountry(country.code) && !exempt.some(p => location.startsWith(p))) {
+      navigate("/coming-soon");
+    }
+  }, [isReady, country.code, location, navigate]);
+  return null;
+}
+
 function SignInPage() {
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-gray-50 px-4">
@@ -188,10 +203,12 @@ function ClerkProviderWithRoutes() {
     >
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
+        <LocationGuard />
         <Switch>
           {/* Public Routes */}
           <Route path="/" component={HomeRedirect} />
           <Route path="/cities" component={CitiesPage} />
+          <Route path="/coming-soon" component={ComingSoonPage} />
           <Route path="/properties" component={PropertiesPage} />
           <Route path="/properties/:id" component={PropertyDetailPage} />
           <Route path="/pro" component={ProPricingPage} />

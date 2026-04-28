@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { MapPin, ChevronDown } from "lucide-react";
+import { useLocation as useWouterLocation } from "wouter";
 import { useLocation_ } from "@/context/location-context";
-import { COUNTRIES } from "@/data/countries";
+import { COUNTRIES, isActiveCountry } from "@/data/countries";
 
 const YELLOW = "#F5A623";
 
 export function LocationPopup() {
   const { showPopup, confirm } = useLocation_();
+  const [, navigate]          = useWouterLocation();
   const [countryCode, setCountryCode] = useState("FR");
   const [postalCode, setPostalCode]   = useState("");
   const [error, setError]             = useState("");
@@ -28,6 +30,9 @@ export function LocationPopup() {
     }
     setError("");
     confirm(countryCode, postalCode.trim());
+    if (!isActiveCountry(countryCode)) {
+      navigate("/coming-soon");
+    }
   }
 
   return (
