@@ -7,6 +7,9 @@ import { useEffect, useRef } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+import { LocationProvider } from "@/context/location-context";
+import { LocationPopup } from "@/components/location-popup";
+import { CountryChangeBanner } from "@/components/country-change-banner";
 
 // Pages
 import HomePage from "@/pages/home";
@@ -223,10 +226,14 @@ function ClerkProviderWithRoutes() {
 function App() {
   return (
     <WouterRouter base={basePath}>
-      <TooltipProvider>
-        <ClerkProviderWithRoutes />
-        <Toaster />
-      </TooltipProvider>
+      <LocationProvider>
+        <TooltipProvider>
+          <ClerkProviderWithRoutes />
+          <Toaster />
+          <LocationPopup />
+          <CountryChangeBanner />
+        </TooltipProvider>
+      </LocationProvider>
     </WouterRouter>
   );
 }

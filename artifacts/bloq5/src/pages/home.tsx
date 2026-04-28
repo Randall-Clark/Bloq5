@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Link } from "wouter";
 import { useGetFeaturedProperties } from "@workspace/api-client-react";
+import { useLocation_ } from "@/context/location-context";
 import {
   Search, ChevronDown, Bed, Bath, Maximize2, MapPin,
   CheckCircle, FileText, PenLine, ClipboardList, ChevronRight,
@@ -11,23 +12,6 @@ import {
 
 const YELLOW = "#F5A623";
 
-/* ── Currency detection ── */
-function useCurrency() {
-  return useMemo(() => {
-    const lang = typeof navigator !== "undefined" ? navigator.language : "fr-FR";
-    const region = lang.includes("-") ? lang.split("-")[1].toUpperCase() : "FR";
-    const map: Record<string, { symbol: string; label: string }> = {
-      US: { symbol: "$",    label: "USD" },
-      CA: { symbol: "CA$",  label: "CAD" },
-      GB: { symbol: "£",    label: "GBP" },
-      AU: { symbol: "A$",   label: "AUD" },
-      CH: { symbol: "CHF",  label: "CHF" },
-      JP: { symbol: "¥",   label: "JPY" },
-      CN: { symbol: "¥",   label: "CNY" },
-    };
-    return map[region] ?? { symbol: "€", label: "EUR" };
-  }, []);
-}
 
 /* ── Budget slider: logarithmic scale 0 → 1 000 000 ── */
 const BUDGET_MAX = 1_000_000;
@@ -44,16 +28,6 @@ function formatBudget(v: number, symbol: string) {
 }
 
 /* ── Static data ── */
-const CITIES = [
-  { name: "Paris",      img: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=200&q=80" },
-  { name: "Lyon",       img: "https://images.unsplash.com/photo-1569949261756-48d5e02a9e8b?w=200&q=80" },
-  { name: "Lille",      img: "https://images.unsplash.com/photo-1590077428593-a55bb07c4665?w=200&q=80" },
-  { name: "Bordeaux",   img: "https://images.unsplash.com/photo-1588515724527-074a7a56616c?w=200&q=80" },
-  { name: "Toulouse",   img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&q=80" },
-  { name: "Strasbourg", img: "https://images.unsplash.com/photo-1564594985645-4427056e22e2?w=200&q=80" },
-  { name: "Nice",       img: "https://images.unsplash.com/photo-1491166617655-9c34fb734e53?w=200&q=80" },
-  { name: "Marseille",  img: "https://images.unsplash.com/photo-1504214208698-ea1916a2195a?w=200&q=80" },
-];
 
 const STATIC_PROPS = [
   { title: "Maison familiale – 5 pièces", city: "Bordeaux", price: 2100, bedrooms: 4, bathrooms: 2, area: 140, img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80" },
@@ -117,7 +91,8 @@ function Chip({ label, checked, onChange }: { label: string; checked: boolean; o
 
 /* ════════════════════════════════════════════════════════════ */
 export default function HomePage() {
-  const currency = useCurrency();
+  const { country } = useLocation_();
+  const currency = country.currency;
   const { data: featured } = useGetFeaturedProperties();
 
   /* Search state */
@@ -353,7 +328,7 @@ export default function HomePage() {
                   {/* Ameublement */}
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Ameublement</p>
-                    <PillGroup options={["Tout", "Meublé", "Semi-meublé", "Non meublé"]} value={furnished} onChange={setFurnished} />
+                    <PillGroup options={["Tout", "Meublé", "Semi-meublé", "Non meublé"]} value={furnished} onChange={(v) => setFurnished(String(v))} />
                   </div>
 
                   {/* Options booléennes */}
@@ -525,20 +500,28 @@ export default function HomePage() {
           <h2 className="text-2xl font-bold mb-1" style={{ color: "#1A1A1A" }}>
             Nos villes <span style={{ color: YELLOW }}>coup de cœur</span>
           </h2>
-          <p className="text-gray-500 text-sm mb-10">BLOQ5 est disponible dans les plus grandes métropoles francophones.</p>
+          <p className="text-gray-500 text-sm mb-10">
+            BLOQ5 est disponible dans les plus grandes métropoles {country.flag && <span>{country.flag} </span>}{country.name}.
+          </p>
           <div className="grid grid-cols-4 md:grid-cols-8 gap-4 mb-8">
-            {CITIES.map((city) => (
+            {country.cities.slice(0, 8).map((city) => (
               <Link key={city.name} href={`/properties?city=${city.name}`}>
                 <div className="flex flex-col items-center gap-2 cursor-pointer group">
                   <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-white shadow-md group-hover:shadow-lg transition-shadow">
-                    <img src={city.img} alt={city.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <img
+                      src={`https://picsum.photos/seed/${city.slug}/160/160`}
+                      alt={city.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
                   </div>
                   <span className="text-xs font-medium text-gray-700">{city.name}</span>
                 </div>
               </Link>
             ))}
           </div>
-          <button className="btn-outline-yellow text-sm px-8 py-3">Voir toutes les villes</button>
+          <Link href="/cities">
+            <button className="btn-outline-yellow text-sm px-8 py-3">Voir toutes les villes</button>
+          </Link>
         </div>
       </section>
 

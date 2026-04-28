@@ -1,28 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { Search, ChevronDown, MapPin, Plus } from "lucide-react";
+import { useLocation_ } from "@/context/location-context";
 
 const YELLOW = "#F5A623";
-
-const CITIES = [
-  { name: "Paris",            slug: "Paris" },
-  { name: "Lyon",             slug: "Lyon" },
-  { name: "Lille",            slug: "Lille" },
-  { name: "Bordeaux",         slug: "Bordeaux" },
-  { name: "Toulouse",         slug: "Toulouse" },
-  { name: "Angoulême",        slug: "Angouleme" },
-  { name: "Caen",             slug: "Caen" },
-  { name: "Tours",            slug: "Tours" },
-  { name: "Angers",           slug: "Angers" },
-  { name: "Grenoble",         slug: "Grenoble" },
-  { name: "Bourgoin-Jaillieu",slug: "BourgoinJaillieu" },
-  { name: "Mulhouse",         slug: "Mulhouse" },
-  { name: "Avignon",          slug: "Avignon" },
-  { name: "Chambéry",         slug: "Chambery" },
-  { name: "Pau",              slug: "Pau" },
-  { name: "Nice",             slug: "Nice" },
-  { name: "Marseille",        slug: "Marseille" },
-  { name: "Annemasse",        slug: "Annemasse" },
-];
 
 /* Decorative diamond images */
 const DIAMONDS = [
@@ -87,10 +67,14 @@ function BuildingIllustration() {
 
 export default function CitiesPage() {
   const [, navigate] = useLocation();
+  const { country } = useLocation_();
+  const cities = country.cities;
 
-  /* Split cities: first 16 in 4×4 grid, last 2 centred */
-  const main = CITIES.slice(0, 16);
-  const tail = CITIES.slice(16);
+  /* Split cities: first group in 4-col grid, remainder centred */
+  const cols = 4;
+  const mainCount = Math.floor(cities.length / cols) * cols;
+  const main = cities.slice(0, mainCount);
+  const tail = cities.slice(mainCount);
 
   return (
     <div className="min-h-screen bg-white font-sans" style={{ color: "#1A1A1A" }}>
@@ -175,7 +159,7 @@ export default function CitiesPage() {
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold leading-tight mb-4" style={{ color: "#1A1A1A" }}>
             <span style={{ color: YELLOW }}>BLOQ5</span> vous propose des biens<br />
-            à travers toute la France !
+            {country.name === "France" ? "à travers toute la France !" : `partout en ${country.name} ${country.flag} !`}
           </h1>
           <p className="text-base" style={{ color: "#666" }}>
             Une gestion locative dans les plus grandes métropoles.
