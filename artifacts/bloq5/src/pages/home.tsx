@@ -3,7 +3,7 @@ import { useGetFeaturedProperties } from "@workspace/api-client-react";
 import {
   Search, ChevronDown, Bed, Bath, Maximize2, MapPin,
   CheckCircle, FileText, PenLine, ClipboardList, ChevronRight,
-  SlidersHorizontal
+  SlidersHorizontal, Home, Building2, Users, BedDouble, Briefcase, Building
 } from "lucide-react";
 
 const YELLOW = "#F5A623";
@@ -100,12 +100,6 @@ export default function HomePage() {
       >
         <div className="absolute inset-0 bg-black/45" />
 
-        {/* "Vu au journal" badge bottom-left */}
-        <div className="absolute bottom-5 left-6 z-10 bg-white/90 rounded-lg px-4 py-2 flex items-center gap-2 text-xs font-semibold text-gray-600 shadow-md">
-          <span>Vu au journal de</span>
-          <span className="font-black text-gray-900">TF1 · M6</span>
-        </div>
-
         {/* Content — no white card, floats over image */}
         <div className="relative z-10 w-full max-w-5xl mx-auto px-6 py-14 text-center">
           {/* Badge */}
@@ -178,37 +172,23 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* City tiles (carreaux) */}
+          {/* Category tiles — fond blanc, icône + texte */}
           <div className="flex items-center justify-center gap-3 flex-wrap">
-            {CITIES.slice(0, 6).map((city) => (
-              <Link key={city.name} href={`/properties?city=${city.name}`}>
-                <div className="relative w-24 h-16 rounded-xl overflow-hidden cursor-pointer group shadow-lg">
-                  <img
-                    src={city.img}
-                    alt={city.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors" />
-                  <span className="absolute inset-0 flex items-center justify-center text-white text-xs font-bold drop-shadow">
-                    {city.name}
-                  </span>
+            {[
+              { icon: Home,      label: "Appartement", type: "apartment" },
+              { icon: Building,  label: "Maison",      type: "house" },
+              { icon: BedDouble, label: "Studio",      type: "studio" },
+              { icon: Users,     label: "Colocation",  type: "co-living" },
+              { icon: Building2, label: "Coliving",    type: "coliving" },
+              { icon: Briefcase, label: "Bureau",      type: "office" },
+            ].map((cat) => (
+              <Link key={cat.type} href={`/properties?type=${cat.type}`}>
+                <div className="flex flex-col items-center gap-1.5 bg-white rounded-xl px-5 py-3 shadow-md cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 min-w-[90px]">
+                  <cat.icon className="w-6 h-6" style={{ color: YELLOW }} />
+                  <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">{cat.label}</span>
                 </div>
               </Link>
             ))}
-          </div>
-
-          {/* Social proof */}
-          <div className="flex items-center justify-center gap-3 mt-8">
-            <div className="flex -space-x-2">
-              {[11, 12, 13, 14, 15].map((i) => (
-                <img key={i} src={`https://i.pravatar.cc/40?img=${i}`} alt="" className="w-7 h-7 rounded-full border-2 border-white object-cover" />
-              ))}
-            </div>
-            <span className="text-white/80 text-sm">
-              <span className="text-amber-400">★★★★</span>
-              <strong className="text-white ml-1">4.8</strong>
-              {" "}· +1 200 avis
-            </span>
           </div>
         </div>
       </section>
