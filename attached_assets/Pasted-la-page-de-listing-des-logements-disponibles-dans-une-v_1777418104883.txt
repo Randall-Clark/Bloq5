@@ -1,0 +1,100 @@
+la page de listing des logements disponibles dans une ville. Design épuré, moderne, fond blanc, couleur principale jaune #F5A623.
+
+NAVBAR PRINCIPALE
+
+Logo BLOQ5 à gauche (texte gras, "5" en jaune #F5A623)
+Liens : Biens à louer · À propos · Articles · Contact
+Droite : bouton "Référence" (outline avec icône loupe) + "Se connecter" (texte) + "Vous êtes propriétaire ▾" (fond jaune #F5A623, texte foncé, coins arrondis, flèche dropdown)
+
+
+BARRE DE RECHERCHE SECONDAIRE (sous la navbar, fond blanc, bordure bas légère 1px solid #E8E8E8)
+
+Champ de recherche pleine largeur à gauche : icône loupe + placeholder "Rechercher une ville, une école…" + bouton carré jaune #F5A623 avec icône loupe blanche
+Filtres en ligne à droite du champ : "Type de bien" · "Meublé ?" · "Loyer" · "Nb de pièces" · "+ de filtres" — tous en boutons outline gris léger, border-radius 20px, padding 8px 16px, texte #444, fond blanc
+Bouton tout à droite : "🔔 Créer une alerte" — fond jaune #F5A623, texte foncé/blanc, border-radius 20px, icône cloche
+
+
+FIL D'ARIANE
+
+Texte petit gris : Accueil › Locations en Île-de-France › Locations à Paris › Locations à Paris (toute la ville)
+Les éléments cliquables en gris #999, le dernier élément (actif) en jaune #F5A623
+
+
+EN-TÊTE DE RÉSULTATS
+
+Gauche : titre h1 "Toutes les locations à Paris (toute la ville)" — noir gras #1A1A1A, ~24px
+Droite : "100 locations" en jaune #F5A623, gras
+
+
+GRILLE DE CARTES DE BIENS
+
+3 colonnes, espacement 16px, fond blanc
+11 cartes au total (3+3+3+2) simulant une vraie pagination
+Chaque carte :
+
+Border 1px solid #E8E8E8, border-radius 8px, overflow hidden, légère ombre au hover
+Photo en haut : hauteur fixe 170px, object-fit: cover, image https://picsum.photos/seed/[N]/370/170
+Badge statut en haut à gauche de la photo, border-radius 12px, padding 4px 10px, texte 12px :
+
+"● Disponible" → fond vert clair #E8F5E9, texte vert #2E7D32
+"⏰ Dispo le JJ/MM" → fond orange clair #FFF3E0, texte orange #E65100
+"● Occupé" → fond rouge clair #FFEBEE, texte rouge #C62828
+
+
+Corps de carte padding 12px :
+
+Titre : "Appartement Studio – location meublée" etc. — noir gras #1A1A1A, 14px, font-weight 600
+Ligne d'icônes caractéristiques (icônes inline SVG ou emoji minimalistes, couleur jaune #F5A623) :
+
+Surface m² · Nombre de pièces (icône lit) · Salle de bain (icône douche) · Jardin si applicable
+Icônes bleues #5C6BC0 (ou jaune selon badge), texte #555, 13px
+
+
+Séparateur border-top: 1px solid #F0F0F0
+Ligne bas : icône pin 📍 + "Paris Xeme arrondissement" en jaune #F5A623 cliquable (si occupé : texte gris non cliquable) + prix aligné à droite en gras noir #1A1A1A + "/mois cc" en gris petit
+Les biens "Occupé" : pas de prix affiché, arrondissement en jaune remplacé par texte gris simple
+
+
+
+
+
+
+PAGINATION
+
+Centrée, style minimal
+"‹ Précédent" (gris désactivé sur page 1) · numéros 1 2 3 4 5 (page active en jaune #F5A623 fond jaune clair #FFF8E1, border-radius 4px) · "Suivant ›" (noir cliquable)
+
+
+SECTION CTA PROPRIÉTAIRE (même que les autres pages)
+
+Fond gris très clair #F5F5F5, border-radius 16px, padding généreux, marges latérales
+Texte gauche :
+
+Titre : "Propriétaire, louez votre bien rapidement !" + soulignement court jaune #F5A623 sous "rapidement !"
+Paragraphe : "Plus de 2500 clients, propriétaires et locataires, nous recommandent pour notre réactivité et notre efficacité. Grâce à leur confiance, nous gérons aujourd'hui plus de 8000 lots répartis dans plus de 40 métropoles en France."
+Bouton : "Vous êtes propriétaire ?" — fond jaune #F5A623, border-radius 24px
+
+
+Droite : illustration SVG isométrique d'un bâtiment en jaune et blanc
+
+
+FOOTER SEO (spécifique à cette page, avant le footer principal)
+
+Fond blanc, 5 colonnes, texte petit 13px
+Colonne 1 — Types de bien à Paris : Location appartement · Location appartement meublé · Location appartement non-meublé · Colocation · Colocation meublée
+Colonne 2 — Locations à Paris : Paris (toute la ville) · Paris 2 · Paris 15
+Colonne 3 — Locations à proximité : Boulogne-Billancourt · Saint-Denis · Montreuil · Aubervilliers · Issy-les-Moulineaux · Levallois-Perret · Ivry-sur-Seine
+Colonne 4 — Locations dans les départements à proximité : Locations Hauts-de-Seine (92) · Locations Seine-Saint-Denis (93) · Locations Val-de-Marne (94)
+Colonne 5 — Principales villes : Location Paris · Location Lyon · Location Marseille · Location Lille · Location Toulouse · Location Bordeaux · Location Montpellier
+Titres de colonnes en noir gras, liens en gris #666, hover en jaune #F5A623
+
+
+FOOTER PRINCIPAL
+
+Fond très sombre #1A1A1A
+Élément décoratif : grand cercle partiel sombre en bas gauche
+Colonne 1 : Logo BLOQ5 blanc + "5" jaune + "Carte professionnelle : n°CPI 6901 2019 000 039 604"
+Colonne 2 — Nos services : Gestion locative · Gestion de colocations · Gestion nourrice · BLOQ5 ULTRA · Tarifs
+Colonne 3 — Nos outils : Estimation de loyer · Générateur d'avis d'échéance · Générateur de quittance · Aide/FAQ
+Colonne 4 — Société : Partenaires · Presse · Recrutement · Politique cookies · Politique confidentialité · Mentions légales · Conditions générales d'utilisation
+Titres en blanc gras, liens en gris #999, hover en jaune #F5A623
