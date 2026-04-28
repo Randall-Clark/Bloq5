@@ -164,21 +164,44 @@ export default function PropertiesPage() {
   const [searchInput, setSearchInput] = useState(city);
   const [filterType,  setFilterType]  = useState(typeFromUrl || "all");
   const [currentPage, setCurrentPage] = useState(1);
-  const TOTAL_PAGES = 5;
+
+  const ITEMS_PER_PAGE = 12; /* 4 lignes × 3 colonnes */
+
+  /* Réinitialise la page quand les filtres changent */
+  const handleFilterType = (v: string) => {
+    setFilterType(v === filterType ? "all" : v);
+    setCurrentPage(1);
+  };
 
   /* API call */
   const { data } = useListProperties({
     city: cityFromUrl || undefined,
     type: (filterType !== "all" ? filterType : undefined) as any,
-    limit: 11,
+    limit: ITEMS_PER_PAGE,
     page: currentPage,
   });
 
   /* Merge API data with static fallbacks */
-  const apiProps = data?.data ?? [];
-  const total    = data?.total ?? 100;
+  const apiProps   = data?.data ?? [];
+  const total      = data?.total ?? 100;
+  const totalPages = data?.totalPages ?? Math.ceil(total / ITEMS_PER_PAGE);
 
-  const displayCards = Array.from({ length: 11 }, (_, i) => {
+  /* Page numbers visible dans la pagination (fenêtre glissante max 5) */
+  function getPageNumbers(current: number, total: number): (number | "...")[] {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: (number | "...")[] = [];
+    const left  = Math.max(2, current - 1);
+    const right = Math.min(total - 1, current + 1);
+    pages.push(1);
+    if (left > 2) pages.push("...");
+    for (let i = left; i <= right; i++) pages.push(i);
+    if (right < total - 1) pages.push("...");
+    pages.push(total);
+    return pages;
+  }
+  const pageNumbers = getPageNumbers(currentPage, totalPages);
+
+  const displayCards = Array.from({ length: ITEMS_PER_PAGE }, (_, i) => {
     const ap = apiProps[i];
     return {
       idx:   i,
@@ -321,7 +344,7 @@ export default function PropertiesPage() {
           ].map((cat) => (
             <button
               key={cat.v}
-              onClick={() => setFilterType(cat.v === filterType ? "all" : cat.v)}
+              onClick={() => handleFilterType(cat.v)}
               className={`filter-btn flex items-center gap-1.5 ${filterType === cat.v ? "active" : ""}`}
             >
               <cat.icon className="w-3.5 h-3.5" />
@@ -342,37 +365,43 @@ export default function PropertiesPage() {
           ))}
         </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-center gap-1 mb-14">
-          <button
-            className="page-btn flex items-center gap-0.5 px-3 text-sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            style={{ color: currentPage === 1 ? "#CCC" : "#1A1A1A", width: "auto" }}
-          >
-            <ChevronLeft className="w-4 h-4" /> Précédent
-          </button>
-
-          {Array.from({ length: TOTAL_PAGES }, (_, i) => i + 1).map((n) => (
+        {/* Pagination — affichée seulement si plusieurs pages */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-1 mb-14">
             <button
-              key={n}
-              className={`page-btn ${n === currentPage ? "active" : ""}`}
-              onClick={() => setCurrentPage(n)}
-              style={n === currentPage ? { color: YELLOW } : { color: "#1A1A1A" }}
+              className="page-btn flex items-center gap-0.5 px-3 text-sm"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              style={{ color: currentPage === 1 ? "#CCC" : "#1A1A1A", width: "auto" }}
             >
-              {n}
+              <ChevronLeft className="w-4 h-4" /> Précédent
             </button>
-          ))}
 
-          <button
-            className="page-btn flex items-center gap-0.5 px-3 text-sm"
-            disabled={currentPage === TOTAL_PAGES}
-            onClick={() => setCurrentPage((p) => Math.min(TOTAL_PAGES, p + 1))}
-            style={{ color: currentPage === TOTAL_PAGES ? "#CCC" : "#1A1A1A", width: "auto" }}
-          >
-            Suivant <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+            {pageNumbers.map((n, i) =>
+              n === "..." ? (
+                <span key={`ellipsis-${i}`} className="px-1 text-gray-400 text-sm select-none">…</span>
+              ) : (
+                <button
+                  key={n}
+                  className={`page-btn ${n === currentPage ? "active" : ""}`}
+                  onClick={() => setCurrentPage(n as number)}
+                  style={n === currentPage ? { color: YELLOW } : { color: "#1A1A1A" }}
+                >
+                  {n}
+                </button>
+              )
+            )}
+
+            <button
+              className="page-btn flex items-center gap-0.5 px-3 text-sm"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              style={{ color: currentPage === totalPages ? "#CCC" : "#1A1A1A", width: "auto" }}
+            >
+              Suivant <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ─── CTA PROPRIÉTAIRE ─── */}
