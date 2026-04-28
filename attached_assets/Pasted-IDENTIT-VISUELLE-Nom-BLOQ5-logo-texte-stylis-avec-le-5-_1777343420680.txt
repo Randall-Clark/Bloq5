@@ -1,0 +1,102 @@
+IDENTITÉ VISUELLE
+
+Nom : BLOQ5 (logo texte stylisé avec le "5" en accent)
+Couleur principale : jaune #F5A623 (jaune légèrement plus clair que le logo Home Depot #F96302, version dorée chaude) — remplace TOUT violet/purple par cette couleur
+Couleur secondaire : blanc #FFFFFF et gris très clair #F8F8F8 pour les fonds de sections
+Texte principal : #1A1A1A
+Boutons CTA principaux : fond jaune #F5A623, texte blanc ou noir foncé selon le contraste
+Accents/badges : jaune #F5A623 avec texte #1A1A1A
+
+
+STRUCTURE DE LA PAGE (de haut en bas)
+1. NAVBAR
+
+Logo BLOQ5 à gauche (texte stylisé, "5" en jaune)
+Liens de navigation : Biens à louer · À propos · Articles · Contact
+Icône loupe (recherche) + bouton "Se connecter" (outline) + bouton CTA "Vous êtes propriétaire ?" (fond jaune, texte foncé, coins arrondis)
+
+2. HERO SECTION
+
+Fond : grande image lifestyle d'intérieur d'appartement chaleureux (pleine largeur, légèrement assombrie)
+Titre principal centré : "Visitez & louez depuis chez vous !" (mot "louez" en jaune cursif/italic)
+Sous-titre en blanc
+Grande barre de recherche blanche avec champ texte "Rechercher une ville, une école…" + bouton de recherche jaune
+Badges de villes populaires sous la barre : Paris · Lyon · Lille · Bordeaux · Toulouse · Strasbourg
+Logo partenaire "Le Journal de TF1" en bas gauche (badge blanc)
+Pastille "BLOQ5, votre plateforme de colocation 100% en ligne" en haut de la section, fond blanc
+
+3. SECTION "Nos derniers biens à louer"
+
+Titre : "Nos derniers biens à louer" (mot "louer" souligné en jaune)
+Sous-titre : "Location ou colocation meublée, découvrez nos derniers appartements !"
+Grille de 6 cartes de logements (2 rangées × 3 colonnes) :
+
+Chaque carte : photo du logement, badge "Disponible" (vert), titre (ex: "Appartement Studio – location meublée"), icônes chambre/salle de bain/surface, ville + prix/mois en gras jaune, bouton "Mois €"
+Prix exemples : 550€, 370€, 350€, 730€, 490€, 500€
+Villes : Tours, Grenoble, Nancy, Villeneuve-d'Ascq, Nouvelle-Vilaine m., Rouen
+
+
+Bouton centré sous la grille : "8000 biens à découvrir — Voir tous les biens" (outline jaune)
+
+4. SECTION "Comment ça marche ?"
+
+Titre à gauche : "Comment ça marche ?"
+Sous-titre : "BLOQ5, la solution la plus simple et rapide pour trouver sa location meublée."
+4 étapes en grille 2×2, chacune avec une icône colorée ronde et un texte :
+
+🔍 "Je sélectionne mon bien" — Parmi les biens du catalogue
+📁 "Je dépose mon dossier" — Déposez votre dossier directement
+✍️ "Je signe mes documents" — Signez tous vos documents en ligne grâce à DocuSign®
+🏠 "Je réalise mon état des lieux" — BLOQ5 réalise avec vous un état des lieux physique
+
+
+
+5. SECTION "Nos villes coup de cœur"
+
+Fond blanc
+Titre centré : "Nos villes coup de cœur" (accent en jaune)
+Sous-titre : "BLOQ5 : gestion locative dans les plus grandes métropoles françaises."
+Grille de 8 villes avec photo circulaire et nom en dessous : Paris · Lyon · Lille · Bordeaux · Toulouse · Angoulême · Strasbourg · Avignon
+Bouton centré : "Voir toutes les villes" (outline jaune)
+
+6. SECTION DOUBLE CTA
+
+Deux blocs côte à côte :
+
+Gauche (fond crème/beige clair) : "BLOQ5 Solo — Trouvez votre prochain locataire avec nous." + 3 arguments avec coches vertes + bouton "Déposer une annonce" (fond jaune)
+Droite (fond jaune #F5A623) : "BLOQ5 Plus — Optez pour la tranquillité totale, au meilleur prix" + texte + 3 items avec icônes + bouton "Vous êtes propriétaire ?" (fond foncé, texte blanc)
+
+
+
+7. SECTION "BLOQ5 bien entourée"
+
+Titre : "BLOQ5 bien entourée"
+Texte : soutenu par la Banque Publique d'Investissement et labellisé French Tech & Lyon Startup, BLOQ5 accompagnée depuis [année]
+Logos partenaires : bpifrance · La French Tech · Real Estech
+Bouton : "En savoir +" (outline)
+
+8. SECTION ARTICLES
+
+Titre : "L'actu immobilière de BLOQ5" + bouton "Tous les articles" (à droite)
+Sous-titre : "Tous les conseils pour vos logements et votre déménagement"
+3 cartes articles :
+
+"Pourquoi investir dans une colocation ?" (catégorie : Investissement)
+"Baromètre de la colocation 2025" (catégorie : Baromètre)
+"Vivre à Lyon" (catégorie : City Guide)
+
+
+
+9. FOOTER
+
+Fond très sombre #1A1A1A
+Colonne gauche : Logo BLOQ5 + "Carte professionnelle : n°CIN 4567 219-005-539-504" + "Gestion locative, BLOQ5 ULTRA, Tarifs"
+3 colonnes de liens :
+
+Nos services : Gestion locative, Estimation en ligne, Gestion de colocations, Gestion routine, BLOQ5 ULTRA, Tarifs
+Nos outils : Générateur de bail, Générateur d'architectures, Générateur de quittance, AcroFAQ
+Société : Références, Presse, Recrutement, Politique cookies, Politique confidentialité, Mentions légales, CGU / Conditions d'utilisation
+
+
+Liens SEO en bas : Location appartement / Appartements meublés / Appartements en colocation / Appartements en coliving — avec sous-liens de villes
+Tout le texte en gris clair sur fond sombre
