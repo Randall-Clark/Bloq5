@@ -1,0 +1,59 @@
+la page de sélection des villes disponibles. Design épuré, moderne, fond blanc, couleur principale jaune #F5A623.
+
+NAVBAR (identique au site principal)
+
+Logo BLOQ5 à gauche (texte gras, "5" en jaune #F5A623)
+Liens : Biens à louer · À propos · Articles · Contact
+Droite : bouton "Référence" (outline avec icône loupe) + "Se connecter" (texte) + "Vous êtes propriétaire ▾" (fond jaune #F5A623, texte foncé, coins arrondis, flèche dropdown)
+
+
+SECTION HERO TEXTE
+
+Pas d'image de fond — fond blanc pur
+Éléments décoratifs géométriques en losange sur les côtés gauche et droit (photos de villes/appartements découpées en forme de losange/diamant, légèrement transparentes) — effet purement décoratif
+Titre à gauche (pas centré) : "BLOQ5 vous propose des biens à travers toute la France !" — le mot "BLOQ5" en gras avec le style logo, reste du titre en noir #1A1A1A, taille ~32px
+Sous-titre : "Une gestion locative dans les plus grandes métropoles." en gris #666
+
+
+GRILLE DES VILLES
+
+Centrée dans la page, largeur ~700px max
+Grille de 4 colonnes × 5 rangées + 1 rangée de 2 cartes centrées en bas
+18 villes au total : Paris, Lyon, Lille, Bordeaux, Toulouse, Angoulême, Caen, Tours, Angers, Grenoble, Bourgoin-Jaillieu, Mulhouse, Avignon, Chambéry, Pau, Nice, Marseille, Annemasse
+Chaque carte de ville :
+
+Taille : ~155px × 100px
+Photo de la ville en fond (utiliser https://picsum.photos/seed/[nomville]/155/100)
+Overlay sombre léger au survol
+Bouton + rond blanc en bas à droite (24px, semi-transparent, icône + en gris foncé) — affiché en permanence
+Nom de la ville en texte noir #1A1A1A, 13px, centré en dessous de la carte
+Bordure légère 1px solid #E8E8E8, border-radius 8px sur la photo
+Légère ombre portée sur la carte au survol (box-shadow)
+Curseur pointer, transition douce au hover
+
+
+
+
+SECTION CTA PROPRIÉTAIRE
+
+Fond blanc cassé / gris très clair #F5F5F5, border-radius 16px, padding généreux, centré avec marges latérales ~60px
+Layout : texte à gauche, illustration à droite
+Texte gauche :
+
+Titre : "Propriétaire, louez votre bien rapidement !" avec soulignement court en jaune #F5A623 sous "rapidement !"
+Paragraphe : "Plus de 2500 clients, propriétaires et locataires, nous recommandent pour notre réactivité et notre efficacité. Grâce à leur confiance, nous gérons aujourd'hui plus de 8000 lots répartis dans plus de 40 métropoles en France."
+Bouton : "Vous êtes propriétaire ?" — fond jaune #F5A623, texte blanc ou foncé, border-radius 24px, padding 12px 24px
+
+
+Illustration droite : illustration isométrique d'un immeuble/bâtiment en jaune #F5A623 et blanc (dessinée en SVG inline — bâtiment simple avec fenêtres, toit, personnes stylisées devant)
+
+
+FOOTER
+
+Fond très sombre #1A1A1A, texte blanc/gris clair
+Ligne du haut : grand élément décoratif circulaire sombre en bas gauche (cercle partiel, juste décoratif)
+Colonne 1 : Logo BLOQ5 (texte blanc, "5" en jaune) + "Carte professionnelle : n°CPI 6901 2019 000 039 604"
+Colonne 2 — Nos services : Gestion locative · Gestion de colocations · Gestion nourrice · BLOQ5 ULTRA · Tarifs
+Colonne 3 — Nos outils : Estimation de loyer · Générateur d'avis d'échéance · Générateur de quittance · Aide/FAQ
+Colonne 4 — Société : Partenaires · Presse · Recrutement · Politique cookies · Politique confidentialité · Mentions légales · Conditions générales d'utilisation
+Titres de colonnes en blanc gras, liens en gris #999, hover en jaune #F5A623

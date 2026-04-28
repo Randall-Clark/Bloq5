@@ -478,7 +478,7 @@ export default function HomePage() {
           </div>
 
           <div className="text-center mt-10">
-            <Link href="/properties">
+            <Link href="/cities">
               <button className="btn-outline-yellow text-sm px-8 py-3">
                 Des milliers de biens disponibles — Voir toutes les annonces <ChevronRight className="w-4 h-4" />
               </button>

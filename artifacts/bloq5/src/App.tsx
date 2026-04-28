@@ -18,6 +18,7 @@ import ProfileRequestDetailPage from "@/pages/profile-request-detail";
 import ProfileFavoritesPage from "@/pages/profile-favorites";
 import ProfileVisitsPage from "@/pages/profile-visits";
 import ProPricingPage from "@/pages/pro-pricing";
+import CitiesPage from "@/pages/cities";
 import ProDashboardPage from "@/pages/pro-dashboard";
 import ProPropertiesPage from "@/pages/pro-properties";
 import ProPropertyNewPage from "@/pages/pro-property-new";
@@ -187,6 +188,7 @@ function ClerkProviderWithRoutes() {
         <Switch>
           {/* Public Routes */}
           <Route path="/" component={HomeRedirect} />
+          <Route path="/cities" component={CitiesPage} />
           <Route path="/properties" component={PropertiesPage} />
           <Route path="/properties/:id" component={PropertyDetailPage} />
           <Route path="/pro" component={ProPricingPage} />
