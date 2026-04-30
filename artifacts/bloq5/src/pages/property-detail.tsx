@@ -46,7 +46,7 @@ function Navbar() {
           </Link>
           <Link href="/sign-up">
             <button className="text-sm font-semibold px-4 py-2 rounded-md flex items-center gap-1" style={{ background: YELLOW, color: "#1A1A1A" }}>
-              Vous êtes propriétaire <ChevronDown className="w-4 h-4" />
+              Vous êtes propriétaire ?
             </button>
           </Link>
         </div>

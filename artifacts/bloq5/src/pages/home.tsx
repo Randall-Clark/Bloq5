@@ -203,7 +203,7 @@ export default function HomePage() {
               Se connecter
             </Link>
             <Link href="/sign-up" className="btn-yellow text-sm">
-              Vous êtes propriétaire <ChevronDown className="w-4 h-4" />
+              Vous êtes propriétaire ?
             </Link>
           </div>
         </div>

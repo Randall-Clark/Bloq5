@@ -265,7 +265,7 @@ export default function PropertiesPage() {
               Se connecter
             </Link>
             <Link href="/sign-up" className="flex items-center gap-1.5 text-sm font-bold rounded-md px-4 py-2 hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
-              Vous êtes propriétaire <ChevronDown className="w-4 h-4" />
+              Vous êtes propriétaire ?
             </Link>
           </div>
         </div>
