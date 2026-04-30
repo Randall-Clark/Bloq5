@@ -5,41 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronDown, MapPin, Bed, Bath, Send, ArrowLeft, CheckCircle } from "lucide-react";
+import { MapPin, Bed, Bath, Send, ArrowLeft, CheckCircle } from "lucide-react";
+import { PublicNavbar } from "@/components/public-navbar";
 
 const YELLOW = "#F5A623";
-
-function Navbar() {
-  return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
-        <div className="flex items-center gap-8">
-          <Link href="/">
-            <span className="text-2xl font-black" style={{ color: "#1A1A1A" }}>
-              BLOQ<span style={{ color: YELLOW }}>5</span>
-            </span>
-          </Link>
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-            <Link href="/cities" className="hover:text-gray-900 transition-colors">Biens à louer</Link>
-            <a href="#" className="hover:text-gray-900 transition-colors">À propos</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">Articles</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">Contact</a>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/sign-in" className="text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-4 py-2 hover:bg-gray-50 transition-colors">
-            Se connecter
-          </Link>
-          <Link href="/sign-up">
-            <button className="text-sm font-semibold px-4 py-2 rounded-md flex items-center gap-1" style={{ background: YELLOW, color: "#1A1A1A" }}>
-              Vous êtes propriétaire ?
-            </button>
-          </Link>
-        </div>
-      </div>
-    </nav>
-  );
-}
 
 export default function PropertyDossierPage() {
   const [, params] = useRoute("/properties/:id/dossier");
@@ -76,9 +45,9 @@ export default function PropertyDossierPage() {
 
   return (
     <div className="bg-white min-h-screen">
-      <Navbar />
+      <PublicNavbar />
 
-      <div className="max-w-3xl mx-auto px-6 py-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Back link */}
         <Link href={`/properties/${id}`}>
           <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors mb-6">

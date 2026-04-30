@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useListProperties } from "@workspace/api-client-react";
 import { useLocation_ } from "@/context/location-context";
 import { countryPrep } from "@/data/countries";
+import { PublicNavbar } from "@/components/public-navbar";
 import {
   Search, Bell, ChevronDown, ChevronLeft, ChevronRight,
   Bed, Bath, Maximize2, MapPin, Home, Building2, Users,
@@ -247,46 +248,24 @@ export default function PropertiesPage() {
       `}</style>
 
       {/* ─── NAVBAR ─── */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="text-2xl font-black tracking-tight" style={{ color: "#1A1A1A" }}>
-              BLOQ<span style={{ color: YELLOW }}>5</span>
-            </Link>
-            <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-              <Link href="/cities" className="font-semibold" style={{ color: YELLOW }}>Biens à louer</Link>
-              <a href="#" className="hover:text-gray-900">À propos</a>
-              <a href="#" className="hover:text-gray-900">Articles</a>
-              <a href="#" className="hover:text-gray-900">Contact</a>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/sign-in" className="text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-4 py-2 hover:bg-gray-50">
-              Se connecter
-            </Link>
-            <Link href="/sign-up" className="flex items-center gap-1.5 text-sm font-bold rounded-md px-4 py-2 hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
-              Vous êtes propriétaire ?
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <PublicNavbar activeItem="biens" />
 
       {/* ─── SECONDARY SEARCH BAR ─── */}
       <div className="bg-white sticky top-16 z-40" style={{ borderBottom: "1px solid #E8E8E8" }}>
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-3 flex-wrap">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-2 sm:gap-3 flex-wrap">
           {/* Search input */}
-          <div className="flex items-stretch flex-1 min-w-[200px] max-w-sm rounded-lg overflow-hidden border border-gray-200">
+          <div className="flex items-stretch flex-1 min-w-0 max-w-sm rounded-lg overflow-hidden border border-gray-200">
             <div className="flex items-center px-3 bg-white">
               <Search className="w-4 h-4 text-gray-400" />
             </div>
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Rechercher une ville, une école…"
-              className="flex-1 py-2 text-sm text-gray-700 placeholder-gray-400 outline-none bg-white"
+              placeholder="Ville, quartier…"
+              className="flex-1 py-2 text-sm text-gray-700 placeholder-gray-400 outline-none bg-white min-w-0"
             />
             <button
-              className="px-4 flex items-center"
+              className="px-3 sm:px-4 flex items-center"
               style={{ background: YELLOW }}
               onClick={() => {
                 const url = new URL(window.location.href);
@@ -299,31 +278,35 @@ export default function PropertiesPage() {
             </button>
           </div>
 
-          {/* Filter pills */}
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Filter pills — hide some on mobile */}
+          <div className="hidden sm:flex items-center gap-2 flex-wrap">
             {[
               { label: "Type de bien", value: "type" },
               { label: "Meublé ?", value: "furnished" },
               { label: "Loyer", value: "price" },
               { label: "Nb de pièces", value: "rooms" },
-              { label: "+ de filtres", value: "more" },
             ].map((f) => (
               <button key={f.value} className="filter-btn">{f.label} <ChevronDown className="w-3 h-3 inline" /></button>
             ))}
           </div>
+          <button className="sm:hidden filter-btn flex items-center gap-1">
+            <ChevronDown className="w-3 h-3" /> Filtres
+          </button>
 
           {/* Alert button */}
           <button
-            className="flex items-center gap-1.5 text-sm font-semibold rounded-full px-4 py-2 ml-auto flex-shrink-0"
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold rounded-full px-3 sm:px-4 py-2 ml-auto flex-shrink-0"
             style={{ background: YELLOW, color: "#1A1A1A" }}
           >
-            <Bell className="w-4 h-4" /> Créer une alerte
+            <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span className="hidden sm:inline">Créer une alerte</span>
+            <span className="sm:hidden">Alerte</span>
           </button>
         </div>
       </div>
 
       {/* ─── MAIN CONTENT ─── */}
-      <div className="max-w-7xl mx-auto px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
 
         {/* Breadcrumb */}
         <nav className="text-xs text-gray-400 mb-5 flex items-center gap-1 flex-wrap">
@@ -337,13 +320,13 @@ export default function PropertiesPage() {
         </nav>
 
         {/* Results header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-extrabold" style={{ color: "#1A1A1A" }}>
-            Toutes les locations à <span style={{ color: "#1A1A1A" }}>{city}</span>{" "}
-            <span className="text-base font-normal text-gray-400">(toute la ville)</span>
+        <div className="flex items-start sm:items-center justify-between mb-4 sm:mb-6 gap-2">
+          <h1 className="text-lg sm:text-2xl font-extrabold leading-tight" style={{ color: "#1A1A1A" }}>
+            Locations à <span>{city}</span>{" "}
+            <span className="text-sm font-normal text-gray-400 block sm:inline">(toute la ville)</span>
           </h1>
-          <span className="text-sm font-bold" style={{ color: YELLOW }}>
-            {total} locations
+          <span className="text-sm font-bold flex-shrink-0" style={{ color: YELLOW }}>
+            {total} biens
           </span>
         </div>
 

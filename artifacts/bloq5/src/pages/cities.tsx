@@ -1,7 +1,8 @@
 import { Link, useLocation, useSearch } from "wouter";
-import { Search, ChevronDown, MapPin, Plus } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 import { useLocation_ } from "@/context/location-context";
 import { countryPrep } from "@/data/countries";
+import { PublicNavbar } from "@/components/public-navbar";
 
 const YELLOW = "#F5A623";
 
@@ -111,34 +112,12 @@ export default function CitiesPage() {
       `}</style>
 
       {/* ─── NAVBAR ─── */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="text-2xl font-black tracking-tight" style={{ color: "#1A1A1A" }}>
-              BLOQ<span style={{ color: YELLOW }}>5</span>
-            </Link>
-            <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-              <Link href="/cities" className="font-semibold" style={{ color: YELLOW }}>Biens à louer</Link>
-              <a href="#" className="hover:text-gray-900 transition-colors">À propos</a>
-              <a href="#" className="hover:text-gray-900 transition-colors">Articles</a>
-              <a href="#" className="hover:text-gray-900 transition-colors">Contact</a>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/sign-in" className="text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-4 py-2 hover:bg-gray-50 transition-colors">
-              Se connecter
-            </Link>
-            <Link href="/sign-up" className="flex items-center gap-1.5 text-sm font-bold rounded-md px-4 py-2 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
-              Vous êtes propriétaire ?
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <PublicNavbar activeItem="biens" />
 
       {/* ─── HERO ─── */}
-      <section className="relative bg-white overflow-hidden py-16 px-6">
-        {/* Left diamond decorations */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col gap-4 -translate-x-10 pointer-events-none select-none">
+      <section className="relative bg-white overflow-hidden py-10 md:py-16 px-4 sm:px-6">
+        {/* Left diamond decorations — hidden on mobile */}
+        <div className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 flex-col gap-4 -translate-x-10 pointer-events-none select-none">
           {[DIAMONDS[0], DIAMONDS[1]].map((src, i) => (
             <div
               key={i}
@@ -153,8 +132,8 @@ export default function CitiesPage() {
           ))}
         </div>
 
-        {/* Right diamond decorations */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col gap-4 translate-x-10 pointer-events-none select-none">
+        {/* Right diamond decorations — hidden on mobile */}
+        <div className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 flex-col gap-4 translate-x-10 pointer-events-none select-none">
           {[DIAMONDS[2], DIAMONDS[3]].map((src, i) => (
             <div
               key={i}
@@ -198,17 +177,17 @@ export default function CitiesPage() {
       </section>
 
       {/* ─── CITY GRID ─── */}
-      <section className="pb-16 px-6">
+      <section className="pb-12 md:pb-16 px-4 sm:px-6">
         <div className="max-w-[720px] mx-auto">
-          {/* 4 × 4 grid */}
-          <div className="grid grid-cols-4 gap-4 mb-4">
+          {/* Responsive grid: 2 cols on mobile, 3 on sm, 4 on md+ */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-4">
             {main.map((city) => (
               <CityCard key={city.name} city={city} onClick={() => goToCity(city.name)} />
             ))}
           </div>
 
-          {/* Last 2 centred */}
-          <div className="flex justify-center gap-4">
+          {/* Last row centred */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:flex md:justify-center gap-3 md:gap-4">
             {tail.map((city) => (
               <CityCard key={city.name} city={city} onClick={() => goToCity(city.name)} />
             ))}

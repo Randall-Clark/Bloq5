@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useGetFeaturedProperties } from "@workspace/api-client-react";
 import { useLocation_ } from "@/context/location-context";
+import { PublicNavbar } from "@/components/public-navbar";
 import {
   Search, ChevronDown, Bed, Bath, Maximize2, MapPin,
   CheckCircle, FileText, PenLine, ClipboardList, ChevronRight,
@@ -185,29 +186,7 @@ export default function HomePage() {
       `}</style>
 
       {/* ─── NAVBAR ─── */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="text-2xl font-black tracking-tight" style={{ color: "#1A1A1A" }}>
-              BLOQ<span style={{ color: YELLOW }}>5</span>
-            </Link>
-            <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-              <Link href="/cities" className="hover:text-gray-900 transition-colors">Biens à louer</Link>
-              <a href="#" className="hover:text-gray-900 transition-colors">À propos</a>
-              <a href="#" className="hover:text-gray-900 transition-colors">Articles</a>
-              <a href="#" className="hover:text-gray-900 transition-colors">Contact</a>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link href="/sign-in" className="text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-4 py-2 hover:bg-gray-50 transition-colors">
-              Se connecter
-            </Link>
-            <Link href="/sign-up" className="btn-yellow text-sm">
-              Vous êtes propriétaire ?
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <PublicNavbar />
 
       {/* ─── HERO ─── */}
       <section
@@ -221,7 +200,7 @@ export default function HomePage() {
       >
         <div className="absolute inset-0 bg-black/45" />
 
-        <div className="relative z-10 w-full max-w-5xl mx-auto px-6 py-14 text-center">
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 py-10 md:py-14 text-center">
           {/* Badge */}
           <p className="text-white/80 text-sm font-medium mb-5">
             <span style={{ color: YELLOW }} className="mr-1 text-base">✳</span>
@@ -236,7 +215,8 @@ export default function HomePage() {
 
           {/* ── Search bar ── */}
           <div className="max-w-4xl mx-auto mb-4">
-            <div className="flex items-stretch bg-white rounded-xl overflow-hidden shadow-2xl">
+            {/* Desktop: horizontal bar */}
+            <div className="hidden md:flex items-stretch bg-white rounded-xl overflow-hidden shadow-2xl">
               {/* Localisation */}
               <div className="flex items-center flex-1 px-5 py-4 border-r border-gray-200">
                 <MapPin className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
@@ -245,7 +225,6 @@ export default function HomePage() {
                   <input type="text" placeholder="Ville, quartier, code postal…" className="w-full text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent" />
                 </div>
               </div>
-
               {/* Type */}
               <div className="flex items-center px-5 py-4 border-r border-gray-200 hover:bg-gray-50 transition-colors">
                 <div className="text-left">
@@ -261,7 +240,6 @@ export default function HomePage() {
                   </select>
                 </div>
               </div>
-
               {/* Budget slider */}
               <div className="flex items-center px-5 py-4 border-r border-gray-200 min-w-[180px]">
                 <div className="w-full text-left">
@@ -280,7 +258,6 @@ export default function HomePage() {
                   />
                 </div>
               </div>
-
               {/* Filtres toggle */}
               <button
                 onClick={() => setShowFilters((s) => !s)}
@@ -291,12 +268,60 @@ export default function HomePage() {
                 Filtres
                 {showFilters ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               </button>
-
               {/* Search CTA */}
               <button className="flex items-center gap-2 px-7 text-sm font-bold transition-opacity hover:opacity-85 flex-shrink-0" style={{ background: YELLOW, color: "#1A1A1A" }}>
                 <Search className="w-5 h-5" />
                 Rechercher
               </button>
+            </div>
+
+            {/* Mobile: stacked card */}
+            <div className="md:hidden bg-white rounded-2xl shadow-2xl overflow-hidden">
+              <div className="flex items-center px-4 py-3.5 border-b border-gray-100">
+                <MapPin className="w-4 h-4 text-gray-400 mr-2.5 flex-shrink-0" />
+                <input type="text" placeholder="Ville, quartier, code postal…" className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none" />
+              </div>
+              <div className="flex items-center px-4 py-3 border-b border-gray-100">
+                <select className="flex-1 text-sm text-gray-700 outline-none bg-transparent cursor-pointer">
+                  <option value="">Tous types de bien</option>
+                  <option>Maison</option>
+                  <option>Appartement</option>
+                  <option>Condo</option>
+                  <option>Colocation</option>
+                  <option>Bureau</option>
+                  <option>Commercial</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              </div>
+              <div className="px-4 py-3 border-b border-gray-100">
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Budget max.</p>
+                  <span className="text-xs font-bold" style={{ color: YELLOW }}>{formatBudget(budget, currency.symbol)}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={BUDGET_STEPS}
+                  value={budgetSlider}
+                  onChange={(e) => setBudgetSlider(Number(e.target.value))}
+                  className="w-full"
+                  style={{ background: `linear-gradient(to right, ${YELLOW} 0%, ${YELLOW} ${(budgetSlider / BUDGET_STEPS) * 100}%, #E5E7EB ${(budgetSlider / BUDGET_STEPS) * 100}%, #E5E7EB 100%)` }}
+                />
+              </div>
+              <div className="flex items-center gap-2 p-3">
+                <button
+                  onClick={() => setShowFilters((s) => !s)}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 flex-1 justify-center"
+                  style={showFilters ? { background: YELLOW, color: "#1A1A1A", borderColor: YELLOW } : { color: "#374151" }}
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Filtres
+                </button>
+                <button className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                  <Search className="w-4 h-4" />
+                  Rechercher
+                </button>
+              </div>
             </div>
 
             {/* ── Expanded filter panel ── */}
@@ -527,7 +552,7 @@ export default function HomePage() {
           <p className="text-gray-500 text-sm mb-10">
             BLOQ5 est disponible dans les plus grandes métropoles {country.flag && <span>{country.flag} </span>}{country.name}.
           </p>
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-4 mb-8">
+          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 sm:gap-4 mb-8">
             {country.cities.slice(0, 8).map((city) => (
               <Link key={city.name} href={`/properties?city=${city.name}`}>
                 <div className="flex flex-col items-center gap-2 cursor-pointer group">

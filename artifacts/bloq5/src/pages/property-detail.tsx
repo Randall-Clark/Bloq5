@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
 import { useLocation_ } from "@/context/location-context";
+import { PublicNavbar } from "@/components/public-navbar";
 import {
   MapPin, Bed, Bath, Heart, Printer, Share2,
   ChevronDown, ChevronRight, ChevronLeft, X, Send,
@@ -23,37 +24,6 @@ import { Textarea } from "@/components/ui/textarea";
 
 const YELLOW = "#F5A623";
 
-function Navbar() {
-  return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
-        <div className="flex items-center gap-8">
-          <Link href="/">
-            <span className="text-2xl font-black" style={{ color: "#1A1A1A" }}>
-              BLOQ<span style={{ color: YELLOW }}>5</span>
-            </span>
-          </Link>
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-            <Link href="/cities" className="hover:text-gray-900 transition-colors">Biens à louer</Link>
-            <a href="#" className="hover:text-gray-900 transition-colors">À propos</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">Articles</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">Contact</a>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/sign-in" className="text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-4 py-2 hover:bg-gray-50 transition-colors">
-            Se connecter
-          </Link>
-          <Link href="/sign-up">
-            <button className="text-sm font-semibold px-4 py-2 rounded-md flex items-center gap-1" style={{ background: YELLOW, color: "#1A1A1A" }}>
-              Vous êtes propriétaire ?
-            </button>
-          </Link>
-        </div>
-      </div>
-    </nav>
-  );
-}
 
 function FloorPlanSVG() {
   return (
@@ -290,16 +260,16 @@ export default function PropertyDetailPage() {
   if (isLoading) {
     return (
       <>
-        <Navbar />
-        <div className="max-w-7xl mx-auto px-6 py-12 animate-pulse">
-          <div className="h-[480px] bg-gray-100 rounded-xl mb-10" />
-          <div className="flex gap-10">
+        <PublicNavbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 animate-pulse">
+          <div className="h-[280px] sm:h-[480px] bg-gray-100 rounded-xl mb-10" />
+          <div className="flex flex-col lg:flex-row gap-10">
             <div className="flex-[1.85] space-y-4">
               <div className="h-8 bg-gray-100 rounded w-3/4" />
               <div className="h-4 bg-gray-100 rounded w-1/2" />
               <div className="h-32 bg-gray-100 rounded" />
             </div>
-            <div className="w-80 h-96 bg-gray-100 rounded-2xl" />
+            <div className="w-full lg:w-80 h-48 lg:h-96 bg-gray-100 rounded-2xl" />
           </div>
         </div>
       </>
@@ -309,8 +279,8 @@ export default function PropertyDetailPage() {
   if (!property) {
     return (
       <>
-        <Navbar />
-        <div className="max-w-7xl mx-auto px-6 py-24 text-center">
+        <PublicNavbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-24 text-center">
           <h2 className="text-2xl font-bold mb-4" style={{ color: "#1A1A1A" }}>Bien introuvable</h2>
           <Link href="/properties">
             <button className="px-6 py-3 rounded-xl font-semibold text-sm" style={{ background: YELLOW, color: "#1A1A1A" }}>
@@ -342,7 +312,7 @@ export default function PropertyDetailPage() {
 
   return (
     <div className="bg-white min-h-screen">
-      <Navbar />
+      <PublicNavbar />
 
       {/* Lightbox */}
       {lightboxOpen && (
@@ -380,18 +350,29 @@ export default function PropertyDetailPage() {
       )}
 
       {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-2 text-xs text-gray-400">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-2 text-xs text-gray-400">
         <Link href="/" className="hover:text-gray-600">Accueil</Link>
         <ChevronRight className="w-3 h-3" />
         <Link href="/properties" className="hover:text-gray-600">Annonces</Link>
         <ChevronRight className="w-3 h-3" />
-        <span className="text-gray-600 font-medium truncate max-w-xs">{property.title}</span>
+        <span className="text-gray-600 font-medium truncate max-w-[160px] sm:max-w-xs">{property.title}</span>
       </div>
 
-      {/* Gallery */}
-      <div className="max-w-7xl mx-auto px-6 mb-10">
-        <div className="relative flex gap-2 rounded-xl overflow-hidden" style={{ height: 480 }}>
-          {/* Large photo */}
+      {/* Gallery — single photo on mobile, asymmetric mosaic on md+ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-6 md:mb-10">
+        {/* Mobile: single photo */}
+        <div className="md:hidden relative rounded-xl overflow-hidden cursor-pointer" style={{ height: 240 }}
+          onClick={() => { setLightboxIdx(0); setLightboxOpen(true); }}>
+          <img src={imgs[0]} alt="Photo principale" className="w-full h-full object-cover" />
+          <button
+            className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-white/85 backdrop-blur-sm text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow"
+            onClick={e => { e.stopPropagation(); setLightboxIdx(0); setLightboxOpen(true); }}
+          >
+            📷 {allImgs.length} photos
+          </button>
+        </div>
+        {/* Desktop: asymmetric mosaic */}
+        <div className="hidden md:flex relative gap-2 rounded-xl overflow-hidden" style={{ height: 480 }}>
           <div className="relative flex-[1.6] rounded-xl overflow-hidden cursor-pointer" onClick={() => { setLightboxIdx(0); setLightboxOpen(true); }}>
             <img src={imgs[0]} alt="Photo principale" className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500" />
             <button
@@ -401,7 +382,6 @@ export default function PropertyDetailPage() {
               📷 {allImgs.length} photos
             </button>
           </div>
-          {/* Mosaic col 1 */}
           <div className="flex flex-col gap-2 flex-1">
             {[imgs[1], imgs[2]].map((src, i) => (
               <div key={i} className="rounded-xl overflow-hidden flex-1 cursor-pointer" onClick={() => { setLightboxIdx(i + 1); setLightboxOpen(true); }}>
@@ -409,7 +389,6 @@ export default function PropertyDetailPage() {
               </div>
             ))}
           </div>
-          {/* Mosaic col 2 */}
           <div className="flex flex-col gap-2 flex-1">
             {[imgs[3], imgs[4]].map((src, i) => (
               <div key={i} className="rounded-xl overflow-hidden flex-1 cursor-pointer" onClick={() => { setLightboxIdx(i + 3); setLightboxOpen(true); }}>
@@ -420,9 +399,24 @@ export default function PropertyDetailPage() {
         </div>
       </div>
 
+      {/* Mobile sticky bottom CTA */}
+      {isAvailable && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 flex items-center gap-3 shadow-lg">
+          <div className="flex-1">
+            <span className="text-xl font-extrabold" style={{ color: "#1A1A1A" }}>{price} CA$</span>
+            <span className="text-gray-400 text-xs">/mois</span>
+          </div>
+          <Link href={`/properties/${id}/dossier`} className="flex-shrink-0">
+            <button className="py-3 px-5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
+              Déposer ma candidature
+            </button>
+          </Link>
+        </div>
+      )}
+
       {/* Two-column layout */}
-      <div className="max-w-7xl mx-auto px-6 pb-20">
-        <div className="flex gap-10 items-start">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24 lg:pb-20">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 items-start">
 
           {/* ═══ LEFT COL ═══ */}
           <div className="flex-[1.85] min-w-0">
@@ -483,7 +477,7 @@ export default function PropertyDetailPage() {
             <section className="mb-8">
               <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Informations détaillées</h2>
               {/* Info items grid */}
-              <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
                 {[
                   { icon: MapPin, label: `${area} m²`, sublabel: "Superficie" },
                   { icon: Bed, label: `${beds} chambre${beds > 1 ? "s" : ""}`, sublabel: "Chambres" },
@@ -502,7 +496,7 @@ export default function PropertyDetailPage() {
               </div>
               {/* Ce qui est inclus */}
               <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-3">Ce qui est inclus</p>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {CHARGES_ITEMS.map(({ icon: Icon, label }) => (
                   <div key={label} className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3">
                     <Icon className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
@@ -636,8 +630,8 @@ export default function PropertyDetailPage() {
 
           </div>
 
-          {/* ═══ RIGHT COL sticky ═══ */}
-          <div className="w-80 shrink-0 sticky top-20">
+          {/* ═══ RIGHT COL sticky — hidden on mobile (bottom bar shows instead) ═══ */}
+          <div className="hidden lg:block w-80 shrink-0 sticky top-20">
             <div className="rounded-2xl border border-gray-200 shadow-lg bg-white p-6">
               {/* Price */}
               <div className="mb-1">
