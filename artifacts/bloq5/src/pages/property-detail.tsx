@@ -5,11 +5,16 @@ import {
 } from "@workspace/api-client-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Calendar } from "@/components/ui/calendar";
+import { useLocation_ } from "@/context/location-context";
 import {
-  MapPin, Bed, Bath, Maximize2, Heart, ArrowLeftRight, Printer, Share2,
-  Camera, RotateCcw, ChevronDown, ChevronUp, Send, Calendar,
-  Flame, Wifi, Droplets, Zap, Trash2, Wind, CheckCircle,
-  FileText, Download, Car, ChevronRight, Search, ArrowLeft
+  MapPin, Bed, Bath, Heart, Printer, Share2,
+  ChevronDown, ChevronRight, ChevronLeft, X, Send,
+  FileText, Download, Car,
+  Flame, Wifi, Droplets, Zap, Trash2, Wind,
+  AlertCircle, HeartPulse, Key, Camera, Shirt, Layers, Wand2, Tv, Snowflake, Coffee,
+  GraduationCap, BookOpen, Train, ShoppingCart, Dumbbell, Store, TreePine,
+  CheckCircle, Info, ArrowLeft, ArrowRight, type LucideProps
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -36,15 +41,12 @@ function Navbar() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="hidden md:flex items-center gap-2 text-gray-600 text-sm font-medium border border-gray-300 rounded-full px-4 py-2 hover:border-gray-400 transition-colors">
-            <Search className="w-3.5 h-3.5" /> Référence
-          </button>
           <Link href="/sign-in" className="text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-4 py-2 hover:bg-gray-50 transition-colors">
             Se connecter
           </Link>
           <Link href="/sign-up">
             <button className="text-sm font-semibold px-4 py-2 rounded-md flex items-center gap-1" style={{ background: YELLOW, color: "#1A1A1A" }}>
-              Vous êtes propriétaire ? <ChevronDown className="w-4 h-4" />
+              Vous êtes propriétaire <ChevronDown className="w-4 h-4" />
             </button>
           </Link>
         </div>
@@ -56,30 +58,213 @@ function Navbar() {
 function FloorPlanSVG() {
   return (
     <svg viewBox="0 0 400 280" className="w-full" style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 8 }}>
-      {/* Outer walls */}
       <rect x="20" y="20" width="360" height="240" fill="none" stroke="#1A1A1A" strokeWidth="3"/>
-      {/* Entrance */}
       <rect x="20" y="120" width="55" height="60" fill="#F8F8F8" stroke="#1A1A1A" strokeWidth="1.5"/>
       <text x="47" y="154" textAnchor="middle" fontSize="9" fill="#555">Entrée</text>
-      {/* Living room */}
       <rect x="75" y="20" width="150" height="120" fill="#F8F8F8" stroke="#1A1A1A" strokeWidth="1.5"/>
       <text x="150" y="84" textAnchor="middle" fontSize="10" fill="#555">Salon / Séjour</text>
-      {/* Kitchen */}
       <rect x="225" y="20" width="155" height="80" fill="#F8F8F8" stroke="#1A1A1A" strokeWidth="1.5"/>
       <text x="302" y="64" textAnchor="middle" fontSize="10" fill="#555">Cuisine</text>
-      {/* Bedroom 1 */}
       <rect x="75" y="140" width="110" height="120" fill="#F8F8F8" stroke="#1A1A1A" strokeWidth="1.5"/>
       <text x="130" y="204" textAnchor="middle" fontSize="10" fill="#555">Chambre 1</text>
-      {/* Bedroom 2 */}
       <rect x="185" y="140" width="105" height="120" fill="#F8F8F8" stroke="#1A1A1A" strokeWidth="1.5"/>
       <text x="237" y="204" textAnchor="middle" fontSize="10" fill="#555">Chambre 2</text>
-      {/* Bathroom */}
       <rect x="290" y="100" width="90" height="80" fill="#E8F4FD" stroke="#1A1A1A" strokeWidth="1.5"/>
       <text x="335" y="144" textAnchor="middle" fontSize="9" fill="#555">Salle de bain</text>
-      {/* Dimensions */}
       <text x="200" y="270" textAnchor="middle" fontSize="8" fill="#9CA3AF">← 12,5 m →</text>
       <text x="8" y="140" textAnchor="middle" fontSize="8" fill="#9CA3AF" transform="rotate(-90,8,140)">← 8,2 m →</text>
     </svg>
+  );
+}
+
+type IconComp = React.ComponentType<LucideProps>;
+const AMENITY_ICON_MAP: Record<string, IconComp> = {
+  "Détecteur de fumée": Flame,
+  "Détecteur de CO": AlertCircle,
+  "Trousse premiers soins": HeartPulse,
+  "Entrée autonome / boîte à clés": Key,
+  "Caméras sécurité extérieures": Camera,
+  "Cintres": Shirt,
+  "Literie fournie": Bed,
+  "Oreillers & couvertures": Layers,
+  "Fer à repasser": Wand2,
+  "Téléviseur câble standard": Tv,
+  "Réfrigérateur": Snowflake,
+  "Micro-ondes": Zap,
+  "Lave-vaisselle": Droplets,
+  "Machine à café": Coffee,
+};
+
+const NEARBY_ITEMS = [
+  { label: "École", val: "0,5 km", icon: GraduationCap },
+  { label: "Hôpital", val: "1,2 km", icon: HeartPulse },
+  { label: "Université", val: "0,8 km", icon: BookOpen },
+  { label: "Station de métro", val: "0,3 km", icon: Train },
+  { label: "Épicerie", val: "0,2 km", icon: ShoppingCart },
+  { label: "Gym / Bien-être", val: "0,9 km", icon: Dumbbell },
+  { label: "Marché", val: "0,7 km", icon: Store },
+  { label: "Parc", val: "0,4 km", icon: TreePine },
+];
+
+const CHARGES_ITEMS = [
+  { icon: Flame, label: "Chauffage" },
+  { icon: Zap, label: "Électricité" },
+  { icon: Trash2, label: "Taxes ordures" },
+  { icon: Droplets, label: "Eau chaude" },
+  { icon: Wind, label: "Eau courante" },
+  { icon: Wifi, label: "Internet Fibre" },
+];
+
+const STATIC_AMENITIES = [
+  "Détecteur de fumée", "Détecteur de CO", "Trousse premiers soins",
+  "Entrée autonome / boîte à clés", "Caméras sécurité extérieures", "Cintres",
+  "Literie fournie", "Oreillers & couvertures", "Fer à repasser",
+  "Téléviseur câble standard", "Réfrigérateur", "Micro-ondes",
+  "Lave-vaisselle", "Machine à café",
+];
+
+function getEarliestVisitDate(): Date {
+  const now = new Date();
+  const cutoff = 17;
+  const daysToAdd = now.getHours() >= cutoff ? 2 : 1;
+  const d = new Date(now);
+  d.setDate(d.getDate() + daysToAdd);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function VisitSchedulerDialog({ availableDates }: { availableDates?: string[] }) {
+  const [step, setStep] = useState<"intro" | "calendar" | "confirmed">("intro");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [howOpen, setHowOpen] = useState(false);
+  const { toast } = useToast();
+
+  const earliest = getEarliestVisitDate();
+  const now = new Date();
+  const cutoffPassed = now.getHours() >= 17;
+
+  const hasPreset = availableDates && availableDates.length > 0;
+
+  function isDateDisabled(date: Date): boolean {
+    if (date < earliest) return true;
+    if (hasPreset) {
+      const ds = date.toISOString().split("T")[0];
+      return !availableDates!.some(d => d.startsWith(ds));
+    }
+    return false;
+  }
+
+  function handleConfirmDate() {
+    if (!selectedDate) return;
+    toast({ title: "Visite planifiée !", description: `Votre visite est réservée pour le ${selectedDate.toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}.` });
+    setStep("confirmed");
+  }
+
+  return (
+    <DialogContent className="max-w-md">
+      <DialogHeader>
+        <DialogTitle className="text-base font-bold" style={{ color: "#1A1A1A" }}>Planifier une visite physique</DialogTitle>
+      </DialogHeader>
+
+      {step === "intro" && (
+        <div className="space-y-4 pt-1">
+          <p className="text-sm text-gray-600 leading-relaxed">
+            La visite virtuelle ne vous convainc pas vraiment ? Planifiez dès maintenant une rencontre en physique avec un de nos agents ou l'agent en charge du logement afin de vous rendre sur place ou échanger sur vos préoccupations.
+          </p>
+          <button
+            onClick={() => setStep("calendar")}
+            className="w-full py-3 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85"
+            style={{ background: YELLOW, color: "#1A1A1A" }}
+          >
+            Planifier une date
+          </button>
+          <button
+            onClick={() => setHowOpen(!howOpen)}
+            className="w-full flex items-center justify-between text-xs font-medium py-2 px-3 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            <span className="flex items-center gap-1.5"><Info className="w-3.5 h-3.5" /> Comment fonctionne la planification ?</span>
+            {howOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+          </button>
+          {howOpen && (
+            <div className="text-xs text-gray-500 leading-relaxed px-3 py-3 bg-gray-50 rounded-lg border border-gray-100 space-y-2">
+              <p>📅 <strong>Délai minimum :</strong> Toute demande de visite doit être effectuée <strong>la veille avant 17h</strong> pour que l'agent en charge puisse être informé à temps.</p>
+              <p>🕔 Si vous faites votre demande <strong>aujourd'hui avant 17h</strong>, vous pouvez choisir une visite <strong>dès demain</strong>.</p>
+              <p>🕔 Si vous faites votre demande <strong>après 17h</strong>, la première date disponible est <strong>dans deux jours</strong>.</p>
+              {hasPreset
+                ? <p>📋 Le propriétaire a <strong>défini des disponibilités spécifiques</strong>. Vous ne pouvez choisir que parmi ces créneaux.</p>
+                : <p>📋 Aucun créneau spécifique n'a été défini : vous pouvez choisir n'importe quelle date, dans le respect des délais ci-dessus.</p>
+              }
+            </div>
+          )}
+        </div>
+      )}
+
+      {step === "calendar" && (
+        <div className="space-y-4 pt-1">
+          <p className="text-xs text-gray-500">
+            {cutoffPassed
+              ? "Il est après 17h — la première date disponible est dans 2 jours."
+              : "Vous pouvez choisir une visite dès demain (demande avant 17h)."}
+            {hasPreset && " Seuls les créneaux définis par le propriétaire sont disponibles."}
+          </p>
+          <div className="flex justify-center">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              disabled={isDateDisabled}
+              fromDate={earliest}
+              className="rounded-xl border border-gray-100"
+            />
+          </div>
+          {selectedDate && (
+            <div className="bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-700">
+              📅 Visite sélectionnée : <strong>{selectedDate.toLocaleDateString("fr-CA", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</strong>
+            </div>
+          )}
+          <div className="flex gap-2">
+            <button onClick={() => setStep("intro")} className="flex-1 py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+              Retour
+            </button>
+            <button
+              onClick={handleConfirmDate}
+              disabled={!selectedDate}
+              className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-opacity hover:opacity-85 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ background: YELLOW, color: "#1A1A1A" }}
+            >
+              Confirmer
+            </button>
+          </div>
+          <button
+            onClick={() => setHowOpen(!howOpen)}
+            className="w-full flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <Info className="w-3 h-3" /> Comment ça marche ?
+          </button>
+          {howOpen && (
+            <div className="text-xs text-gray-500 leading-relaxed px-3 py-3 bg-gray-50 rounded-lg border border-gray-100 space-y-1.5">
+              <p>📅 Délai minimum : la veille avant 17h pour que l'agent soit informé.</p>
+              {hasPreset
+                ? <p>📋 Seuls les créneaux définis par le propriétaire sont disponibles.</p>
+                : <p>📋 Aucun créneau fixé : toute date respectant le délai est accessible.</p>
+              }
+            </div>
+          )}
+        </div>
+      )}
+
+      {step === "confirmed" && (
+        <div className="flex flex-col items-center py-6 gap-3">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "#F0FDF4" }}>
+            <CheckCircle className="w-7 h-7 text-green-500" />
+          </div>
+          <p className="text-base font-bold" style={{ color: "#1A1A1A" }}>Visite confirmée !</p>
+          <p className="text-sm text-gray-500 text-center">
+            Un agent vous contactera pour confirmer les détails de votre visite.
+          </p>
+        </div>
+      )}
+    </DialogContent>
   );
 }
 
@@ -87,10 +272,13 @@ export default function PropertyDetailPage() {
   const [, params] = useRoute("/properties/:id");
   const id = params?.id ? parseInt(params.id) : 0;
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const { country } = useLocation_();
+
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
   const [floorOpen, setFloorOpen] = useState(true);
-  const [chargesTab, setChargesTab] = useState<"charges" | "forfait">("forfait");
-  const [formData, setFormData] = useState({ applicantName: "", applicantEmail: "", applicantPhone: "", message: "" });
+  const [honorairesOpen, setHonorairesOpen] = useState(false);
+  const [visitOpen, setVisitOpen] = useState(false);
 
   const { data: property, isLoading } = useGetProperty(id, {
     query: { enabled: !!id, queryKey: ["getProperty", id] as const }
@@ -98,15 +286,6 @@ export default function PropertyDetailPage() {
   const { data: availableDates } = useGetPropertyAvailableDates(id, {
     query: { enabled: !!id, queryKey: getGetPropertyAvailableDatesQueryKey(id) }
   });
-  const createRequest = useCreateRentalRequest();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createRequest.mutate({ data: { propertyId: id, ...formData } }, {
-      onSuccess: () => { toast({ title: "Candidature envoyée avec succès !" }); setOpen(false); setFormData({ applicantName: "", applicantEmail: "", applicantPhone: "", message: "" }); },
-      onError: () => { toast({ title: "Erreur lors de l'envoi", variant: "destructive" }); }
-    });
-  };
 
   if (isLoading) {
     return (
@@ -114,13 +293,13 @@ export default function PropertyDetailPage() {
         <Navbar />
         <div className="max-w-7xl mx-auto px-6 py-12 animate-pulse">
           <div className="h-[480px] bg-gray-100 rounded-xl mb-10" />
-          <div className="grid grid-cols-3 gap-8">
-            <div className="col-span-2 space-y-4">
+          <div className="flex gap-10">
+            <div className="flex-[1.85] space-y-4">
               <div className="h-8 bg-gray-100 rounded w-3/4" />
               <div className="h-4 bg-gray-100 rounded w-1/2" />
               <div className="h-32 bg-gray-100 rounded" />
             </div>
-            <div className="h-96 bg-gray-100 rounded-2xl" />
+            <div className="w-80 h-96 bg-gray-100 rounded-2xl" />
           </div>
         </div>
       </>
@@ -152,88 +331,103 @@ export default function PropertyDetailPage() {
   const baths = property.bathrooms ?? 1;
   const addr = `102, Rue Sainte-Catherine O, ${city}, QC H2X 1Z3`;
 
-  const imgs = Array.from({ length: 4 }, (_, i) =>
-    property.images?.[i] || `https://picsum.photos/seed/prop${property.id}${i}/800/500`
+  const imgs = Array.from({ length: 5 }, (_, i) =>
+    property.images?.[i] || `https://picsum.photos/seed/prop${property.id}${i + 1}/800/500`
   );
+  const allImgs = imgs;
 
-  const AMENITIES = [
-    "Détecteur de fumée", "Détecteur de CO", "Trousse premiers soins",
-    "Entrée autonome / boîte à clés", "Caméras sécurité extérieures", "Cintres",
-    "Literie fournie", "Oreillers & couvertures", "Fer à repasser",
-    "Téléviseur câble standard", "Réfrigérateur", "Micro-ondes",
-    "Lave-vaisselle", "Machine à café"
-  ];
+  const amenities: string[] = property.amenities?.length ? property.amenities : STATIC_AMENITIES;
 
-  const CHARGES = [
-    { icon: Flame, label: "Chauffage" },
-    { icon: Zap, label: "Électricité" },
-    { icon: Trash2, label: "Taxes ordures" },
-    { icon: Droplets, label: "Eau chaude" },
-    { icon: Wind, label: "Eau courante" },
-    { icon: Wifi, label: "Internet Fibre" },
-  ];
-
-  const NEARBY = [
-    { label: "École", val: "0,5 km" }, { label: "Hôpital", val: "1,2 km" },
-    { label: "Université", val: "0,8 km" }, { label: "Station de métro", val: "0,3 km" },
-    { label: "Épicerie", val: "0,2 km" }, { label: "Gym / Bien-être", val: "0,9 km" },
-    { label: "Marché", val: "0,7 km" }, { label: "Parc", val: "0,4 km" },
-  ];
+  const selectedCity = country.cities?.[0]?.name || city;
 
   return (
     <div className="bg-white min-h-screen">
       <Navbar />
 
-      {/* ── Breadcrumb ── */}
+      {/* Lightbox */}
+      {lightboxOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center" onClick={() => setLightboxOpen(false)}>
+          <button className="absolute top-4 right-4 text-white/70 hover:text-white" onClick={() => setLightboxOpen(false)}>
+            <X className="w-8 h-8" />
+          </button>
+          <button
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-white/10 rounded-full p-2"
+            onClick={e => { e.stopPropagation(); setLightboxIdx((lightboxIdx - 1 + allImgs.length) % allImgs.length); }}
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <img
+            src={allImgs[lightboxIdx]}
+            alt={`Photo ${lightboxIdx + 1}`}
+            className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain"
+            onClick={e => e.stopPropagation()}
+          />
+          <button
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white/70 hover:text-white bg-white/10 rounded-full p-2"
+            onClick={e => { e.stopPropagation(); setLightboxIdx((lightboxIdx + 1) % allImgs.length); }}
+          >
+            <ArrowRight className="w-6 h-6" />
+          </button>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {allImgs.map((_, i) => (
+              <button key={i} onClick={e => { e.stopPropagation(); setLightboxIdx(i); }}
+                className="w-2 h-2 rounded-full transition-all"
+                style={{ background: i === lightboxIdx ? YELLOW : "rgba(255,255,255,0.4)" }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-2 text-xs text-gray-400">
         <Link href="/" className="hover:text-gray-600">Accueil</Link>
         <ChevronRight className="w-3 h-3" />
         <Link href="/properties" className="hover:text-gray-600">Annonces</Link>
         <ChevronRight className="w-3 h-3" />
-        <span className="text-gray-600 font-medium">{property.title}</span>
+        <span className="text-gray-600 font-medium truncate max-w-xs">{property.title}</span>
       </div>
 
-      {/* ── Gallery ── */}
+      {/* Gallery */}
       <div className="max-w-7xl mx-auto px-6 mb-10">
         <div className="relative flex gap-2 rounded-xl overflow-hidden" style={{ height: 480 }}>
-          {/* Large photo left */}
-          <div className="relative flex-[1.6] rounded-xl overflow-hidden">
-            <img src={imgs[0]} alt="Photo principale" className="w-full h-full object-cover" />
-            {/* 360° badge */}
-            <div className="absolute top-3 right-3 w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow cursor-pointer hover:bg-white transition-colors">
-              <RotateCcw className="w-4 h-4 text-gray-700" />
-            </div>
-            {/* Photo count */}
-            <button className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-white/85 backdrop-blur-sm text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow hover:bg-white transition-colors">
-              <Camera className="w-3.5 h-3.5" /> 13 photos
+          {/* Large photo */}
+          <div className="relative flex-[1.6] rounded-xl overflow-hidden cursor-pointer" onClick={() => { setLightboxIdx(0); setLightboxOpen(true); }}>
+            <img src={imgs[0]} alt="Photo principale" className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500" />
+            <button
+              className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-white/85 backdrop-blur-sm text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow hover:bg-white transition-colors"
+              onClick={e => { e.stopPropagation(); setLightboxIdx(0); setLightboxOpen(true); }}
+            >
+              📷 {allImgs.length} photos
             </button>
           </div>
-          {/* Mosaic 2×2 right */}
+          {/* Mosaic col 1 */}
           <div className="flex flex-col gap-2 flex-1">
             {[imgs[1], imgs[2]].map((src, i) => (
-              <div key={i} className="rounded-xl overflow-hidden flex-1">
-                <img src={src} alt={`Photo ${i + 2}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-pointer" />
+              <div key={i} className="rounded-xl overflow-hidden flex-1 cursor-pointer" onClick={() => { setLightboxIdx(i + 1); setLightboxOpen(true); }}>
+                <img src={src} alt={`Photo ${i + 2}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
               </div>
             ))}
           </div>
+          {/* Mosaic col 2 */}
           <div className="flex flex-col gap-2 flex-1">
-            {[imgs[3], imgs[0]].map((src, i) => (
-              <div key={i} className="rounded-xl overflow-hidden flex-1">
-                <img src={src} alt={`Photo ${i + 4}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-pointer" />
+            {[imgs[3], imgs[4]].map((src, i) => (
+              <div key={i} className="rounded-xl overflow-hidden flex-1 cursor-pointer" onClick={() => { setLightboxIdx(i + 3); setLightboxOpen(true); }}>
+                <img src={src} alt={`Photo ${i + 4}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── Two-column layout ── */}
+      {/* Two-column layout */}
       <div className="max-w-7xl mx-auto px-6 pb-20">
         <div className="flex gap-10 items-start">
 
-          {/* ═══ LEFT COL 65% ═══ */}
+          {/* ═══ LEFT COL ═══ */}
           <div className="flex-[1.85] min-w-0">
 
-            {/* Titre + actions */}
+            {/* Title + actions */}
             <div className="flex items-start justify-between gap-4 mb-6">
               <div className="flex-1 min-w-0">
                 <h1 className="text-2xl font-extrabold mb-1.5 leading-tight" style={{ color: "#1A1A1A" }}>
@@ -243,7 +437,7 @@ export default function PropertyDetailPage() {
                   <MapPin className="w-3.5 h-3.5 flex-shrink-0" /> {addr}
                 </p>
                 <p className="text-sm text-gray-400 mb-3">
-                  {beds > 0 && `${beds} Ch.`}{beds > 0 && " · "}{baths} Sdb · {area} m²
+                  {beds > 0 ? `${beds} Ch.` : ""}{beds > 0 && baths > 0 ? " · " : ""}{baths > 0 ? `${baths} Sdb` : ""}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {[`Réf : ${ref}`, "Logement entier", "Meublé"].map(b => (
@@ -251,14 +445,8 @@ export default function PropertyDetailPage() {
                   ))}
                 </div>
               </div>
-              {/* Action icons */}
               <div className="flex items-center gap-2 flex-shrink-0 mt-1">
-                {[
-                  { icon: Heart, title: "Favori" },
-                  { icon: ArrowLeftRight, title: "Comparer" },
-                  { icon: Printer, title: "Imprimer" },
-                  { icon: Share2, title: "Partager" },
-                ].map(({ icon: Icon, title }) => (
+                {[{ icon: Heart, title: "Favori" }, { icon: Printer, title: "Imprimer" }, { icon: Share2, title: "Partager" }].map(({ icon: Icon, title }) => (
                   <button key={title} title={title} className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors">
                     <Icon className="w-4 h-4 text-gray-500" />
                   </button>
@@ -268,97 +456,54 @@ export default function PropertyDetailPage() {
 
             <div className="border-t border-gray-100 mb-8" />
 
-            {/* Le logement */}
-            <section className="mb-7">
-              <h2 className="text-lg font-bold mb-2" style={{ color: "#1A1A1A" }}>Le logement</h2>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                BLOQ5 vous présente ce logement de {area} m² idéalement situé au 102, Rue Sainte-Catherine O à {city}. Profitez d'un espace de vie lumineux, entièrement meublé, à deux pas des transports en commun et de tous les commerces du quartier.
-              </p>
-            </section>
-
-            {/* L'appartement */}
-            <section className="mb-7">
-              <h2 className="text-base font-bold mb-2 flex items-center gap-2" style={{ color: "#1A1A1A" }}>
-                <span className="w-3 h-3 rounded-full bg-red-500 inline-block" /> L'appartement
-              </h2>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                {property.description ||
-                  `Ce logement de ${area} m² dispose de ${beds} chambre${beds > 1 ? "s" : ""} lumineuse${beds > 1 ? "s" : ""}, d'un salon spacieux et d'une cuisine entièrement équipée (réfrigérateur, micro-ondes, plaques de cuisson). La salle de bain privative comprend une douche et une baignoire. Le chauffage et la connexion Internet fibre sont inclus dans les charges.`
-                }
-              </p>
-            </section>
-
-            {/* Accès et extérieurs */}
-            <section className="mb-7">
-              <h2 className="text-base font-bold mb-2 flex items-center gap-2" style={{ color: "#1A1A1A" }}>
-                <span className="w-3 h-3 rounded-full bg-orange-400 inline-block" /> Les accès et extérieurs
-              </h2>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                L'unité est accessible par escalier depuis l'entrée principale sécurisée. Une buanderie commune est disponible au sous-sol de l'immeuble. Stationnement intérieur disponible en option (tarif séparé).
-              </p>
-            </section>
-
-            {/* Le quartier */}
-            <section className="mb-7">
-              <h2 className="text-base font-bold mb-2 flex items-center gap-2" style={{ color: "#1A1A1A" }}>
-                <span className="w-3 h-3 rounded-full bg-blue-500 inline-block" /> Le quartier
-              </h2>
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                Situé en plein cœur du Quartier des Spectacles, ce logement bénéficie d'une localisation exceptionnelle :
-              </p>
-              <ul className="space-y-1.5 text-sm text-gray-600">
-                <li className="flex items-start gap-2">🎓 <span><strong>Éducation :</strong> Université du Québec à Montréal à 8 min à pied</span></li>
-                <li className="flex items-start gap-2">🚇 <span><strong>Transports :</strong> Station de métro Place-des-Arts (ligne Verte) à 3 min</span></li>
-                <li className="flex items-start gap-2">🛒 <span><strong>Commodités :</strong> nombreux commerces, épiceries, restaurants, cafés à proximité immédiate</span></li>
-              </ul>
-            </section>
-
-            {/* Publié par BLOQ5 */}
-            <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 w-fit mb-8">
-              <span className="text-sm font-black" style={{ color: "#1A1A1A" }}>BLOQ<span style={{ color: YELLOW }}>5</span></span>
-              <span className="text-xs text-gray-400">Annonce publiée et vérifiée par BLOQ5</span>
-            </div>
-
-            {/* Informations essentielles */}
+            {/* Description (merged) */}
             <section className="mb-8">
-              <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Informations essentielles</h2>
-              <div className="rounded-xl overflow-hidden border border-gray-100">
+              <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1A1A" }}>Description</h2>
+              <div className="text-sm text-gray-600 leading-relaxed space-y-3">
+                <p>
+                  {property.description ||
+                    `BLOQ5 vous présente ce logement de ${area} m² idéalement situé au cœur de ${city}. Ce bien dispose de ${beds} chambre${beds > 1 ? "s" : ""} lumineuse${beds > 1 ? "s" : ""}, d'un salon spacieux et d'une cuisine entièrement équipée (réfrigérateur, micro-ondes, plaques de cuisson). La salle de bain privative est dotée d'une douche. Le chauffage et la connexion Internet fibre sont inclus.`
+                  }
+                </p>
+                <p>
+                  L'unité est accessible par escalier depuis l'entrée principale sécurisée. Une buanderie commune est disponible au sous-sol. Stationnement intérieur disponible.
+                </p>
+                <p>
+                  Situé en plein cœur du Quartier des Spectacles, ce logement bénéficie d'une localisation exceptionnelle à deux pas de l'UQAM, de la station de métro Place-des-Arts (ligne Verte), de nombreux commerces, épiceries, restaurants et cafés.
+                </p>
+              </div>
+              {/* Publié par BLOQ5 badge */}
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 w-fit mt-5">
+                <span className="text-sm font-black" style={{ color: "#1A1A1A" }}>BLOQ<span style={{ color: YELLOW }}>5</span></span>
+                <span className="text-xs text-gray-400">Annonce publiée et vérifiée par BLOQ5</span>
+              </div>
+            </section>
+
+            {/* Informations détaillées */}
+            <section className="mb-8">
+              <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Informations détaillées</h2>
+              {/* Info items grid */}
+              <div className="grid grid-cols-3 gap-3 mb-5">
                 {[
-                  { label: "Superficie", val: `${area} m²` },
-                  { label: "Nombre de chambres", val: `${beds}` },
-                  { label: "Salles de bain", val: `${baths}` },
-                  { label: "Étage", val: "3e étage" },
-                  { label: "Honoraires charge locataire", val: "375 CA$", sub: "Constitution du bail 185 $ · État des lieux entrée 190 $" },
-                  { label: "Loyer mensuel (charges comprises)", val: `${price} CA$/mois`, highlight: true },
-                ].map((row, i) => (
-                  <div key={i} className="flex items-start justify-between px-5 py-3.5 text-sm" style={{ background: row.highlight ? "#F8F8F8" : i % 2 === 0 ? "white" : "#FAFAFA" }}>
-                    <span className="text-gray-500">{row.label}</span>
-                    <div className="text-right">
-                      <span className={`font-semibold ${row.highlight ? "text-base" : ""}`} style={{ color: "#1A1A1A" }}>{row.val}</span>
-                      {row.sub && <p className="text-xs text-gray-400 mt-0.5">{row.sub}</p>}
+                  { icon: MapPin, label: `${area} m²`, sublabel: "Superficie" },
+                  { icon: Bed, label: `${beds} chambre${beds > 1 ? "s" : ""}`, sublabel: "Chambres" },
+                  { icon: Bath, label: `${baths} salle${baths > 1 ? "s" : ""}`, sublabel: "Salle de bain" },
+                  { icon: ChevronRight, label: "3e étage", sublabel: "Étage" },
+                  { icon: Car, label: "1 inclus", sublabel: "Stationnement" },
+                ].map(({ icon: Icon, label, sublabel }) => (
+                  <div key={sublabel} className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3">
+                    <Icon className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
+                    <div>
+                      <div className="text-xs font-semibold text-gray-800">{label}</div>
+                      <div className="text-[10px] text-gray-400">{sublabel}</div>
                     </div>
                   </div>
                 ))}
               </div>
-            </section>
-
-            {/* Détail des charges */}
-            <section className="mb-8">
-              <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Détail des charges</h2>
-              <div className="flex gap-2 mb-5">
-                {(["charges", "forfait"] as const).map(t => (
-                  <button key={t} onClick={() => setChargesTab(t)}
-                    className="px-4 py-2 rounded-full text-xs font-semibold border transition-all"
-                    style={chargesTab === t
-                      ? { background: YELLOW, borderColor: YELLOW, color: "#1A1A1A" }
-                      : { background: "white", borderColor: "#D1D5DB", color: "#4B5563" }}>
-                    {t === "charges" ? "Charges" : "Forfait : 75 CA$/mois"}
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-gray-400 mb-4">Inclus dans les charges :</p>
+              {/* Ce qui est inclus */}
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-3">Ce qui est inclus</p>
               <div className="grid grid-cols-3 gap-3">
-                {CHARGES.map(({ icon: Icon, label }) => (
+                {CHARGES_ITEMS.map(({ icon: Icon, label }) => (
                   <div key={label} className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3">
                     <Icon className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
                     <span className="text-xs font-medium text-gray-700">{label}</span>
@@ -371,43 +516,15 @@ export default function PropertyDetailPage() {
             <section className="mb-8">
               <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Équipements et commodités</h2>
               <div className="grid grid-cols-2 gap-2.5">
-                {(property.amenities?.length ? property.amenities : AMENITIES).map((a: string) => (
-                  <div key={a} className="flex items-center gap-2.5 text-sm text-gray-600">
-                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: YELLOW }} />
-                    {a}
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* Détails de la propriété */}
-            <section className="mb-8">
-              <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1A1A" }}>Détails de la propriété</h2>
-              <p className="text-sm text-gray-600 leading-relaxed mb-2">
-                Logement de {area} m² situé dans le Quartier des Spectacles à {city}. L'unité comprend {beds} chambre{beds > 1 ? "s" : ""}, une cuisine entièrement équipée et un accès direct aux transports en commun. Chauffage et eau chaude inclus. Disponible immédiatement.
-              </p>
-              <button className="text-xs font-semibold flex items-center gap-1" style={{ color: YELLOW }}>
-                Lire la suite <ChevronDown className="w-3.5 h-3.5" />
-              </button>
-              <div className="mt-5 rounded-xl overflow-hidden border border-gray-100">
-                {[
-                  ["ID", ref, "Chambres", `${beds}`],
-                  ["Prix", `${price} CA$/mois`, "Année de construction", "2018"],
-                  ["Superficie", `${area} m²`, "Type", property.type || "Appartement"],
-                  ["Pièces", `${(beds || 0) + 2}`, "Statut", isAvailable ? "Disponible" : "Loué"],
-                  ["Salles de bain", `${baths}`, "Stationnement", "1"],
-                ].map(([lL, lV, rL, rV], i) => (
-                  <div key={i} className="grid grid-cols-2 divide-x divide-gray-100 text-sm" style={{ background: i % 2 === 0 ? "white" : "#FAFAFA", borderBottom: "1px solid #F0F0F0" }}>
-                    <div className="flex justify-between px-5 py-3">
-                      <span className="text-gray-400">{lL}</span>
-                      <span className="font-semibold text-gray-800">{lV}</span>
+                {amenities.map((a: string) => {
+                  const Icon = AMENITY_ICON_MAP[a] ?? CheckCircle;
+                  return (
+                    <div key={a} className="flex items-center gap-2.5 text-sm text-gray-600">
+                      <Icon className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
+                      {a}
                     </div>
-                    <div className="flex justify-between px-5 py-3">
-                      <span className="text-gray-400">{rL}</span>
-                      <span className="font-semibold text-gray-800">{rV}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
 
@@ -423,13 +540,11 @@ export default function PropertyDetailPage() {
                   <span>{floorOpen ? "∧" : "∨"} Premier étage</span>
                   <span className="flex items-center gap-3 text-xs font-medium text-gray-500">
                     <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" />{beds} Chambre{beds > 1 ? "s" : ""}</span>
-                    <span className="flex items-center gap-1">🚿 {baths} Salle de bain</span>
+                    <span>🚿 {baths} Salle de bain</span>
                   </span>
                 </button>
                 {floorOpen && (
-                  <div className="p-5">
-                    <FloorPlanSVG />
-                  </div>
+                  <div className="p-5"><FloorPlanSVG /></div>
                 )}
               </div>
             </section>
@@ -457,19 +572,14 @@ export default function PropertyDetailPage() {
               <h2 className="text-lg font-bold mb-2" style={{ color: "#1A1A1A" }}>Visite virtuelle</h2>
               <p className="text-sm text-gray-500 mb-4">Visualisez le bien en 3D et projetez-vous comme si vous y étiez !</p>
               <div className="relative rounded-xl overflow-hidden flex items-center justify-center" style={{ background: "#1A1A1A", aspectRatio: "16/9" }}>
-                <div className="absolute inset-0 opacity-30"
-                  style={{ backgroundImage: `url(${imgs[1]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
-                <div className="relative z-10 flex flex-col items-center gap-3">
+                <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `url(${imgs[1]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                <div className="relative z-10">
                   <button className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}>
                     <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7 ml-1"><polygon points="5,3 19,12 5,21" /></svg>
                   </button>
                 </div>
-                <div className="absolute bottom-3 left-4 text-xs text-white/70">
-                  102 Rue Sainte-Catherine O, {city} – {beds} Ch. – Appartement
-                </div>
-                <div className="absolute bottom-3 right-4 bg-white text-gray-600 text-xs font-bold px-2.5 py-1 rounded-md">
-                  Matterport
-                </div>
+                <div className="absolute bottom-3 left-4 text-xs text-white/70">102 Rue Sainte-Catherine O, {city} – {beds} Ch. – Appartement</div>
+                <div className="absolute bottom-3 right-4 bg-white text-gray-600 text-xs font-bold px-2.5 py-1 rounded-md">Matterport</div>
               </div>
             </section>
 
@@ -491,10 +601,12 @@ export default function PropertyDetailPage() {
             <section className="mb-8">
               <h2 className="text-lg font-bold mb-1" style={{ color: "#1A1A1A" }}>À proximité</h2>
               <p className="text-sm text-gray-400 mb-5">Découvrez les commodités à proximité pour bien évaluer l'emplacement et la qualité de vie offerte.</p>
-              <div className="grid grid-cols-2 gap-0">
-                {NEARBY.map(({ label, val }, i) => (
-                  <div key={label} className="flex justify-between items-center py-3 px-4 text-sm" style={{ borderBottom: "1px solid #F0F0F0", background: i % 4 < 2 ? "white" : "#FAFAFA" }}>
-                    <span className="font-semibold text-xs" style={{ color: YELLOW }}>{label}</span>
+              <div className="grid grid-cols-2 gap-0 rounded-xl overflow-hidden border border-gray-100">
+                {NEARBY_ITEMS.map(({ label, val, icon: Icon }, i) => (
+                  <div key={label} className="flex items-center justify-between py-3 px-4 text-sm" style={{ borderBottom: "1px solid #F0F0F0", background: i % 2 === 0 ? "white" : "#FAFAFA" }}>
+                    <span className="flex items-center gap-2 font-semibold text-xs" style={{ color: YELLOW }}>
+                      <Icon className="w-3.5 h-3.5" />{label}
+                    </span>
                     <span className="text-gray-500 text-xs">{val}</span>
                   </div>
                 ))}
@@ -506,12 +618,12 @@ export default function PropertyDetailPage() {
               <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Pièces jointes</h2>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { name: "Bail-Logement.pdf", iconBg: "#EBF5FB", iconColor: "#1565C0", icon: "PDF" },
-                  { name: "Règlement-Immeuble.pdf", iconBg: "#E0F7FA", iconColor: "#00838F", icon: "DOC" },
+                  { name: "Bail-Logement.pdf", iconBg: "#EBF5FB", iconColor: "#1565C0", label: "PDF" },
+                  { name: "Règlement-Immeuble.pdf", iconBg: "#E0F7FA", iconColor: "#00838F", label: "DOC" },
                 ].map(f => (
                   <div key={f.name} className="flex items-center justify-between px-4 py-3.5 rounded-xl" style={{ background: "#F5F5F5" }}>
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-black" style={{ background: f.iconBg, color: f.iconColor }}>{f.icon}</div>
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-black" style={{ background: f.iconBg, color: f.iconColor }}>{f.label}</div>
                       <span className="text-xs font-medium text-gray-700">{f.name}</span>
                     </div>
                     <button className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors">
@@ -522,9 +634,9 @@ export default function PropertyDetailPage() {
               </div>
             </section>
 
-          </div>{/* end left col */}
+          </div>
 
-          {/* ═══ RIGHT COL sticky 35% ═══ */}
+          {/* ═══ RIGHT COL sticky ═══ */}
           <div className="w-80 shrink-0 sticky top-20">
             <div className="rounded-2xl border border-gray-200 shadow-lg bg-white p-6">
               {/* Price */}
@@ -532,82 +644,69 @@ export default function PropertyDetailPage() {
                 <span className="text-3xl font-extrabold" style={{ color: "#1A1A1A" }}>{price} CA$</span>
                 <span className="text-gray-400 text-sm">/mois</span>
               </div>
-              <p className="text-xs text-gray-400 mb-3">dont 75 CA$ de charges comprises</p>
 
-              {/* Status badge */}
+              {/* Status */}
               <div className="flex items-center gap-1.5 mb-5">
                 <span className={`text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1 ${isAvailable ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
                   <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: isAvailable ? "#22C55E" : "#EF4444" }} />
                   {isAvailable ? "Disponible" : "Loué"}
                 </span>
-                {availableDates && availableDates.length > 0 && (
-                  <span className="text-xs text-gray-400 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" /> {availableDates.length} dates dispo
-                  </span>
-                )}
               </div>
 
-              {/* CTA */}
-              <Dialog open={open} onOpenChange={setOpen}>
+              {/* CTA candidature */}
+              {isAvailable ? (
+                <Link href={`/properties/${id}/dossier`}>
+                  <button className="w-full py-4 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                    Je dépose ma candidature
+                  </button>
+                </Link>
+              ) : (
+                <button disabled className="w-full py-4 rounded-xl font-semibold text-sm mb-3 opacity-50 cursor-not-allowed bg-gray-200 text-gray-500">
+                  Bien indisponible
+                </button>
+              )}
+
+              {/* Planifier visite */}
+              <Dialog open={visitOpen} onOpenChange={setVisitOpen}>
                 <DialogTrigger asChild>
-                  <button
-                    disabled={!isAvailable}
-                    className="w-full py-4 rounded-xl font-semibold text-sm mb-4 transition-opacity hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ background: YELLOW, color: "#1A1A1A" }}
-                  >
-                    {isAvailable ? "Je dépose ma candidature" : "Bien indisponible"}
+                  <button className="w-full py-3 rounded-xl font-medium text-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors mb-4 flex items-center justify-center gap-2">
+                    📅 Planifier une visite physique
                   </button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle className="text-lg font-bold" style={{ color: "#1A1A1A" }}>Dossier de location</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-                    <div className="space-y-1.5">
-                      <Label className="text-sm font-medium">Nom complet</Label>
-                      <Input required value={formData.applicantName} onChange={e => setFormData({ ...formData, applicantName: e.target.value })} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-sm font-medium">Email</Label>
-                      <Input type="email" required value={formData.applicantEmail} onChange={e => setFormData({ ...formData, applicantEmail: e.target.value })} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-sm font-medium">Téléphone</Label>
-                      <Input value={formData.applicantPhone} onChange={e => setFormData({ ...formData, applicantPhone: e.target.value })} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-sm font-medium">Message</Label>
-                      <Textarea required value={formData.message} onChange={e => setFormData({ ...formData, message: e.target.value })} placeholder="Présentez votre situation..." className="min-h-[90px]" />
-                    </div>
-                    <button type="submit" disabled={createRequest.isPending}
-                      className="w-full py-3 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-85"
-                      style={{ background: YELLOW, color: "#1A1A1A" }}>
-                      {createRequest.isPending ? "Envoi en cours…" : <><Send className="w-4 h-4" /> Envoyer ma candidature</>}
-                    </button>
-                  </form>
-                </DialogContent>
+                <VisitSchedulerDialog availableDates={availableDates?.map(d => typeof d === "string" ? d : String(d))} />
               </Dialog>
 
               <div className="border-t border-gray-100 my-4" />
 
-              {/* Details */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400 flex items-center gap-1.5"><FileText className="w-4 h-4" />Honoraires locataire</span>
+              {/* Honoraires with expand */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-sm mb-1">
+                  <span className="text-gray-500 flex items-center gap-1.5"><FileText className="w-4 h-4" />Honoraires locataire</span>
                   <span className="font-semibold" style={{ color: "#1A1A1A" }}>375 CA$</span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400 flex items-center gap-1.5"><Maximize2 className="w-4 h-4" />Superficie</span>
-                  <span className="font-semibold" style={{ color: "#1A1A1A" }}>{area} m²</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400 flex items-center gap-1.5"><Bed className="w-4 h-4" />Chambres</span>
-                  <span className="font-semibold" style={{ color: "#1A1A1A" }}>{beds}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400 flex items-center gap-1.5"><Car className="w-4 h-4" />Stationnement</span>
-                  <span className="font-semibold" style={{ color: "#1A1A1A" }}>1 inclus</span>
-                </div>
+                <button
+                  onClick={() => setHonorairesOpen(!honorairesOpen)}
+                  className="flex items-center gap-1 text-xs font-medium transition-colors"
+                  style={{ color: YELLOW }}
+                >
+                  {honorairesOpen ? "Masquer le détail" : "Voir le détail"}
+                  <ChevronDown className={`w-3 h-3 transition-transform ${honorairesOpen ? "rotate-180" : ""}`} />
+                </button>
+                {honorairesOpen && (
+                  <div className="mt-2 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 text-xs text-gray-600 space-y-2">
+                    <div className="flex justify-between">
+                      <span>Constitution du bail</span>
+                      <span className="font-semibold">185 CA$</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>État des lieux d'entrée</span>
+                      <span className="font-semibold">190 CA$</span>
+                    </div>
+                    <div className="border-t border-gray-200 pt-2 text-gray-400">
+                      Ces honoraires sont facturés une seule fois à la signature du bail, à la charge du locataire, conformément à la réglementation en vigueur au Québec.
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="border-t border-gray-100 my-4" />
@@ -623,11 +722,11 @@ export default function PropertyDetailPage() {
         </div>
       </div>
 
-      {/* ── SEO Footer ── */}
+      {/* SEO Footer */}
       <div className="border-t border-gray-100 py-10 bg-white">
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8 text-xs text-gray-500">
           <div>
-            <h5 className="font-semibold text-gray-700 mb-3">Types de bien à {city}</h5>
+            <h5 className="font-semibold text-gray-700 mb-3">Types de bien à {selectedCity}</h5>
             {["Location appartement", "Location meublée", "Colocation", "Coliving"].map(l => (
               <a key={l} href="#" className="block mb-1.5 hover:text-gray-800 transition-colors">{l}</a>
             ))}
@@ -653,9 +752,8 @@ export default function PropertyDetailPage() {
         </div>
       </div>
 
-      {/* ── Main Footer ── */}
+      {/* Main Footer */}
       <footer style={{ background: "#1A1A1A", color: "#ccc" }} className="pt-14 pb-8 relative overflow-hidden">
-        {/* Decorative circle */}
         <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full opacity-5" style={{ background: YELLOW }} />
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
@@ -675,7 +773,7 @@ export default function PropertyDetailPage() {
             <div>
               <h4 className="text-white font-semibold text-sm mb-4">Nos outils</h4>
               <ul className="space-y-2 text-xs text-gray-500">
-                {["Générateur de bail", "Simulateur de loyer", "Générateur de quittance", "État des lieux digital"].map(l => (
+                {["Générateur de bail", "État des lieux digital"].map(l => (
                   <li key={l}><a href="#" className="hover:text-white transition-colors">{l}</a></li>
                 ))}
               </ul>

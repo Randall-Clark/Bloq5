@@ -16,6 +16,7 @@ import { isActiveCountry } from "@/data/countries";
 import HomePage from "@/pages/home";
 import PropertiesPage from "@/pages/properties";
 import PropertyDetailPage from "@/pages/property-detail";
+import PropertyDossierPage from "@/pages/property-dossier";
 import ProfilePage from "@/pages/profile";
 import ProfileRequestsPage from "@/pages/profile-requests";
 import ProfileRequestDetailPage from "@/pages/profile-request-detail";
@@ -210,6 +211,7 @@ function ClerkProviderWithRoutes() {
           <Route path="/cities" component={CitiesPage} />
           <Route path="/coming-soon" component={ComingSoonPage} />
           <Route path="/properties" component={PropertiesPage} />
+          <Route path="/properties/:id/dossier" component={PropertyDossierPage} />
           <Route path="/properties/:id" component={PropertyDetailPage} />
           <Route path="/pro" component={ProPricingPage} />
           
