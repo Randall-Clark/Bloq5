@@ -1,9 +1,10 @@
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import {
   useGetProperty, useCreateRentalRequest, useGetPropertyAvailableDates,
   getGetPropertyAvailableDatesQueryKey
 } from "@workspace/api-client-react";
 import { useState } from "react";
+import { useUser } from "@clerk/react";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
 import { useLocation_ } from "@/context/location-context";
@@ -243,12 +244,22 @@ export default function PropertyDetailPage() {
   const id = params?.id ? parseInt(params.id) : 0;
   const { toast } = useToast();
   const { country } = useLocation_();
+  const { isSignedIn } = useUser();
+  const [, navigate] = useLocation();
 
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
   const [floorOpen, setFloorOpen] = useState(true);
   const [honorairesOpen, setHonorairesOpen] = useState(false);
   const [visitOpen, setVisitOpen] = useState(false);
+
+  function openVisitScheduler() {
+    if (!isSignedIn) {
+      navigate(`/sign-in?redirect=/properties/${id}`);
+      return;
+    }
+    setVisitOpen(true);
+  }
 
   const { data: property, isLoading } = useGetProperty(id, {
     query: { enabled: !!id, queryKey: ["getProperty", id] as const }
@@ -434,9 +445,7 @@ export default function PropertyDetailPage() {
                   {beds > 0 ? `${beds} Ch.` : ""}{beds > 0 && baths > 0 ? " · " : ""}{baths > 0 ? `${baths} Sdb` : ""}
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {[`Réf : ${ref}`, "Logement entier", "Meublé"].map(b => (
-                    <span key={b} className="text-xs px-3 py-1 rounded-full font-medium" style={{ background: "#F5F5F5", color: "#555" }}>{b}</span>
-                  ))}
+                  <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ background: "#F5F5F5", color: "#555" }}>Réf : {ref}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0 mt-1">
@@ -484,6 +493,7 @@ export default function PropertyDetailPage() {
                   { icon: Bath, label: `${baths} salle${baths > 1 ? "s" : ""}`, sublabel: "Salle de bain" },
                   { icon: ChevronRight, label: "3e étage", sublabel: "Étage" },
                   { icon: Car, label: "1 inclus", sublabel: "Stationnement" },
+                  { icon: Wand2, label: id % 2 === 1 ? "Meublé" : "Non meublé", sublabel: "Ameublement" },
                 ].map(({ icon: Icon, label, sublabel }) => (
                   <div key={sublabel} className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3">
                     <Icon className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
@@ -661,12 +671,13 @@ export default function PropertyDetailPage() {
               )}
 
               {/* Planifier visite */}
+              <button
+                onClick={openVisitScheduler}
+                className="w-full py-3 rounded-xl font-medium text-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors mb-4 flex items-center justify-center gap-2"
+              >
+                📅 Planifier une visite physique
+              </button>
               <Dialog open={visitOpen} onOpenChange={setVisitOpen}>
-                <DialogTrigger asChild>
-                  <button className="w-full py-3 rounded-xl font-medium text-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors mb-4 flex items-center justify-center gap-2">
-                    📅 Planifier une visite physique
-                  </button>
-                </DialogTrigger>
                 <VisitSchedulerDialog availableDates={availableDates?.map(d => typeof d === "string" ? d : String(d))} />
               </Dialog>
 
