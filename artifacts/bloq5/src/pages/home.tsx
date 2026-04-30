@@ -7,8 +7,7 @@ import {
   CheckCircle, FileText, PenLine, ClipboardList, ChevronRight,
   SlidersHorizontal, Home, Building2, Users, Briefcase, Store,
   X, Wifi, Zap, Flame, Droplets, Wind, Car, PawPrint,
-  LayoutGrid, ChevronUp, Factory, Eye, Calendar, MessageSquare,
-  Heart, BarChart3, ShieldCheck, UserCog
+  LayoutGrid, ChevronUp, Factory
 } from "lucide-react";
 
 const YELLOW = "#F5A623";
@@ -491,74 +490,32 @@ export default function HomePage() {
       </section>
 
       {/* ─── COMMENT ÇA MARCHE ─── */}
-      <section className="py-16" style={{ background: "#F8F8F8" }}>
+      <section className="py-14" style={{ background: "#F8F8F8" }}>
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: "#1A1A1A" }}>Comment ça marche ?</h2>
-            <p className="text-gray-500 text-sm max-w-xl mx-auto">
-              BLOQ5 connecte locataires et propriétaires sur une plateforme unique — tout le cycle locatif, en ligne, pour tous les types de biens.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Parcours Locataire */}
-            <div className="bg-white rounded-2xl p-7 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "#FEF9EE" }}>
-                  <Search className="w-4.5 h-4.5" style={{ color: YELLOW }} />
-                </div>
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest" style={{ color: YELLOW }}>Côté Locataire</p>
-                  <h3 className="font-bold text-sm" style={{ color: "#1A1A1A" }}>Trouvez et réservez votre bien</h3>
-                </div>
-              </div>
-              <ol className="space-y-4">
-                {[
-                  { icon: Search,        txt: "Parcourez les annonces vérifiées — appartements, maisons, bureaux, locaux commerciaux ou espaces industriels." },
-                  { icon: Eye,           txt: "Faites une visite virtuelle ou planifiez une visite physique aux créneaux disponibles sur le calendrier." },
-                  { icon: FileText,      txt: "Créez votre compte et déposez une demande de location (max. 3 simultanées) avec vos informations personnelles." },
-                  { icon: MessageSquare, txt: "Échangez avec le gestionnaire du bien via la messagerie intégrée (messages valables 24h)." },
-                  { icon: Heart,         txt: "Sauvegardez vos coups de cœur et partagez des annonces avec vos proches." },
-                  { icon: ClipboardList, txt: "Suivez le statut de vos demandes (en attente, documents requis, approuvée ou rejetée) depuis votre profil." },
-                ].map((s, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-0.5" style={{ background: "#FEF9EE" }}>
-                      <s.icon className="w-3.5 h-3.5" style={{ color: YELLOW }} />
-                    </div>
-                    <p className="text-xs text-gray-600 leading-relaxed">{s.txt}</p>
-                  </li>
-                ))}
-              </ol>
+          <div className="md:flex md:gap-16 items-start">
+            <div className="md:w-1/3 mb-8 md:mb-0">
+              <h2 className="text-2xl font-bold mb-3" style={{ color: "#1A1A1A" }}>Comment ça marche ?</h2>
+              <p className="text-gray-500 text-sm leading-relaxed">
+                BLOQ5 gère l'ensemble du cycle locatif pour tout type de bien — résidentiel, commercial ou industriel. Propriétaires et locataires, tout se fait en ligne.
+              </p>
             </div>
-
-            {/* Parcours Propriétaire / Gestionnaire */}
-            <div className="bg-white rounded-2xl p-7 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "#1A1A1A1A" }}>
-                  <BarChart3 className="w-4.5 h-4.5" style={{ color: "#1A1A1A" }} />
+            <div className="md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {[
+                { icon: Search,        color: "#E3F2FD", iconColor: "#1565C0", step: "Trouvez le bien adapté",      desc: "Appartements, maisons, bureaux, locaux commerciaux ou entrepôts industriels — filtrez par type, superficie et loyer." },
+                { icon: FileText,      color: "#FFF3E0", iconColor: "#E65100", step: "Déposez votre dossier",       desc: "Dossier locataire ou bail commercial en quelques minutes, directement depuis l'application." },
+                { icon: PenLine,       color: "#E8F5E9", iconColor: "#2E7D32", step: "Signez vos documents",        desc: "Signature électronique sécurisée : bail résidentiel, bail commercial, état des lieux et quittances." },
+                { icon: ClipboardList, color: "#F3E5F5", iconColor: "#6A1B9A", step: "BLOQ5 gère pour vous",        desc: "Suivi des paiements, gestion des incidents, renouvellement de bail — nous nous occupons de tout." },
+              ].map((s, i) => (
+                <div key={i} className="flex gap-4 bg-white rounded-xl p-5 shadow-sm">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ background: s.color }}>
+                    <s.icon className="w-5 h-5" style={{ color: s.iconColor }} />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-sm mb-1" style={{ color: "#1A1A1A" }}>{s.step}</h4>
+                    <p className="text-xs text-gray-500 leading-relaxed">{s.desc}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Côté Propriétaire</p>
-                  <h3 className="font-bold text-sm" style={{ color: "#1A1A1A" }}>Gérez votre portefeuille locatif</h3>
-                </div>
-              </div>
-              <ol className="space-y-4">
-                {[
-                  { icon: PenLine,      txt: "Publiez vos biens en quelques minutes — résidentiels, commerciaux ou industriels — avec photos et visite virtuelle." },
-                  { icon: BarChart3,    txt: "Consultez vos KPI en temps réel : loyers, taux d'occupation, nombre de vues et de demandes par bien." },
-                  { icon: ClipboardList,txt: "Gérez chaque demande de location reçue : acceptez, refusez ou demandez des documents complémentaires." },
-                  { icon: MessageSquare,txt: "Communiquez avec les candidats via la messagerie intégrée et mettez fin à la conversation quand vous le souhaitez." },
-                  { icon: UserCog,      txt: "Désignez des gestionnaires pour vos biens — ils reçoivent un accès au dashboard avec des permissions définies." },
-                  { icon: ShieldCheck,  txt: "Souscrivez à un plan Pro adapté à votre portefeuille et bénéficiez d'un support dédié." },
-                ].map((s, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center mt-0.5 bg-gray-100">
-                      <s.icon className="w-3.5 h-3.5 text-gray-600" />
-                    </div>
-                    <p className="text-xs text-gray-600 leading-relaxed">{s.txt}</p>
-                  </li>
-                ))}
-              </ol>
+              ))}
             </div>
           </div>
         </div>
@@ -598,56 +555,40 @@ export default function HomePage() {
       {/* ─── DOUBLE CTA ─── */}
       <section className="py-14" style={{ background: "#F8F8F8" }}>
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Locataire */}
           <div className="rounded-2xl p-8 flex flex-col" style={{ background: "#FEF9EE" }}>
             <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: YELLOW }}>✳ BLOQ5 Locataire</div>
-            <h3 className="text-xl font-bold mb-2" style={{ color: "#1A1A1A" }}>Trouvez votre bien et postulez en ligne.</h3>
+            <h3 className="text-xl font-bold mb-2" style={{ color: "#1A1A1A" }}>Trouvez le bien qui correspond à votre activité.</h3>
             <p className="text-sm text-gray-500 mb-5">
-              Appartements, maisons, bureaux, locaux commerciaux ou espaces industriels — visitez, faites vos demandes de location et suivez leur avancement directement depuis votre profil.
+              Appartement, maison, bureau, local commercial ou espace industriel — accédez à des milliers d'annonces vérifiées et postulez en ligne sans paperasse.
             </p>
             <ul className="space-y-2 mb-7">
-              {[
-                "Visite virtuelle ou physique sur calendrier",
-                "Max. 3 demandes simultanées en cours",
-                "Messagerie directe avec le gestionnaire",
-                "Statut de demande en temps réel",
-              ].map((txt) => (
+              {["Résidentiel, commercial et industriel", "Dossier locataire ou bail commercial en ligne", "Visite virtuelle et signature électronique"].map((txt) => (
                 <li key={txt} className="flex items-center gap-2 text-sm text-gray-700">
                   <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: "#22C55E" }} />
                   {txt}
                 </li>
               ))}
             </ul>
-            <Link href="/properties">
-              <button className="btn-yellow self-start text-sm">Parcourir les annonces</button>
-            </Link>
+            <button className="btn-yellow self-start text-sm">Rechercher un bien</button>
           </div>
 
-          {/* Propriétaire */}
-          <div className="rounded-2xl p-8 flex flex-col" style={{ background: "#1A1A1A" }}>
-            <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: YELLOW }}>✳ BLOQ5 Propriétaire & Gestionnaire</div>
-            <h3 className="text-xl font-bold mb-2 text-white">Publiez, gérez, et suivez votre portefeuille.</h3>
-            <p className="text-sm mb-5" style={{ color: "rgba(255,255,255,0.6)" }}>
-              Tous types de biens — résidentiel, commercial ou industriel. Dashboard complet, KPI en temps réel, gestion des demandes et désignation de gestionnaires.
+          <div className="rounded-2xl p-8 flex flex-col" style={{ background: YELLOW }}>
+            <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#7a4a00" }}>✳ BLOQ5 Propriétaire</div>
+            <h3 className="text-xl font-bold mb-2 text-white">Publiez votre annonce et gérez votre bien sans effort.</h3>
+            <p className="text-sm text-white/80 mb-5">
+              Appartement, maison, bureau, local commercial ou entrepôt — confiez la gestion locative de tous vos biens à BLOQ5 : mise en location rapide, locataires qualifiés, suivi en temps réel.
             </p>
             <ul className="space-y-2 mb-7">
-              {[
-                "Publication de biens en quelques minutes",
-                "KPI : vues, demandes, taux d'occupation",
-                "Délégation à des gestionnaires désignés",
-                "Dès 22 CA$/mois — plans sur mesure disponibles",
-              ].map((txt) => (
+              {["Tous types de biens : résidentiel, commercial, industriel", "Bail résidentiel ou commercial rédigé et signé en ligne", "Gestion complète, tableaux de bord en temps réel"].map((txt) => (
                 <li key={txt} className="flex items-center gap-2 text-sm text-white">
-                  <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
+                  <CheckCircle className="w-4 h-4 flex-shrink-0 text-white" />
                   {txt}
                 </li>
               ))}
             </ul>
-            <Link href="/pro/pricing">
-              <button className="self-start text-sm font-semibold rounded-md px-5 py-2.5 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
-                Voir les plans Pro
-              </button>
-            </Link>
+            <button className="self-start text-sm font-semibold rounded-md px-5 py-2.5 transition-opacity hover:opacity-85" style={{ background: "#1A1A1A", color: "#fff" }}>
+              Déposer mon annonce
+            </button>
           </div>
         </div>
       </section>
@@ -755,19 +696,6 @@ export default function HomePage() {
                 </ul>
               </div>
             ))}
-          </div>
-
-          {/* Bandeau Devenir Pro */}
-          <div className="border-t border-gray-800 pt-8 pb-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-              <p className="text-white font-semibold text-sm">Vous êtes propriétaire ou gestionnaire ?</p>
-              <p className="text-gray-500 text-xs mt-0.5">Publiez vos biens et gérez votre portefeuille locatif — dès 22 CA$/mois.</p>
-            </div>
-            <Link href="/pro/pricing">
-              <button className="text-sm font-bold px-6 py-2.5 rounded-xl flex-shrink-0 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
-                Devenir Pro →
-              </button>
-            </Link>
           </div>
 
           <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between text-xs text-gray-600 gap-3">
