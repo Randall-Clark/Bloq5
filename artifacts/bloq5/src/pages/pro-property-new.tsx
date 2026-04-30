@@ -46,7 +46,7 @@ export default function ProPropertyNewPage() {
       type: "apartment",
       address: "",
       city: "",
-      country: "France",
+      country: "Canada",
       price: undefined,
       bedrooms: undefined,
       bathrooms: undefined,

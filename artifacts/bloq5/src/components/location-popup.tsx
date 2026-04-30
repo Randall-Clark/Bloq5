@@ -9,7 +9,7 @@ const YELLOW = "#F5A623";
 export function LocationPopup() {
   const { showPopup, confirm } = useLocation_();
   const [, navigate]          = useWouterLocation();
-  const [countryCode, setCountryCode] = useState("FR");
+  const [countryCode, setCountryCode] = useState("CA");
   const [postalCode, setPostalCode]   = useState("");
   const [error, setError]             = useState("");
   const [visible, setVisible]         = useState(false);

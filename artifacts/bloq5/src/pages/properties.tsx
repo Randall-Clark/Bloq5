@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { useListProperties } from "@workspace/api-client-react";
 import { useLocation_ } from "@/context/location-context";
+import { countryPrep } from "@/data/countries";
 import {
   Search, Bell, ChevronDown, ChevronLeft, ChevronRight,
   Bed, Bath, Maximize2, MapPin, Home, Building2, Users,
@@ -171,7 +172,7 @@ export default function PropertiesPage() {
   const { country } = useLocation_();
   const cityFromUrl = getSearchParam("city");
   const typeFromUrl = getSearchParam("type");
-  const city = cityFromUrl || "Paris";
+  const city = cityFromUrl || country.cities[0]?.name || "Montréal";
 
   const [searchInput, setSearchInput] = useState(city);
   const [filterType,  setFilterType]  = useState(typeFromUrl || "all");
@@ -434,7 +435,7 @@ export default function PropertiesPage() {
                 </span>
               </h2>
               <p className="text-sm text-gray-500 mt-4 mb-7 leading-relaxed max-w-md">
-                Plus de 2 500 clients, propriétaires et locataires, nous recommandent pour notre réactivité et notre efficacité. Grâce à leur confiance, nous gérons aujourd'hui plus de 8 000 lots répartis dans plus de 40 métropoles en France.
+                Plus de 2 500 clients, propriétaires et locataires, nous recommandent pour notre réactivité et notre efficacité. Grâce à leur confiance, nous gérons aujourd'hui plus de 8 000 lots répartis dans plus de 40 métropoles {countryPrep(country.code)} {country.name}.
               </p>
               <button className="text-sm font-bold rounded-full px-6 py-3 hover:opacity-85 transition-opacity" style={{ background: YELLOW, color: "#1A1A1A" }}>
                 Vous êtes propriétaire ?
@@ -458,7 +459,7 @@ export default function PropertiesPage() {
           </div>
           <div>
             <h5 className="font-bold text-sm mb-3" style={{ color: "#1A1A1A" }}>Locations à {city}</h5>
-            {[`${city} (toute la ville)`, `${city} 2`, `${city} 15`].map(l => (
+            {[`${city} (toute la ville)`, ...ARRONDISSEMENTS.slice(0, 4)].map(l => (
               <a key={l} href="#" className="seo-link">{l}</a>
             ))}
           </div>

@@ -57,7 +57,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   const saved = loadSaved();
 
   const [state, setState] = useState<LocationState>({
-    country: saved ? getCountryByCode(saved.countryCode) : getCountryByCode("FR"),
+    country: saved ? getCountryByCode(saved.countryCode) : getCountryByCode("CA"),
     postalCode: saved?.postalCode ?? "",
     isReady: !!saved,
     showPopup: !saved,

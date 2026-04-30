@@ -114,9 +114,7 @@ export default function ComingSoonPage() {
 
         {/* Active countries hint */}
         <p className="text-xs text-gray-400 mt-10">
-          Actuellement disponible en{" "}
-          <span className="font-semibold text-gray-600">🇫🇷 France</span>{" "}
-          et{" "}
+          Actuellement disponible au{" "}
           <span className="font-semibold text-gray-600">🇨🇦 Canada</span>.
         </p>
       </div>

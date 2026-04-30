@@ -42,8 +42,8 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
               <h4 className="text-lg font-bold mb-6">Contact</h4>
               <ul className="space-y-4 text-blue-200">
                 <li>contact@bloq5.com</li>
-                <li>+33 1 23 45 67 89</li>
-                <li>Paris, France</li>
+                <li>+1 514 000 0000</li>
+                <li>Montréal, Canada</li>
               </ul>
             </div>
           </div>

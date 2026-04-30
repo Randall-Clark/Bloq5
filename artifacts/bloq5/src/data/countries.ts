@@ -148,12 +148,20 @@ export const COUNTRY_MAP: Record<string, CountryData> = Object.fromEntries(
 );
 
 export function getCountryByCode(code: string): CountryData {
-  return COUNTRY_MAP[code] ?? COUNTRY_MAP["FR"];
+  return COUNTRY_MAP[code] ?? COUNTRY_MAP["CA"];
 }
 
 /** Countries that have full platform support */
-export const ACTIVE_COUNTRY_CODES = new Set(["FR", "CA"]);
+export const ACTIVE_COUNTRY_CODES = new Set(["CA"]);
 
 export function isActiveCountry(code: string): boolean {
   return ACTIVE_COUNTRY_CODES.has(code);
+}
+
+/** Returns the correct French preposition for a country ("au", "en", "aux", etc.) */
+const COUNTRY_PREPS: Record<string, string> = {
+  CA: "au", LU: "au", CM: "au", SN: "au", MA: "au",
+};
+export function countryPrep(code: string): string {
+  return COUNTRY_PREPS[code] ?? "en";
 }

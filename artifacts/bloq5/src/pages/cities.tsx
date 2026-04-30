@@ -1,6 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Search, ChevronDown, MapPin, Plus } from "lucide-react";
 import { useLocation_ } from "@/context/location-context";
+import { countryPrep } from "@/data/countries";
 
 const YELLOW = "#F5A623";
 
@@ -159,7 +160,7 @@ export default function CitiesPage() {
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold leading-tight mb-4" style={{ color: "#1A1A1A" }}>
             <span style={{ color: YELLOW }}>BLOQ5</span> vous propose des biens<br />
-            {country.name === "France" ? "à travers toute la France !" : `partout en ${country.name} ${country.flag} !`}
+            {`partout ${countryPrep(country.code)} ${country.name} ${country.flag} !`}
           </h1>
           <p className="text-base" style={{ color: "#666" }}>
             Une gestion locative dans les plus grandes métropoles.
@@ -206,7 +207,7 @@ export default function CitiesPage() {
                 </span>
               </h2>
               <p className="text-sm text-gray-500 mt-4 mb-7 leading-relaxed max-w-md">
-                Plus de 2 500 clients, propriétaires et locataires, nous recommandent pour notre réactivité et notre efficacité. Grâce à leur confiance, nous gérons aujourd'hui plus de 8 000 lots répartis dans plus de 40 métropoles en France.
+                Plus de 2 500 clients, propriétaires et locataires, nous recommandent pour notre réactivité et notre efficacité. Grâce à leur confiance, nous gérons aujourd'hui plus de 8 000 lots répartis dans plus de 40 métropoles {countryPrep(country.code)} {country.name}.
               </p>
               <button className="btn-yellow text-sm">
                 Vous êtes propriétaire ?
