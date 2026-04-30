@@ -427,7 +427,7 @@ export default function HomePage() {
           {/* ── Category tiles ── */}
           <div className="flex items-center justify-center gap-3 flex-wrap mt-2">
             {CATEGORIES.map((cat) => (
-              <Link key={cat.type} href={`/properties?type=${cat.type}`}>
+              <Link key={cat.type} href={`/cities?type=${cat.type}`}>
                 <div className="flex flex-col items-center gap-1.5 bg-white rounded-xl px-5 py-3 shadow-md cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 min-w-[90px]">
                   <cat.icon className="w-6 h-6" style={{ color: YELLOW }} />
                   <span className="text-xs font-semibold text-gray-700 whitespace-nowrap">{cat.label}</span>

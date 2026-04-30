@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { Search, ChevronDown, MapPin, Plus } from "lucide-react";
 import { useLocation_ } from "@/context/location-context";
 import { countryPrep } from "@/data/countries";
@@ -66,10 +66,30 @@ function BuildingIllustration() {
   );
 }
 
+const CATEGORY_LABELS: Record<string, string> = {
+  apartment: "Appartements",
+  house: "Maisons",
+  "co-living": "Colocations",
+  office: "Bureaux",
+  commercial: "Locaux commerciaux",
+  industrial: "Espaces industriels",
+};
+
 export default function CitiesPage() {
   const [, navigate] = useLocation();
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const typeFilter = params.get("type") ?? "";
+
   const { country } = useLocation_();
   const cities = country.cities;
+
+  function goToCity(cityName: string) {
+    const dest = typeFilter
+      ? `/properties?city=${encodeURIComponent(cityName)}&type=${encodeURIComponent(typeFilter)}`
+      : `/properties?city=${encodeURIComponent(cityName)}`;
+    navigate(dest);
+  }
 
   /* Split cities: first group in 4-col grid, remainder centred */
   const cols = 4;
@@ -151,16 +171,28 @@ export default function CitiesPage() {
 
         {/* Text content */}
         <div className="max-w-3xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5 text-xs font-semibold mb-6" style={{ color: YELLOW }}>
-            <MapPin className="w-3.5 h-3.5" />
-            Choisissez votre ville
+          <div className="flex flex-col items-center gap-2 mb-6">
+            <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-4 py-1.5 text-xs font-semibold" style={{ color: YELLOW }}>
+              <MapPin className="w-3.5 h-3.5" />
+              Choisissez votre ville
+            </div>
+            {typeFilter && CATEGORY_LABELS[typeFilter] && (
+              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-bold" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                {CATEGORY_LABELS[typeFilter]} — sélectionnez une ville pour continuer
+              </div>
+            )}
           </div>
           <h1 className="text-3xl md:text-4xl font-extrabold leading-tight mb-4" style={{ color: "#1A1A1A" }}>
-            <span style={{ color: YELLOW }}>BLOQ5</span> vous propose des biens<br />
-            {`partout ${countryPrep(country.code)} ${country.name} ${country.flag} !`}
+            {typeFilter && CATEGORY_LABELS[typeFilter]
+              ? <><span style={{ color: YELLOW }}>{CATEGORY_LABELS[typeFilter]}</span> disponibles<br />{`partout ${countryPrep(country.code)} ${country.name} ${country.flag} !`}</>
+              : <><span style={{ color: YELLOW }}>BLOQ5</span> vous propose des biens<br />{`partout ${countryPrep(country.code)} ${country.name} ${country.flag} !`}</>
+            }
           </h1>
           <p className="text-base" style={{ color: "#666" }}>
-            Une gestion locative dans les plus grandes métropoles.
+            {typeFilter
+              ? "Choisissez une ville pour voir les annonces disponibles."
+              : "Une gestion locative dans les plus grandes métropoles."
+            }
           </p>
         </div>
       </section>
@@ -171,14 +203,14 @@ export default function CitiesPage() {
           {/* 4 × 4 grid */}
           <div className="grid grid-cols-4 gap-4 mb-4">
             {main.map((city) => (
-              <CityCard key={city.name} city={city} onClick={() => navigate(`/properties?city=${city.name}`)} />
+              <CityCard key={city.name} city={city} onClick={() => goToCity(city.name)} />
             ))}
           </div>
 
           {/* Last 2 centred */}
           <div className="flex justify-center gap-4">
             {tail.map((city) => (
-              <CityCard key={city.name} city={city} onClick={() => navigate(`/properties?city=${city.name}`)} />
+              <CityCard key={city.name} city={city} onClick={() => goToCity(city.name)} />
             ))}
           </div>
         </div>
