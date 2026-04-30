@@ -7,7 +7,7 @@ import {
   CheckCircle, FileText, PenLine, ClipboardList, ChevronRight,
   SlidersHorizontal, Home, Building2, Users, Briefcase, Store,
   X, Wifi, Zap, Flame, Droplets, Wind, Car, PawPrint,
-  LayoutGrid, ChevronUp
+  LayoutGrid, ChevronUp, Factory
 } from "lucide-react";
 
 const YELLOW = "#F5A623";
@@ -32,44 +32,44 @@ type StaticProp = { title: string; city: string; price: number; bedrooms: number
 
 const STATIC_PROPS_MAP: Record<string, StaticProp[]> = {
   FR: [
-    { title: "Maison familiale – 5 pièces",        city: "Bordeaux",    price: 2100, bedrooms: 4, bathrooms: 2, area: 140, img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80" },
-    { title: "Appartement lumineux – centre-ville", city: "Lyon",        price: 1200, bedrooms: 2, bathrooms: 1, area: 65,  img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500&q=80" },
-    { title: "Studio meublé – proche campus",       city: "Toulouse",    price: 580,  bedrooms: 1, bathrooms: 1, area: 24,  img: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=500&q=80" },
-    { title: "Colocation – chambre privée",         city: "Paris 11e",   price: 750,  bedrooms: 1, bathrooms: 1, area: 18,  img: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=500&q=80" },
-    { title: "Bureau open-space – La Défense",      city: "La Défense",  price: 4500, bedrooms: 0, bathrooms: 2, area: 200, img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80" },
-    { title: "Local commercial – rez-de-chaussée",  city: "Nice",        price: 1800, bedrooms: 0, bathrooms: 1, area: 80,  img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&q=80" },
+    { title: "Appartement T3 – centre historique",  city: "Lyon",        price: 1350, bedrooms: 2, bathrooms: 1, area: 68,  img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500&q=80" },
+    { title: "Maison individuelle – jardin privé",  city: "Bordeaux",    price: 2200, bedrooms: 4, bathrooms: 2, area: 145, img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80" },
+    { title: "Bureau clé en main – 12 postes",      city: "Paris",       price: 5200, bedrooms: 0, bathrooms: 2, area: 210, img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80" },
+    { title: "Local commercial – pied d'immeuble",  city: "Toulouse",    price: 1900, bedrooms: 0, bathrooms: 1, area: 85,  img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&q=80" },
+    { title: "Entrepôt logistique – accès A62",     city: "Bordeaux",    price: 3800, bedrooms: 0, bathrooms: 2, area: 600, img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=500&q=80" },
+    { title: "Colocation – 4 chambres meublées",    city: "Nice",        price: 680,  bedrooms: 1, bathrooms: 1, area: 22,  img: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=500&q=80" },
   ],
   CA: [
-    { title: "Condo moderne – Plateau Mont-Royal",  city: "Montréal",    price: 2400, bedrooms: 2, bathrooms: 1, area: 70,  img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500&q=80" },
-    { title: "Maison jumelée – banlieue sud",       city: "Toronto",     price: 3800, bedrooms: 3, bathrooms: 2, area: 120, img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80" },
-    { title: "Studio meublé – Vieux-Québec",        city: "Québec",      price: 1100, bedrooms: 1, bathrooms: 1, area: 32,  img: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=500&q=80" },
-    { title: "Colocation – chambre privée",         city: "Montréal",    price: 980,  bedrooms: 1, bathrooms: 1, area: 20,  img: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=500&q=80" },
-    { title: "Bureau open-space – Downtown",        city: "Vancouver",   price: 6500, bedrooms: 0, bathrooms: 2, area: 200, img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80" },
-    { title: "Local commercial – avenue principale",city: "Calgary",     price: 2800, bedrooms: 0, bathrooms: 1, area: 90,  img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&q=80" },
+    { title: "Appartement 4½ – Plateau Mont-Royal", city: "Montréal",    price: 2100, bedrooms: 2, bathrooms: 1, area: 72,  img: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500&q=80" },
+    { title: "Maison unifamiliale – banlieue sud",  city: "Toronto",     price: 3900, bedrooms: 4, bathrooms: 2, area: 180, img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80" },
+    { title: "Bureau moderne – Downtown core",      city: "Vancouver",   price: 7200, bedrooms: 0, bathrooms: 2, area: 240, img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80" },
+    { title: "Local commercial – rue Sainte-Cath.", city: "Montréal",    price: 3200, bedrooms: 0, bathrooms: 1, area: 110, img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&q=80" },
+    { title: "Entrepôt industriel – zone logistique",city: "Calgary",    price: 5500, bedrooms: 0, bathrooms: 2, area: 850, img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=500&q=80" },
+    { title: "Colocation – chambre privée meublée", city: "Québec",      price: 950,  bedrooms: 1, bathrooms: 1, area: 20,  img: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=500&q=80" },
   ],
 };
 
 type Article = { category: string; title: string; img: string };
 const ARTICLES_MAP: Record<string, Article[]> = {
   FR: [
-    { category: "Guide locataire", title: "Comment préparer un dossier de location solide ?",     img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500&q=80" },
-    { category: "Marché",          title: "Baromètre des loyers en France – 2025",                 img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&q=80" },
-    { category: "City Guide",      title: "Les meilleurs quartiers pour vivre à Lyon",             img: "https://images.unsplash.com/photo-1569949261756-48d5e02a9e8b?w=500&q=80" },
+    { category: "Guide propriétaire", title: "Gestion locative : comment déléguer efficacement ?",  img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500&q=80" },
+    { category: "Marché commercial",  title: "Louer un local commercial : les clauses à connaître", img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80" },
+    { category: "Immobilier industriel", title: "Entrepôts et ateliers : le marché locatif en 2025", img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=500&q=80" },
   ],
   CA: [
-    { category: "Guide locataire", title: "Comment préparer un dossier de location solide ?",     img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500&q=80" },
-    { category: "Marché",          title: "Baromètre des loyers au Canada – 2025",                 img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=500&q=80" },
-    { category: "City Guide",      title: "Les meilleurs quartiers pour vivre à Montréal",         img: "https://images.unsplash.com/photo-1569949261756-48d5e02a9e8b?w=500&q=80" },
+    { category: "Guide propriétaire", title: "Gestion locative au Canada : déléguer en toute sérénité", img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500&q=80" },
+    { category: "Marché commercial",  title: "Bail commercial au Québec : ce que tout propriétaire doit savoir", img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80" },
+    { category: "Industriel & Logistique", title: "Espaces industriels au Canada : tendances et opportunités 2025", img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=500&q=80" },
   ],
 };
 
 const CATEGORIES = [
-  { icon: Home,      label: "Maisons",      type: "house" },
   { icon: Building2, label: "Appartements", type: "apartment" },
-  { icon: LayoutGrid,label: "Condos",       type: "condo" },
+  { icon: Home,      label: "Maisons",      type: "house" },
   { icon: Users,     label: "Colocations",  type: "co-living" },
   { icon: Briefcase, label: "Bureaux",      type: "office" },
   { icon: Store,     label: "Commerciales", type: "commercial" },
+  { icon: Factory,   label: "Industriel",   type: "industrial" },
 ];
 
 /* ── Pill selector helper ── */
@@ -228,13 +228,13 @@ export default function HomePage() {
           {/* Badge */}
           <p className="text-white/80 text-sm font-medium mb-5">
             <span style={{ color: YELLOW }} className="mr-1 text-base">✳</span>
-            BLOQ5 — la location simplifiée pour tous
+            BLOQ5 — La gestion immobilière locative, simplifiée
           </p>
 
           {/* Title */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-8">
-            Trouvez votre{" "}
-            <span className="script-yellow" style={{ fontSize: "1.1em" }}>Location Idéale</span>
+            Tous vos biens, une seule{" "}
+            <span className="script-yellow" style={{ fontSize: "1.1em" }}>Plateforme</span>
           </h1>
 
           {/* ── Search bar ── */}
@@ -449,7 +449,7 @@ export default function HomePage() {
               Nos derniers biens à{" "}
               <span className="script-yellow">louer</span>
             </h2>
-            <p className="text-gray-500 text-sm mt-1">Maisons, appartements, condos, colocations — découvrez nos annonces vérifiées.</p>
+            <p className="text-gray-500 text-sm mt-1">Appartements, maisons, bureaux, locaux commerciaux et espaces industriels — des biens gérés et vérifiés par BLOQ5.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
@@ -496,15 +496,15 @@ export default function HomePage() {
             <div className="md:w-1/3 mb-8 md:mb-0">
               <h2 className="text-2xl font-bold mb-3" style={{ color: "#1A1A1A" }}>Comment ça marche ?</h2>
               <p className="text-gray-500 text-sm leading-relaxed">
-                BLOQ5 simplifie chaque étape de votre location — de la recherche à la signature, tout se fait en ligne.
+                BLOQ5 gère l'ensemble du cycle locatif pour tout type de bien — résidentiel, commercial ou industriel. Propriétaires et locataires, tout se fait en ligne.
               </p>
             </div>
             <div className="md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
-                { icon: Search,      color: "#E3F2FD", iconColor: "#1565C0", step: "Je sélectionne mon bien",      desc: "Parcourez des milliers d'annonces vérifiées : maisons, appartements, condos, bureaux et plus." },
-                { icon: FileText,    color: "#FFF3E0", iconColor: "#E65100", step: "Je dépose mon dossier",        desc: "Envoyez votre dossier locataire en quelques minutes, directement depuis l'application." },
-                { icon: PenLine,     color: "#E8F5E9", iconColor: "#2E7D32", step: "Je signe mes documents",      desc: "Signature électronique sécurisée de votre bail, quittance et état des lieux." },
-                { icon: ClipboardList, color: "#F3E5F5", iconColor: "#6A1B9A", step: "J'emménage sereinement",   desc: "BLOQ5 réalise l'état des lieux avec vous et assure le suivi tout au long de votre bail." },
+                { icon: Search,        color: "#E3F2FD", iconColor: "#1565C0", step: "Trouvez le bien adapté",      desc: "Appartements, maisons, bureaux, locaux commerciaux ou entrepôts industriels — filtrez par type, superficie et loyer." },
+                { icon: FileText,      color: "#FFF3E0", iconColor: "#E65100", step: "Déposez votre dossier",       desc: "Dossier locataire ou bail commercial en quelques minutes, directement depuis l'application." },
+                { icon: PenLine,       color: "#E8F5E9", iconColor: "#2E7D32", step: "Signez vos documents",        desc: "Signature électronique sécurisée : bail résidentiel, bail commercial, état des lieux et quittances." },
+                { icon: ClipboardList, color: "#F3E5F5", iconColor: "#6A1B9A", step: "BLOQ5 gère pour vous",        desc: "Suivi des paiements, gestion des incidents, renouvellement de bail — nous nous occupons de tout." },
               ].map((s, i) => (
                 <div key={i} className="flex gap-4 bg-white rounded-xl p-5 shadow-sm">
                   <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ background: s.color }}>
@@ -557,12 +557,12 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="rounded-2xl p-8 flex flex-col" style={{ background: "#FEF9EE" }}>
             <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: YELLOW }}>✳ BLOQ5 Locataire</div>
-            <h3 className="text-xl font-bold mb-2" style={{ color: "#1A1A1A" }}>Trouvez votre logement idéal en quelques clics.</h3>
+            <h3 className="text-xl font-bold mb-2" style={{ color: "#1A1A1A" }}>Trouvez le bien qui correspond à votre activité.</h3>
             <p className="text-sm text-gray-500 mb-5">
-              Maison, appartement, condo ou colocation — accédez à des milliers d'annonces vérifiées et postulez en ligne sans paperasse.
+              Appartement, maison, bureau, local commercial ou espace industriel — accédez à des milliers d'annonces vérifiées et postulez en ligne sans paperasse.
             </p>
             <ul className="space-y-2 mb-7">
-              {["Annonces vérifiées et à jour", "Dossier locataire en ligne", "Visite virtuelle disponible"].map((txt) => (
+              {["Résidentiel, commercial et industriel", "Dossier locataire ou bail commercial en ligne", "Visite virtuelle et signature électronique"].map((txt) => (
                 <li key={txt} className="flex items-center gap-2 text-sm text-gray-700">
                   <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: "#22C55E" }} />
                   {txt}
@@ -576,10 +576,10 @@ export default function HomePage() {
             <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#7a4a00" }}>✳ BLOQ5 Propriétaire</div>
             <h3 className="text-xl font-bold mb-2 text-white">Publiez votre annonce et gérez votre bien sans effort.</h3>
             <p className="text-sm text-white/80 mb-5">
-              Confiez la gestion locative de votre bien à BLOQ5 : mise en location rapide, locataires sélectionnés, suivi en temps réel.
+              Appartement, maison, bureau, local commercial ou entrepôt — confiez la gestion locative de tous vos biens à BLOQ5 : mise en location rapide, locataires qualifiés, suivi en temps réel.
             </p>
             <ul className="space-y-2 mb-7">
-              {["Annonce mise en ligne sous 24h", "Sélection rigoureuse des locataires", "Gestion complète, zéro stress"].map((txt) => (
+              {["Tous types de biens : résidentiel, commercial, industriel", "Bail résidentiel ou commercial rédigé et signé en ligne", "Gestion complète, tableaux de bord en temps réel"].map((txt) => (
                 <li key={txt} className="flex items-center gap-2 text-sm text-white">
                   <CheckCircle className="w-4 h-4 flex-shrink-0 text-white" />
                   {txt}
@@ -600,7 +600,7 @@ export default function HomePage() {
             <div className="md:w-1/2 mb-8 md:mb-0">
               <h2 className="text-xl font-bold mb-2" style={{ color: "#1A1A1A" }}>BLOQ5 bien entourée</h2>
               <p className="text-sm text-gray-500 mb-5 leading-relaxed">
-                Soutenu par la Banque Publique d'Investissement et labellisé French Tech, BLOQ5 innove pour rendre la location immobilière plus simple, transparente et accessible à tous.
+                Reconnu parmi les plateformes PropTech les plus innovantes au Canada, BLOQ5 simplifie la gestion locative de tous types de biens — appartements, maisons, bureaux, locaux commerciaux et espaces industriels — pour les propriétaires et les locataires.
               </p>
               <button className="btn-outline-dark text-sm px-6 py-2.5">En savoir +</button>
             </div>
@@ -627,7 +627,7 @@ export default function HomePage() {
             </div>
             <button className="btn-yellow text-sm px-5 py-2">Tous les articles</button>
           </div>
-          <p className="text-sm text-gray-500 mb-8">Conseils, guides, tendances — tout pour réussir votre location.</p>
+          <p className="text-sm text-gray-500 mb-8">Conseils, guides et tendances pour propriétaires et locataires — résidentiel, commercial et industriel.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {ARTICLES.map((a, i) => (
               <div key={i} className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
@@ -653,12 +653,12 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
             <div>
               <div className="text-2xl font-black text-white mb-2">BLOQ<span style={{ color: YELLOW }}>5</span></div>
-              <p className="text-xs text-gray-500 leading-relaxed mb-4">La location simplifiée pour tous.<br />Carte professionnelle : n°CIN 4567 219-005-539-504</p>
+              <p className="text-xs text-gray-500 leading-relaxed mb-4">La plateforme de gestion immobilière locative — résidentiel, commercial et industriel.<br />Carte professionnelle : n°CIN 4567 219-005-539-504</p>
             </div>
             <div>
               <h4 className="text-white font-semibold text-sm mb-4">Nos services</h4>
               <ul className="space-y-2 text-xs text-gray-500">
-                {["Gestion locative", "Estimation en ligne", "Location longue durée", "Location courte durée", "BLOQ5 Pro", "Tarifs"].map(l => (
+                {["Gestion locative résidentielle", "Gestion locative commerciale", "Espaces industriels & logistique", "Location longue durée", "BLOQ5 Pro", "Tarifs"].map(l => (
                   <li key={l}><a href="#" className="hover:text-white transition-colors">{l}</a></li>
                 ))}
               </ul>

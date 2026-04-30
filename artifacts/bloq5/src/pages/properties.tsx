@@ -77,19 +77,19 @@ function BuildingIllustration() {
 }
 
 /* ── Static fallback cards ── */
-const TYPES = ["Appartement Studio", "Maison 4 pièces", "Appartement 2 pièces", "Studio meublé", "Appartement 3 pièces", "Chambre en colocation", "Appartement F3", "Bureau open-space", "Local commercial", "Appartement duplex", "Studio cosy"];
-const AREAS = [22, 110, 55, 20, 72, 15, 68, 120, 85, 90, 19, 48];
-const ROOMS = [1, 4, 2, 1, 3, 1, 3, 1, 1, 4, 1, 2];
-const BATHS = [1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1];
+const TYPES = ["Appartement 4½", "Maison unifamiliale", "Appartement 3½", "Appartement meublé", "Appartement 5½", "Chambre en colocation", "Bureau open-space", "Local commercial – rez-de-chaussée", "Entrepôt industriel", "Appartement 2 chambres", "Local d'activité mixte", "Bureau cloisonné"];
+const AREAS = [72, 185, 55, 48, 105, 20, 210, 120, 850, 68, 380, 145];
+const ROOMS = [2, 4, 1, 1, 3, 1, 0, 0, 0, 2, 0, 0];
+const BATHS = [1, 2, 1, 1, 2, 1, 2, 1, 2, 1, 2, 2];
 
 /* Country-aware prices and neighborhoods */
 const PRICES_MAP: Record<string, number[]> = {
-  FR: [750, 2100, 1150, 620, 1380, 490, 1250, 3500, 1800, 1900, 680, 920],
-  CA: [1200, 3500, 1800, 950, 2200, 780, 2000, 5500, 2800, 3200, 1100, 1500],
+  FR: [1100, 2800, 850, 690, 1650, 520, 4200, 2400, 6800, 1300, 5500, 3800],
+  CA: [1800, 4200, 1350, 1050, 2600, 850, 6500, 3800, 9500, 2100, 8200, 5800],
 };
 const NEIGHBORHOODS_MAP: Record<string, string[]> = {
-  FR: ["Paris 11ème", "Paris 16ème", "Paris 5ème", "Paris 14ème", "Paris 7ème", "Paris 18ème", "Paris 3ème", "La Défense", "Paris 12ème", "Paris 8ème", "Paris 13ème", "Paris 9ème"],
-  CA: ["Plateau Mont-Royal", "Rosemont", "Verdun", "Côte-des-Neiges", "Villeray", "Outremont", "Griffintown", "Mile-End", "Saint-Laurent", "Laval", "Longueuil", "Westmount"],
+  FR: ["Plateau historique", "Banlieue résidentielle", "Quartier étudiant", "Centre-ville", "Quartier familial", "Campus universitaire", "Quartier d'affaires", "Artère commerciale", "Zone industrielle Est", "Quartier mixte", "Parc d'activités", "Tour de bureaux"],
+  CA: ["Plateau Mont-Royal", "Banlieue de Toronto", "Côte-des-Neiges", "Centre-ville Montréal", "Quartier familial", "Vieux-Québec", "Downtown Vancouver", "Rue Sainte-Catherine", "Zone industrielle Saint-Laurent", "Quartier mixte Griffintown", "Parc industriel de Calgary", "Tour de bureaux Downtown"],
 };
 const NEARBY_REGIONS_MAP: Record<string, string[]> = {
   FR: ["Locations Hauts-de-Seine (92)", "Locations Seine-Saint-Denis (93)", "Locations Val-de-Marne (94)"],
