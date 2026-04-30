@@ -34,7 +34,7 @@ function Navbar() {
             </span>
           </Link>
           <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-            <Link href="/properties" className="hover:text-gray-900 transition-colors">Biens à louer</Link>
+            <Link href="/cities" className="hover:text-gray-900 transition-colors">Biens à louer</Link>
             <a href="#" className="hover:text-gray-900 transition-colors">À propos</a>
             <a href="#" className="hover:text-gray-900 transition-colors">Articles</a>
             <a href="#" className="hover:text-gray-900 transition-colors">Contact</a>
