@@ -1,0 +1,190 @@
+complète et entièrement en français pour le site BLOQ5, représentant la fiche détaillée d'une propriété à louer au Canada. Design épuré, professionnel, inspiré du site OQORO. Couleur principale : jaune #F5A623. Fond blanc. Font : Inter via Google Fonts.
+
+NAVBAR
+
+Logo BLOQ5 à gauche ("5" en jaune #F5A623)
+Liens : Biens à louer · À propos · Articles · Contact
+Droite : "Référence" (outline + icône loupe) · "Se connecter" · "Vous êtes propriétaire ▾" (fond jaune, coins arrondis)
+
+
+GALERIE PHOTOS (en haut, pleine largeur)
+
+Layout asymétrique : 1 grande photo à gauche (~60% largeur) + mosaïque 2×2 à droite
+Toutes les photos : https://picsum.photos/seed/[N]/800/500 intérieurs modernes
+Bouton en bas à gauche de la galerie : "📷 13 photos" (fond blanc semi-transparent, border-radius 20px, texte foncé)
+Icône 360° en haut à droite de la grande photo (cercle blanc avec icône)
+Border-radius 12px sur chaque photo, gap 8px entre les photos
+
+
+LAYOUT PRINCIPAL (2 colonnes sous la galerie)
+COLONNE GAUCHE (65%)
+Bloc titre + actions (inspiré image 6)
+
+Titre h1 : "Appartement meublé – 4½ – Montréal, QC" — noir gras #1A1A1A, 26px
+Ligne sous le titre : icône pin 📍 + "102, Rue Sainte-Catherine O, Montréal, QC H2X 1Z3" en gris
+Ligne caractéristiques : "2 Ch. · 1 Sdb · 65 m²" — texte gris, séparateurs points
+Badges : "Référence : BLQ-0012" · "Studio" · "Logement entier" · "Meublé" — fond gris très clair #F5F5F5, border-radius 20px, texte #555, 12px
+Icônes actions à droite alignées : ❤️ (favori) · ⇄ (comparer) · 🖨️ (imprimer) · ↗ (partager) — boutons outline cercle gris, 36px
+
+Section "Le logement"
+
+Titre h2 18px noir gras
+Paragraphe intro : "BLOQ5 vous présente ce logement de 65 m² idéalement situé au 102, Rue Sainte-Catherine O à Montréal."
+
+Section "L'appartement" (icône 🔴 rouge en titre)
+
+Texte descriptif sur 4-5 lignes : description des pièces, cuisine équipée, réfrigérateur, micro-ondes, salle de bain privative, chauffage inclus, connexion internet
+
+Section "Les accès et extérieurs" (icône 🟠 orange)
+
+Texte : accès par escalier, entrée sécurisée, buanderie commune au sous-sol
+
+Section "Le quartier" (icône 🔵 bleu)
+
+Texte intro
+Liste à puces :
+
+🎓 Éducation : Université du Québec à Montréal à 8 min à pied
+🚇 Transports : Station de métro Place-des-Arts (ligne Verte) à 3 min
+🛒 Commodités : nombreux commerces, épiceries, restaurants, cafés
+
+
+
+Badge "Publié par BLOQ5" : logo petit + texte gris, fond blanc bordure légère
+
+Section "Informations essentielles" (tableau sobre, alternance fond gris clair/blanc)
+
+Lignes :
+
+Superficie : 65 m²
+Nombre de chambres : 2
+Étage : 3e étage
+Honoraires charge locataire : 375 $ — Répartition : Constitution du bail 185 $, État des lieux entrée 190 $
+Loyer mensuel (charges comprises) : 1 390 $/mois — mis en évidence, fond gris clair, texte noir gras
+
+
+
+
+Section "Détail des charges" (inspiré OQORO)
+
+Boutons toggle : "Charges" | "Forfait : 75 $/mois" (actif en fond jaune #F5A623)
+Inclus dans les charges (grille 3 colonnes, icônes colorées jaune) :
+
+Chauffage · Électricité · Taxe ordures ménagères · Eau chaude · Eau courante · Internet Fibre
+
+
+
+
+Section "Équipements et commodités" (inspiré image 4)
+
+Titre h2 "Équipements et commodités"
+Grille 3 colonnes, puces rondes jaune #F5A623 :
+
+Détecteur de fumée · Détecteur de monoxyde de carbone · Trousse de premiers soins · Entrée autonome avec boîte à clés · Caméras de sécurité extérieures · Cintres · Literie fournie · Oreillers et couvertures supplémentaires · Fer à repasser · Téléviseur avec câble standard · Réfrigérateur · Micro-ondes · Lave-vaisselle · Machine à café
+
+
+
+
+Section "Property Details" (inspiré image 5, renommé en français)
+
+Titre h2 "Détails de la propriété"
+Paragraphe descriptif : "Logement de 65 m² situé dans le Quartier des Spectacles à Montréal. L'unité comprend 2 chambres, une cuisine entièrement équipée et un accès direct aux transports en commun. Chauffage et eau chaude inclus. Disponible immédiatement."
+Lien "Lire la suite ⬇" en jaune #F5A623
+Grille de détails 2 colonnes (style tableau), séparateurs horizontaux légers 1px solid #F0F0F0 :
+
+Gauche : ID #BLQ-0012 · Prix 1 390 $/mois · Superficie 65 m² · Pièces 4 · Salles de bain 1
+Droite : Chambres 2 · Année de construction 2018 · Type Appartement · Statut Disponible · Stationnement 1
+
+
+
+
+Section "Plans d'étage" (inspiré image 3)
+
+Titre h2 "Plans d'étage"
+Accordéon dépliable :
+
+En-tête : "∧ Premier étage" à gauche + "🛏 2 Chambres · 🚿 1 Salle de bain" à droite, fond gris très clair #F5F5F5
+Corps : grande image de plan d'étage simulée via SVG inline simple (rectangles représentant les pièces avec labels : Cuisine, Salon, Chambre 1, Chambre 2, Salle de bain, Entrée) — style blueprint noir sur fond blanc, cotes dimensionnelles en gris autour
+
+
+
+
+Section "Diagnostic de performance énergétique (DPE)"
+
+Titre h2
+Texte intro : "Montant estimé des dépenses annuelles : entre 400 $ et 700 $ par an (estimation basée sur les données 2022-2023)."
+Barre dégradée gauche (vert #4CAF50) → droite (rouge #F44336), hauteur 12px, border-radius 6px
+Curseur/indicateur rond jaune #F5A623 positionné à ~30% (bonne performance)
+Lien "Voir le détail de performance énergétique ↗" en jaune
+
+
+Section "Visite virtuelle"
+
+Titre h2 "Visite virtuelle"
+Texte : "Visualisez le bien en 3D et projetez-vous comme si vous y étiez !"
+Bloc vidéo simulé : fond noir #1A1A1A, ratio 16:9, border-radius 12px, icône play ▶ centré blanc sur cercle semi-transparent, texte en bas "102 Rue Sainte-Catherine O, Montréal – 2 Ch. – Appartement" + badge "Matterport" en bas à droite (fond blanc, texte gris)
+
+
+Section "Votre futur quartier"
+
+Titre h2 "Votre futur quartier : découvrez votre logement sur la carte"
+Texte : "Les informations sur les risques auxquels le bien est exposé sont disponibles sur le site Géorisques : www.georisques.gouv.fr"
+Carte simulée : iframe OpenStreetMap centré sur Montréal https://www.openstreetmap.org/export/embed.html?bbox=-73.58,45.49,-73.55,45.52&layer=mapnik — hauteur 300px, border-radius 12px, bordure 1px solid #E8E8E8
+
+
+Section "À proximité" (inspiré image 1, titre "What's Nearby?" → français)
+
+Titre h2 "À proximité"
+Sous-titre : "Découvrez les commodités à proximité pour bien évaluer l'emplacement et la qualité de vie offerte par ce logement."
+Grille 2 colonnes, 4 lignes, séparateurs légers :
+
+École : 0,5 km | Hôpital : 1,2 km
+Université : 0,8 km | Station de métro : 0,3 km
+Épicerie : 0,2 km | Gym / Bien-être : 0,9 km
+Marché : 0,7 km | Parc : 0,4 km
+
+
+Labels à gauche en jaune #F5A623 gras 13px, valeurs en gris #555
+
+
+Section "Pièces jointes" (inspiré image 2)
+
+Titre h2 "Pièces jointes"
+2 cartes côte à côte, fond gris très clair #F5F5F5, border-radius 8px, padding 16px :
+
+Icône PDF (bleu #1565C0, fond bleu clair) + "Bail-Logement.pdf" + icône téléchargement ⬇
+Icône DOC (cyan, fond cyan clair) + "Règlement-Immeuble.pdf" + icône téléchargement ⬇
+
+
+
+
+COLONNE DROITE (35%) — STICKY
+Carte prix + CTA (sticky, top 80px)
+
+Fond blanc, bordure 1px solid #E8E8E8, border-radius 16px, padding 24px, ombre légère
+Prix : "1 390 $/mois" — "1 390 $" en noir gras 28px, "/mois" en gris
+Sous-prix : "dont 75 $ de charges comprises"
+Badge statut : "● Disponible" — fond vert clair, texte vert
+Bouton principal pleine largeur : "Je dépose ma candidature" — fond jaune #F5A623, texte blanc ou noir foncé, border-radius 12px, padding 16px, font-weight 600, 16px
+Séparateur
+Ligne : icône + "375 $" gras + "Honoraires charge locataire" gris
+Ligne : icône surface + "65 m²" gras
+Ligne : icône lit + "2 Chambres" gras
+Séparateur
+Badge "Éligible aux aides (APL, ALS)" → adapter Canada : "Éligible aux aides au logement (RGI, PHAP)" — fond vert très clair, texte vert, border-radius 20px
+
+
+FOOTER SEO (fond blanc, 4 colonnes, petit texte 13px)
+
+Colonne 1 — Types de bien à Montréal : Location appartement · Location meublée · Colocation · Coliving
+Colonne 2 — Locations à proximité : Laval · Longueuil · Brossard · Saint-Lambert · Verdun
+Colonne 3 — Locations dans les régions à proximité : Locations Montérégie · Locations Laurentides · Locations Lanaudière
+Colonne 4 — Principales villes : Location Montréal · Location Québec · Location Toronto · Location Ottawa · Location Calgary · Location Vancouver
+
+
+FOOTER PRINCIPAL (fond #1A1A1A)
+
+Logo BLOQ5 blanc + cercle décoratif bas gauche
+Carte professionnelle : n°CPI 6901 2019 000 039 604
+Colonnes : Nos services · Nos outils · Société (mêmes liens que les autres pages)
+Ligne de copyright : "Copyright © 2026. Tous droits réservés. Fait avec ❤ à Montréal."
