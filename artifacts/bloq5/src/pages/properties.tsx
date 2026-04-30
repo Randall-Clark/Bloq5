@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect, lazy, Suspense } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useListProperties } from "@workspace/api-client-react";
 import { useLocation_ } from "@/context/location-context";
+import { useUser } from "@clerk/react";
 import { countryPrep } from "@/data/countries";
 import { PublicNavbar } from "@/components/public-navbar";
 import {
   Search, Bell, ChevronDown, ChevronLeft, ChevronRight, Map, List, X,
+  SlidersHorizontal, Check,
   Bed, Bath, Maximize2, MapPin, Home, Building2, Users,
   Briefcase, Store, LayoutGrid,
 } from "lucide-react";
@@ -186,7 +188,13 @@ export default function PropertiesPage() {
   const [filterBedrooms, setFilterBedrooms] = useState<number | null>(null);
   const [activeFilterPanel, setActiveFilterPanel] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertFreq, setAlertFreq] = useState<"immediate" | "daily" | "weekly">("daily");
+  const [alertSaved, setAlertSaved] = useState(false);
   const filterBarRef = useRef<HTMLDivElement>(null);
+  const { isSignedIn } = useUser();
+  const [, navigate] = useLocation();
 
   const ITEMS_PER_PAGE = 12;
 
@@ -234,6 +242,32 @@ export default function PropertiesPage() {
     !!filterMinPrice || !!filterMaxPrice,
     filterBedrooms !== null,
   ].filter(Boolean).length;
+
+  /* Dynamic filter pills based on selected type */
+  const isCommercial = filterType === "office" || filterType === "commercial";
+  const isResidential = !isCommercial;
+
+  function resetAllFilters() {
+    setFilterFurnished("all");
+    setFilterMinPrice("");
+    setFilterMaxPrice("");
+    setFilterBedrooms(null);
+    setCurrentPage(1);
+  }
+
+  function openAlert() {
+    if (!isSignedIn) {
+      navigate(`/sign-in?redirect=/properties${window.location.search}`);
+      return;
+    }
+    setAlertSaved(false);
+    setAlertOpen(true);
+  }
+
+  function saveAlert() {
+    setAlertSaved(true);
+    setTimeout(() => setAlertOpen(false), 1800);
+  }
 
   /* Page numbers visible dans la pagination (fenêtre glissante max 5) */
   function getPageNumbers(current: number, total: number): (number | "...")[] {
@@ -316,39 +350,41 @@ export default function PropertiesPage() {
             </button>
           </div>
 
-          {/* Filter pills — desktop */}
+          {/* Filter pills — desktop, dynamic per type */}
           <div className="hidden sm:flex items-center gap-2 flex-wrap relative">
 
-            {/* Meublé */}
-            <div className="relative">
-              <button
-                onClick={() => setActiveFilterPanel(activeFilterPanel === "furnished" ? null : "furnished")}
-                className={`filter-btn flex items-center gap-1 ${filterFurnished !== "all" ? "active" : ""}`}
-              >
-                {filterFurnished === "yes" ? "Meublé" : filterFurnished === "no" ? "Non meublé" : "Meublé ?"}
-                {filterFurnished !== "all"
-                  ? <X className="w-3 h-3" onClick={(e) => { e.stopPropagation(); setFilterFurnished("all"); }} />
-                  : <ChevronDown className="w-3 h-3" />}
-              </button>
-              {activeFilterPanel === "furnished" && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg p-3 z-50 min-w-[160px]">
-                  {[
-                    { v: "all", label: "Peu importe" },
-                    { v: "yes", label: "Meublé" },
-                    { v: "no",  label: "Non meublé" },
-                  ].map(opt => (
-                    <button
-                      key={opt.v}
-                      onClick={() => { setFilterFurnished(opt.v as "all" | "yes" | "no"); setActiveFilterPanel(null); setCurrentPage(1); }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors ${filterFurnished === opt.v ? "font-semibold" : ""}`}
-                      style={filterFurnished === opt.v ? { color: YELLOW } : {}}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Meublé — résidentiel uniquement */}
+            {isResidential && (
+              <div className="relative">
+                <button
+                  onClick={() => setActiveFilterPanel(activeFilterPanel === "furnished" ? null : "furnished")}
+                  className={`filter-btn flex items-center gap-1 ${filterFurnished !== "all" ? "active" : ""}`}
+                >
+                  {filterFurnished === "yes" ? "Meublé ✓" : filterFurnished === "no" ? "Non meublé ✓" : "Meublé ?"}
+                  {filterFurnished !== "all"
+                    ? <X className="w-3 h-3" onClick={(e) => { e.stopPropagation(); setFilterFurnished("all"); setCurrentPage(1); }} />
+                    : <ChevronDown className="w-3 h-3" />}
+                </button>
+                {activeFilterPanel === "furnished" && (
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg p-3 z-50 min-w-[170px]">
+                    {[
+                      { v: "all", label: "Peu importe" },
+                      { v: "yes", label: "Meublé" },
+                      { v: "no",  label: "Non meublé" },
+                    ].map(opt => (
+                      <button key={opt.v}
+                        onClick={() => { setFilterFurnished(opt.v as "all" | "yes" | "no"); setActiveFilterPanel(null); setCurrentPage(1); }}
+                        className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors flex items-center justify-between"
+                        style={filterFurnished === opt.v ? { color: YELLOW, fontWeight: 600 } : {}}
+                      >
+                        {opt.label}
+                        {filterFurnished === opt.v && <Check className="w-3.5 h-3.5" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Loyer */}
             <div className="relative">
@@ -358,102 +394,106 @@ export default function PropertiesPage() {
               >
                 {filterMinPrice || filterMaxPrice
                   ? `${filterMinPrice || "0"} – ${filterMaxPrice || "∞"} CA$`
-                  : "Loyer"}
+                  : isCommercial ? "Budget" : "Loyer"}
                 {(filterMinPrice || filterMaxPrice)
-                  ? <X className="w-3 h-3" onClick={(e) => { e.stopPropagation(); setFilterMinPrice(""); setFilterMaxPrice(""); }} />
+                  ? <X className="w-3 h-3" onClick={(e) => { e.stopPropagation(); setFilterMinPrice(""); setFilterMaxPrice(""); setCurrentPage(1); }} />
                   : <ChevronDown className="w-3 h-3" />}
               </button>
               {activeFilterPanel === "price" && (
                 <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-50 w-64">
-                  <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Budget mensuel (CA$)</p>
+                  <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">
+                    {isCommercial ? "Budget mensuel (CA$)" : "Loyer mensuel (CA$)"}
+                  </p>
                   <div className="flex gap-2 mb-3">
                     <div className="flex-1">
                       <label className="text-xs text-gray-400 mb-1 block">Min</label>
-                      <input
-                        type="number" min={0} step={50}
-                        value={filterMinPrice}
-                        onChange={(e) => setFilterMinPrice(e.target.value)}
-                        placeholder="0"
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-yellow-400"
-                      />
+                      <input type="number" min={0} step={50} value={filterMinPrice}
+                        onChange={(e) => setFilterMinPrice(e.target.value)} placeholder="0"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-yellow-400" />
                     </div>
                     <div className="flex-1">
                       <label className="text-xs text-gray-400 mb-1 block">Max</label>
-                      <input
-                        type="number" min={0} step={50}
-                        value={filterMaxPrice}
-                        onChange={(e) => setFilterMaxPrice(e.target.value)}
-                        placeholder="∞"
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-yellow-400"
-                      />
+                      <input type="number" min={0} step={50} value={filterMaxPrice}
+                        onChange={(e) => setFilterMaxPrice(e.target.value)} placeholder="∞"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-yellow-400" />
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 mb-3">
-                    {[800, 1200, 1600, 2000, 2500].map(p => (
+                    {(isCommercial ? [1500, 3000, 5000, 8000] : [800, 1200, 1600, 2000, 2500]).map(p => (
                       <button key={p} onClick={() => setFilterMaxPrice(String(p))}
                         className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${filterMaxPrice === String(p) ? "border-yellow-400 bg-yellow-50" : "border-gray-200"}`}>
                         &lt;{p}
                       </button>
                     ))}
                   </div>
-                  <button
-                    onClick={() => { setActiveFilterPanel(null); setCurrentPage(1); }}
-                    className="w-full py-2 rounded-lg text-sm font-semibold text-white"
-                    style={{ background: YELLOW, color: "#1A1A1A" }}
-                  >
+                  <button onClick={() => { setActiveFilterPanel(null); setCurrentPage(1); }}
+                    className="w-full py-2 rounded-lg text-sm font-semibold"
+                    style={{ background: YELLOW, color: "#1A1A1A" }}>
                     Appliquer
                   </button>
                 </div>
               )}
             </div>
 
-            {/* Nb de pièces */}
-            <div className="relative">
-              <button
-                onClick={() => setActiveFilterPanel(activeFilterPanel === "rooms" ? null : "rooms")}
-                className={`filter-btn flex items-center gap-1 ${filterBedrooms !== null ? "active" : ""}`}
-              >
-                {filterBedrooms !== null ? `${filterBedrooms}+ chambre${filterBedrooms > 1 ? "s" : ""}` : "Chambres"}
-                {filterBedrooms !== null
-                  ? <X className="w-3 h-3" onClick={(e) => { e.stopPropagation(); setFilterBedrooms(null); }} />
-                  : <ChevronDown className="w-3 h-3" />}
-              </button>
-              {activeFilterPanel === "rooms" && (
-                <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-50 w-52">
-                  <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Nb de chambres min.</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {[null, 1, 2, 3, 4, 5].map((n) => (
-                      <button
-                        key={n ?? "any"}
-                        onClick={() => { setFilterBedrooms(n); setActiveFilterPanel(null); setCurrentPage(1); }}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${filterBedrooms === n ? "border-yellow-400 bg-yellow-50 font-semibold" : "border-gray-200 hover:border-gray-300"}`}
-                        style={filterBedrooms === n ? { color: YELLOW } : {}}
-                      >
-                        {n === null ? "Tous" : `${n}+`}
-                      </button>
-                    ))}
+            {/* Chambres — résidentiel uniquement */}
+            {isResidential && (
+              <div className="relative">
+                <button
+                  onClick={() => setActiveFilterPanel(activeFilterPanel === "rooms" ? null : "rooms")}
+                  className={`filter-btn flex items-center gap-1 ${filterBedrooms !== null ? "active" : ""}`}
+                >
+                  {filterBedrooms !== null ? `${filterBedrooms}+ chambre${filterBedrooms > 1 ? "s" : ""} ✓` : "Chambres"}
+                  {filterBedrooms !== null
+                    ? <X className="w-3 h-3" onClick={(e) => { e.stopPropagation(); setFilterBedrooms(null); setCurrentPage(1); }} />
+                    : <ChevronDown className="w-3 h-3" />}
+                </button>
+                {activeFilterPanel === "rooms" && (
+                  <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-50 w-52">
+                    <p className="text-xs font-semibold text-gray-500 mb-3 uppercase tracking-wide">Chambres min.</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {[null, 1, 2, 3, 4, 5].map((n) => (
+                        <button key={n ?? "any"}
+                          onClick={() => { setFilterBedrooms(n); setActiveFilterPanel(null); setCurrentPage(1); }}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${filterBedrooms === n ? "border-yellow-400 bg-yellow-50 font-semibold" : "border-gray-200 hover:border-gray-300"}`}
+                          style={filterBedrooms === n ? { color: YELLOW } : {}}>
+                          {n === null ? "Tous" : `${n}+`}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
-            {/* Reset all filters */}
+            {/* + de filtres */}
+            <button
+              onClick={() => { setActiveFilterPanel(null); setMoreFiltersOpen(true); }}
+              className={`filter-btn flex items-center gap-1.5 ${activeFilterCount > 0 ? "active" : ""}`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              + de filtres
+              {activeFilterCount > 0 && (
+                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: YELLOW }}>
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            {/* Reset */}
             {activeFilterCount > 0 && (
-              <button
-                onClick={() => { setFilterFurnished("all"); setFilterMinPrice(""); setFilterMaxPrice(""); setFilterBedrooms(null); setCurrentPage(1); }}
-                className="text-xs text-gray-400 hover:text-gray-700 flex items-center gap-0.5 transition-colors"
-              >
-                <X className="w-3 h-3" /> Réinitialiser ({activeFilterCount})
+              <button onClick={resetAllFilters}
+                className="text-xs text-gray-400 hover:text-gray-700 flex items-center gap-0.5 transition-colors">
+                <X className="w-3 h-3" /> Réinitialiser
               </button>
             )}
           </div>
 
-          {/* Mobile: simple Filtres button */}
+          {/* Mobile: Filtres button */}
           <button
             onClick={() => setActiveFilterPanel(activeFilterPanel === "mobile" ? null : "mobile")}
             className={`sm:hidden filter-btn flex items-center gap-1 ${activeFilterCount > 0 ? "active" : ""}`}
           >
-            <ChevronDown className="w-3 h-3" /> Filtres
+            <SlidersHorizontal className="w-3.5 h-3.5" /> Filtres
             {activeFilterCount > 0 && (
               <span className="ml-1 text-xs font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: YELLOW }}>
                 {activeFilterCount}
@@ -463,7 +503,8 @@ export default function PropertiesPage() {
 
           {/* Alert button */}
           <button
-            className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold rounded-full px-3 sm:px-4 py-2 ml-auto flex-shrink-0"
+            onClick={openAlert}
+            className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold rounded-full px-3 sm:px-4 py-2 ml-auto flex-shrink-0 transition-opacity hover:opacity-85"
             style={{ background: YELLOW, color: "#1A1A1A" }}
           >
             <Bell className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
@@ -475,20 +516,20 @@ export default function PropertiesPage() {
         {/* Mobile filter panel */}
         {activeFilterPanel === "mobile" && (
           <div className="sm:hidden border-t border-gray-100 px-4 py-4 space-y-4">
-            {/* Meublé */}
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Meublé</p>
-              <div className="flex gap-2">
-                {[{ v: "all", label: "Tous" }, { v: "yes", label: "Meublé" }, { v: "no", label: "Non meublé" }].map(opt => (
-                  <button key={opt.v} onClick={() => setFilterFurnished(opt.v as "all" | "yes" | "no")}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${filterFurnished === opt.v ? "border-yellow-400 bg-yellow-50 font-semibold" : "border-gray-200"}`}
-                    style={filterFurnished === opt.v ? { color: YELLOW } : {}}>
-                    {opt.label}
-                  </button>
-                ))}
+            {isResidential && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Meublé</p>
+                <div className="flex gap-2">
+                  {[{ v: "all", label: "Tous" }, { v: "yes", label: "Meublé" }, { v: "no", label: "Non meublé" }].map(opt => (
+                    <button key={opt.v} onClick={() => setFilterFurnished(opt.v as "all" | "yes" | "no")}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${filterFurnished === opt.v ? "border-yellow-400 bg-yellow-50 font-semibold" : "border-gray-200"}`}
+                      style={filterFurnished === opt.v ? { color: YELLOW } : {}}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            {/* Prix */}
+            )}
             <div>
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Budget (CA$/mois)</p>
               <div className="flex gap-2">
@@ -498,24 +539,23 @@ export default function PropertiesPage() {
                   className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none" />
               </div>
             </div>
-            {/* Chambres */}
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Chambres min.</p>
-              <div className="flex gap-2 flex-wrap">
-                {[null, 1, 2, 3, 4].map(n => (
-                  <button key={n ?? "any"} onClick={() => setFilterBedrooms(n)}
-                    className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${filterBedrooms === n ? "border-yellow-400 bg-yellow-50 font-semibold" : "border-gray-200"}`}
-                    style={filterBedrooms === n ? { color: YELLOW } : {}}>
-                    {n === null ? "Tous" : `${n}+`}
-                  </button>
-                ))}
+            {isResidential && (
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Chambres min.</p>
+                <div className="flex gap-2 flex-wrap">
+                  {[null, 1, 2, 3, 4].map(n => (
+                    <button key={n ?? "any"} onClick={() => setFilterBedrooms(n)}
+                      className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${filterBedrooms === n ? "border-yellow-400 bg-yellow-50 font-semibold" : "border-gray-200"}`}
+                      style={filterBedrooms === n ? { color: YELLOW } : {}}>
+                      {n === null ? "Tous" : `${n}+`}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            <button
-              onClick={() => { setActiveFilterPanel(null); setCurrentPage(1); }}
+            )}
+            <button onClick={() => { setActiveFilterPanel(null); setCurrentPage(1); }}
               className="w-full py-2.5 rounded-xl font-semibold text-sm"
-              style={{ background: YELLOW, color: "#1A1A1A" }}
-            >
+              style={{ background: YELLOW, color: "#1A1A1A" }}>
               Appliquer les filtres
             </button>
           </div>
@@ -531,16 +571,7 @@ export default function PropertiesPage() {
           <span>›</span>
           <Link href="/cities" className="hover:text-gray-600">Locations en {country.name}</Link>
           <span>›</span>
-          <span className="hover:text-gray-600 cursor-pointer">Locations à {city}</span>
-          <span>›</span>
-          <button
-            onClick={() => setViewMode("map")}
-            className="hover:underline transition-colors"
-            style={{ color: YELLOW }}
-          >
-            <Map className="w-3 h-3 inline mr-0.5" />
-            Voir sur la carte
-          </button>
+          <span style={{ color: YELLOW }} className="font-medium">Locations à {city}</span>
         </nav>
 
         {/* Results header */}
@@ -549,29 +580,30 @@ export default function PropertiesPage() {
             <h1 className="text-lg sm:text-2xl font-extrabold leading-tight" style={{ color: "#1A1A1A" }}>
               Locations à <span>{city}</span>
             </h1>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {total > 0
-                ? <><span className="font-semibold" style={{ color: YELLOW }}>{total} bien{total > 1 ? "s" : ""}</span> trouvé{total > 1 ? "s" : ""}</>
-                : "Aucun bien correspondant à vos critères"}
-              {(filterFurnished !== "all" || filterMinPrice || filterMaxPrice || filterBedrooms !== null) && (
-                <button onClick={() => { setFilterFurnished("all"); setFilterMinPrice(""); setFilterMaxPrice(""); setFilterBedrooms(null); }}
-                  className="ml-2 underline hover:text-gray-600">Réinitialiser les filtres</button>
-              )}
-            </p>
+            {total > 0 && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                <span className="font-semibold" style={{ color: YELLOW }}>{total} bien{total > 1 ? "s" : ""}</span> trouvé{total > 1 ? "s" : ""}
+                {activeFilterCount > 0 && (
+                  <button onClick={resetAllFilters} className="ml-2 underline hover:text-gray-600">
+                    Réinitialiser les filtres
+                  </button>
+                )}
+              </p>
+            )}
           </div>
           {/* List / Map toggle */}
           <div className="flex items-center gap-1 rounded-lg border border-gray-200 p-0.5 flex-shrink-0">
             <button
               onClick={() => setViewMode("list")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${viewMode === "list" ? "text-white" : "text-gray-500 hover:text-gray-700"}`}
-              style={viewMode === "list" ? { background: YELLOW, color: "#1A1A1A" } : {}}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors`}
+              style={viewMode === "list" ? { background: YELLOW, color: "#1A1A1A" } : { color: "#888" }}
             >
               <List className="w-3.5 h-3.5" /> Liste
             </button>
             <button
               onClick={() => setViewMode("map")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${viewMode === "map" ? "text-white" : "text-gray-500 hover:text-gray-700"}`}
-              style={viewMode === "map" ? { background: YELLOW, color: "#1A1A1A" } : {}}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-colors`}
+              style={viewMode === "map" ? { background: YELLOW, color: "#1A1A1A" } : { color: "#888" }}
             >
               <Map className="w-3.5 h-3.5" /> Carte
             </button>
@@ -616,6 +648,30 @@ export default function PropertiesPage() {
                 }))}
               />
             </Suspense>
+          </div>
+        ) : total === 0 && data !== undefined ? (
+          /* ── Empty state ── */
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6" style={{ background: "#FEF9EE" }}>
+              <Search className="w-9 h-9" style={{ color: YELLOW }} />
+            </div>
+            <h2 className="text-xl font-bold mb-2" style={{ color: "#1A1A1A" }}>Aucun bien ne correspond à vos critères</h2>
+            <p className="text-sm text-gray-400 max-w-sm mb-6">
+              Essayez d'ajuster vos filtres ou d'élargir votre zone de recherche pour découvrir plus d'annonces disponibles.
+            </p>
+            <div className="flex gap-3 flex-wrap justify-center">
+              {activeFilterCount > 0 && (
+                <button onClick={resetAllFilters}
+                  className="px-5 py-2.5 rounded-xl font-semibold text-sm border border-gray-200 hover:bg-gray-50 transition-colors">
+                  Réinitialiser les filtres
+                </button>
+              )}
+              <button onClick={openAlert}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85"
+                style={{ background: YELLOW, color: "#1A1A1A" }}>
+                <Bell className="w-4 h-4" /> Créer une alerte pour cette recherche
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
@@ -668,6 +724,175 @@ export default function PropertiesPage() {
           </div>
         )}
       </div>
+
+      {/* ══ "+ de filtres" modal overlay ══ */}
+      {moreFiltersOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.45)" }}
+          onClick={() => setMoreFiltersOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="text-base font-bold" style={{ color: "#1A1A1A" }}>
+                <SlidersHorizontal className="w-4 h-4 inline mr-2" style={{ color: YELLOW }} />
+                Filtres avancés
+              </h3>
+              <button onClick={() => setMoreFiltersOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors">
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-6">
+              {/* Meublé — résidentiel uniquement */}
+              {isResidential && (
+                <div>
+                  <p className="text-sm font-semibold mb-3" style={{ color: "#1A1A1A" }}>Ameublement</p>
+                  <div className="flex gap-2">
+                    {[{ v: "all", label: "Peu importe" }, { v: "yes", label: "Meublé" }, { v: "no", label: "Non meublé" }].map(opt => (
+                      <button key={opt.v} onClick={() => setFilterFurnished(opt.v as "all" | "yes" | "no")}
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition-colors ${filterFurnished === opt.v ? "font-semibold" : "border-gray-200 hover:border-gray-300"}`}
+                        style={filterFurnished === opt.v ? { borderColor: YELLOW, background: "#FEF9EE", color: YELLOW } : {}}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Loyer */}
+              <div>
+                <p className="text-sm font-semibold mb-3" style={{ color: "#1A1A1A" }}>
+                  {isCommercial ? "Budget mensuel (CA$)" : "Loyer mensuel (CA$)"}
+                </p>
+                <div className="flex gap-3 mb-3">
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-400 mb-1.5 block">Minimum</label>
+                    <input type="number" min={0} step={50} value={filterMinPrice}
+                      onChange={e => setFilterMinPrice(e.target.value)} placeholder="0"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-yellow-400" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-400 mb-1.5 block">Maximum</label>
+                    <input type="number" min={0} step={50} value={filterMaxPrice}
+                      onChange={e => setFilterMaxPrice(e.target.value)} placeholder="Illimité"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-yellow-400" />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(isCommercial ? [1500, 3000, 5000, 8000, 12000] : [800, 1000, 1200, 1500, 2000, 2500]).map(p => (
+                    <button key={p} onClick={() => setFilterMaxPrice(String(p))}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${filterMaxPrice === String(p) ? "font-semibold" : "border-gray-200 hover:border-gray-300"}`}
+                      style={filterMaxPrice === String(p) ? { borderColor: YELLOW, background: "#FEF9EE", color: YELLOW } : {}}>
+                      &lt; {p.toLocaleString("fr-CA")} CA$
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Chambres — résidentiel uniquement */}
+              {isResidential && (
+                <div>
+                  <p className="text-sm font-semibold mb-3" style={{ color: "#1A1A1A" }}>Nombre de chambres</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {[null, 1, 2, 3, 4, 5].map(n => (
+                      <button key={n ?? "any"} onClick={() => setFilterBedrooms(n)}
+                        className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-colors ${filterBedrooms === n ? "font-semibold" : "border-gray-200 hover:border-gray-300"}`}
+                        style={filterBedrooms === n ? { borderColor: YELLOW, background: "#FEF9EE", color: YELLOW } : {}}>
+                        {n === null ? "Tous" : `${n}+`}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+              <button onClick={() => { resetAllFilters(); }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 hover:bg-gray-50 transition-colors">
+                Réinitialiser
+              </button>
+              <button onClick={() => { setMoreFiltersOpen(false); setCurrentPage(1); }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold"
+                style={{ background: YELLOW, color: "#1A1A1A" }}>
+                Voir les résultats
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ Créer une alerte — modal ══ */}
+      {alertOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.45)" }}
+          onClick={() => setAlertOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="text-base font-bold flex items-center gap-2" style={{ color: "#1A1A1A" }}>
+                <Bell className="w-4 h-4" style={{ color: YELLOW }} />
+                Créer une alerte
+              </h3>
+              <button onClick={() => setAlertOpen(false)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors">
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+
+            {alertSaved ? (
+              <div className="px-6 py-10 flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{ background: "#F0FDF4" }}>
+                  <Check className="w-8 h-8 text-green-500" />
+                </div>
+                <h4 className="font-bold text-lg mb-1" style={{ color: "#1A1A1A" }}>Alerte créée !</h4>
+                <p className="text-sm text-gray-400">Vous recevrez un e-mail dès qu'un bien correspond à vos critères.</p>
+              </div>
+            ) : (
+              <div className="px-6 py-5 space-y-5">
+                {/* Résumé des critères */}
+                <div className="rounded-xl p-4" style={{ background: "#FEF9EE" }}>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Critères de l'alerte</p>
+                  <ul className="text-sm space-y-1" style={{ color: "#1A1A1A" }}>
+                    <li>📍 <strong>Ville :</strong> {city}</li>
+                    {filterType !== "all" && <li>🏠 <strong>Type :</strong> {filterType}</li>}
+                    {filterFurnished !== "all" && <li>🛋 <strong>Meublé :</strong> {filterFurnished === "yes" ? "Oui" : "Non"}</li>}
+                    {(filterMinPrice || filterMaxPrice) && (
+                      <li>💰 <strong>Budget :</strong> {filterMinPrice || "0"} – {filterMaxPrice || "∞"} CA$/mois</li>
+                    )}
+                    {filterBedrooms !== null && <li>🛏 <strong>Chambres :</strong> {filterBedrooms}+</li>}
+                    {filterType === "all" && filterFurnished === "all" && !filterMinPrice && !filterMaxPrice && filterBedrooms === null && (
+                      <li className="text-gray-400 italic">Tous les biens disponibles à {city}</li>
+                    )}
+                  </ul>
+                </div>
+
+                {/* Fréquence */}
+                <div>
+                  <p className="text-sm font-semibold mb-2" style={{ color: "#1A1A1A" }}>Fréquence de notification</p>
+                  <div className="flex gap-2">
+                    {[
+                      { v: "immediate", label: "Immédiate" },
+                      { v: "daily",     label: "Quotidienne" },
+                      { v: "weekly",    label: "Hebdomadaire" },
+                    ].map(f => (
+                      <button key={f.v} onClick={() => setAlertFreq(f.v as "immediate" | "daily" | "weekly")}
+                        className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors`}
+                        style={alertFreq === f.v ? { borderColor: YELLOW, background: "#FEF9EE", color: YELLOW } : { borderColor: "#E5E5E5" }}>
+                        {f.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <p className="text-xs text-gray-400">
+                  Les alertes sont envoyées sur l'adresse e-mail associée à votre compte BLOQ5. Vous pouvez les gérer depuis votre espace personnel.
+                </p>
+
+                <button onClick={saveAlert}
+                  className="w-full py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85"
+                  style={{ background: YELLOW, color: "#1A1A1A" }}>
+                  Activer cette alerte
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ─── CTA PROPRIÉTAIRE ─── */}
       <section className="px-6 pb-12">
