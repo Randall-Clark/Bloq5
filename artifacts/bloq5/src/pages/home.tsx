@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useGetFeaturedProperties } from "@workspace/api-client-react";
 import { useLocation_ } from "@/context/location-context";
 import { PublicNavbar } from "@/components/public-navbar";
@@ -126,6 +126,17 @@ export default function HomePage() {
   /* Search state */
   const [budgetSlider, setBudgetSlider] = useState(BUDGET_STEPS);
   const [showFilters, setShowFilters] = useState(false);
+  const [searchCity, setSearchCity] = useState("");
+  const [searchType, setSearchType] = useState("");
+  const [, navigate] = useLocation();
+
+  function handleSearch() {
+    const q = new URLSearchParams();
+    if (searchCity.trim()) q.set("city", searchCity.trim());
+    if (searchType) q.set("type", searchType);
+    if (budgetSlider < BUDGET_STEPS) q.set("maxPrice", String(budgetSlider * 50));
+    navigate(`/properties?${q.toString()}`);
+  }
 
   /* Filter state */
   const [bedrooms,    setBedrooms]    = useState<string | number>("Tout");
@@ -222,21 +233,32 @@ export default function HomePage() {
                 <MapPin className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
                 <div className="flex-1 text-left">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide leading-none mb-0.5">Localisation</p>
-                  <input type="text" placeholder="Ville, quartier, code postal…" className="w-full text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent" />
+                  <input
+                    type="text"
+                    value={searchCity}
+                    onChange={e => setSearchCity(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && handleSearch()}
+                    placeholder="Ville, quartier, code postal…"
+                    className="w-full text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
+                  />
                 </div>
               </div>
               {/* Type */}
               <div className="flex items-center px-5 py-4 border-r border-gray-200 hover:bg-gray-50 transition-colors">
                 <div className="text-left">
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide leading-none mb-0.5">Type de bien</p>
-                  <select className="text-sm text-gray-700 outline-none bg-transparent cursor-pointer pr-4">
-                    <option>Tous types</option>
-                    <option>Maison</option>
-                    <option>Appartement</option>
-                    <option>Condo</option>
-                    <option>Colocation</option>
-                    <option>Bureau</option>
-                    <option>Commercial</option>
+                  <select
+                    value={searchType}
+                    onChange={e => setSearchType(e.target.value)}
+                    className="text-sm text-gray-700 outline-none bg-transparent cursor-pointer pr-4"
+                  >
+                    <option value="">Tous types</option>
+                    <option value="house">Maison</option>
+                    <option value="apartment">Appartement</option>
+                    <option value="condo">Condo</option>
+                    <option value="co-living">Colocation</option>
+                    <option value="office">Bureau</option>
+                    <option value="commercial">Commercial</option>
                   </select>
                 </div>
               </div>
@@ -269,7 +291,7 @@ export default function HomePage() {
                 {showFilters ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               </button>
               {/* Search CTA */}
-              <button className="flex items-center gap-2 px-7 text-sm font-bold transition-opacity hover:opacity-85 flex-shrink-0" style={{ background: YELLOW, color: "#1A1A1A" }}>
+              <button onClick={handleSearch} className="flex items-center gap-2 px-7 text-sm font-bold transition-opacity hover:opacity-85 flex-shrink-0" style={{ background: YELLOW, color: "#1A1A1A" }}>
                 <Search className="w-5 h-5" />
                 Rechercher
               </button>
@@ -279,17 +301,28 @@ export default function HomePage() {
             <div className="md:hidden bg-white rounded-2xl shadow-2xl overflow-hidden">
               <div className="flex items-center px-4 py-3.5 border-b border-gray-100">
                 <MapPin className="w-4 h-4 text-gray-400 mr-2.5 flex-shrink-0" />
-                <input type="text" placeholder="Ville, quartier, code postal…" className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none" />
+                <input
+                  type="text"
+                  value={searchCity}
+                  onChange={e => setSearchCity(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleSearch()}
+                  placeholder="Ville, quartier, code postal…"
+                  className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none"
+                />
               </div>
               <div className="flex items-center px-4 py-3 border-b border-gray-100">
-                <select className="flex-1 text-sm text-gray-700 outline-none bg-transparent cursor-pointer">
+                <select
+                  value={searchType}
+                  onChange={e => setSearchType(e.target.value)}
+                  className="flex-1 text-sm text-gray-700 outline-none bg-transparent cursor-pointer"
+                >
                   <option value="">Tous types de bien</option>
-                  <option>Maison</option>
-                  <option>Appartement</option>
-                  <option>Condo</option>
-                  <option>Colocation</option>
-                  <option>Bureau</option>
-                  <option>Commercial</option>
+                  <option value="house">Maison</option>
+                  <option value="apartment">Appartement</option>
+                  <option value="condo">Condo</option>
+                  <option value="co-living">Colocation</option>
+                  <option value="office">Bureau</option>
+                  <option value="commercial">Commercial</option>
                 </select>
                 <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
               </div>
@@ -317,7 +350,7 @@ export default function HomePage() {
                   <SlidersHorizontal className="w-4 h-4" />
                   Filtres
                 </button>
-                <button className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                <button onClick={handleSearch} className="flex items-center justify-center gap-2 flex-1 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
                   <Search className="w-4 h-4" />
                   Rechercher
                 </button>

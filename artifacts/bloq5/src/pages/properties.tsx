@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, lazy, Suspense } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useSearch } from "wouter";
 import { useListProperties } from "@workspace/api-client-react";
 import { useLocation_ } from "@/context/location-context";
 import { useUser } from "@clerk/react";
@@ -175,12 +175,17 @@ function PropCard({ idx, city, price, area, rooms, baths, arrond, title, currenc
 /* ════════════════════════════════════════════════════════════ */
 export default function PropertiesPage() {
   const { country } = useLocation_();
-  const cityFromUrl = getSearchParam("city");
-  const typeFromUrl = getSearchParam("type");
+  const search = useSearch();                             // reactive search string
+  const params = new URLSearchParams(search);
+  const cityFromUrl = params.get("city") ?? "";
+  const typeFromUrl = params.get("type") ?? "";
   const city = cityFromUrl || country.cities[0]?.name || "Montréal";
 
   const [searchInput, setSearchInput] = useState(city);
   const [filterType,  setFilterType]  = useState(typeFromUrl || "all");
+
+  /* Keep searchInput in sync when city changes from URL */
+  useEffect(() => { setSearchInput(city); }, [city]);
   const [currentPage, setCurrentPage] = useState(1);
   const [filterFurnished, setFilterFurnished] = useState<"all" | "yes" | "no">("all");
   const [filterMinPrice, setFilterMinPrice] = useState("");
@@ -232,16 +237,34 @@ export default function PropertiesPage() {
   } as Parameters<typeof useListProperties>[0]);
 
   /* Merge API data with static fallbacks */
-  const apiProps   = data?.data ?? [];
-  const total      = data?.total ?? 0;
-  const totalPages = data?.totalPages ?? Math.ceil(total / ITEMS_PER_PAGE);
+  const apiProps    = data?.data ?? [];
+  const hasApiData  = apiProps.length > 0;
+  const apiLoaded   = data !== undefined;
+  const apiTotal    = data?.total ?? 0;
 
-  /* Active filter count badge */
+  /* Determine display mode */
+  // hasCategoryFilter = a specific type is selected (not "all")
+  // hasFilters        = at least one filter pill is active
+  // → show fallback cards when: no real API data + no filters + all categories
+  // → show category empty when: no real API data + specific category + no filters
+  // → show no-results when: no real API data + any filter combination is active
+  const hasCategoryFilter = filterType !== "all";
+
+  /* Active filter count badge (pill-based filters only, not type category) */
   const activeFilterCount = [
     filterFurnished !== "all",
     !!filterMinPrice || !!filterMaxPrice,
     filterBedrooms !== null,
   ].filter(Boolean).length;
+
+  /* Any active filter = category OR pill filters */
+  const hasAnyFilter = hasCategoryFilter || activeFilterCount > 0;
+
+  /* Total to display in header */
+  const total = hasApiData ? apiTotal : (hasAnyFilter || !apiLoaded ? 0 : ITEMS_PER_PAGE * 2);
+  const totalPages = hasApiData
+    ? (data?.totalPages ?? Math.ceil(apiTotal / ITEMS_PER_PAGE))
+    : 1;
 
   /* Dynamic filter pills based on selected type */
   const isCommercial = filterType === "office" || filterType === "commercial";
@@ -257,7 +280,7 @@ export default function PropertiesPage() {
 
   function openAlert() {
     if (!isSignedIn) {
-      navigate(`/sign-in?redirect=/properties${window.location.search}`);
+      navigate(`/sign-in?redirect=/properties${search ? "?" + search : ""}`);
       return;
     }
     setAlertSaved(false);
@@ -326,11 +349,12 @@ export default function PropertiesPage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  const url = new URL(window.location.href);
-                  url.searchParams.set("city", searchInput);
-                  window.history.replaceState({}, "", url.toString());
-                  window.location.reload();
+                if (e.key === "Enter" && searchInput.trim()) {
+                  const q = new URLSearchParams(search);
+                  q.set("city", searchInput.trim());
+                  q.delete("page");
+                  navigate(`/properties?${q.toString()}`);
+                  setCurrentPage(1);
                 }
               }}
               placeholder="Ville, quartier…"
@@ -340,10 +364,12 @@ export default function PropertiesPage() {
               className="px-3 sm:px-4 flex items-center"
               style={{ background: YELLOW }}
               onClick={() => {
-                const url = new URL(window.location.href);
-                url.searchParams.set("city", searchInput);
-                window.history.replaceState({}, "", url.toString());
-                window.location.reload();
+                if (!searchInput.trim()) return;
+                const q = new URLSearchParams(search);
+                q.set("city", searchInput.trim());
+                q.delete("page");
+                navigate(`/properties?${q.toString()}`);
+                setCurrentPage(1);
               }}
             >
               <Search className="w-4 h-4 text-white" />
@@ -649,8 +675,44 @@ export default function PropertiesPage() {
               />
             </Suspense>
           </div>
-        ) : total === 0 && data !== undefined ? (
-          /* ── Empty state ── */
+        ) : !apiLoaded ? (
+          /* ── Loading skeleton ── */
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-lg overflow-hidden bg-white animate-pulse" style={{ border: "1px solid #E8E8E8" }}>
+                <div className="bg-gray-100" style={{ height: 170 }} />
+                <div className="p-3 space-y-2">
+                  <div className="h-4 bg-gray-100 rounded w-3/4" />
+                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                  <div className="h-3 bg-gray-100 rounded w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : !hasApiData && hasCategoryFilter && !activeFilterCount ? (
+          /* ── Catégorie vide (pas encore d'annonces dans ce type) ── */
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6" style={{ background: "#F5F5F5" }}>
+              <Building2 className="w-9 h-9 text-gray-300" />
+            </div>
+            <h2 className="text-lg font-bold mb-1" style={{ color: "#1A1A1A" }}>Rien à afficher pour le moment</h2>
+            <p className="text-sm text-gray-400 max-w-xs mb-6">
+              Aucune annonce dans cette catégorie à {city} pour l'instant. Revenez bientôt ou créez une alerte.
+            </p>
+            <div className="flex gap-3 flex-wrap justify-center">
+              <button onClick={() => { setFilterType("all"); setCurrentPage(1); }}
+                className="px-5 py-2.5 rounded-xl font-semibold text-sm border border-gray-200 hover:bg-gray-50 transition-colors">
+                Voir toutes les catégories
+              </button>
+              <button onClick={openAlert}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85"
+                style={{ background: YELLOW, color: "#1A1A1A" }}>
+                <Bell className="w-4 h-4" /> Créer une alerte
+              </button>
+            </div>
+          </div>
+        ) : !hasApiData && hasAnyFilter ? (
+          /* ── Aucun résultat pour la combinaison de filtres ── */
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6" style={{ background: "#FEF9EE" }}>
               <Search className="w-9 h-9" style={{ color: YELLOW }} />
@@ -660,12 +722,10 @@ export default function PropertiesPage() {
               Essayez d'ajuster vos filtres ou d'élargir votre zone de recherche pour découvrir plus d'annonces disponibles.
             </p>
             <div className="flex gap-3 flex-wrap justify-center">
-              {activeFilterCount > 0 && (
-                <button onClick={resetAllFilters}
-                  className="px-5 py-2.5 rounded-xl font-semibold text-sm border border-gray-200 hover:bg-gray-50 transition-colors">
-                  Réinitialiser les filtres
-                </button>
-              )}
+              <button onClick={resetAllFilters}
+                className="px-5 py-2.5 rounded-xl font-semibold text-sm border border-gray-200 hover:bg-gray-50 transition-colors">
+                Réinitialiser les filtres
+              </button>
               <button onClick={openAlert}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85"
                 style={{ background: YELLOW, color: "#1A1A1A" }}>
@@ -674,6 +734,7 @@ export default function PropertiesPage() {
             </div>
           </div>
         ) : (
+          /* ── Grille de biens (API ou données de repli) ── */
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
             {displayCards.map((card) => (
               <PropCard
