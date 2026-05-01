@@ -753,6 +753,111 @@ export default function PropertyDetailPage() {
 
           </div>
 
+            {/* ═══ MOBILE-ONLY action card — mirrors the desktop sidebar ═══ */}
+            <div className="lg:hidden mt-8 mb-4">
+              <div className="rounded-2xl border border-gray-200 shadow-sm bg-white p-5">
+                {/* Price + status */}
+                <div className="flex items-end justify-between mb-4">
+                  <div>
+                    <span className="text-2xl font-extrabold" style={{ color: "#1A1A1A" }}>{price} CA$</span>
+                    <span className="text-gray-400 text-sm">/mois {isCommercialType ? "HT" : "cc"}</span>
+                  </div>
+                  <span className={`text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1 ${isAvailable ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
+                    <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: isAvailable ? "#22C55E" : "#EF4444" }} />
+                    {isAvailable ? "Disponible" : "Loué"}
+                  </span>
+                </div>
+
+                {/* Main CTA */}
+                {isAvailable ? (
+                  isCommercialType ? (
+                    <button
+                      onClick={openVisitScheduler}
+                      className="w-full py-3.5 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85"
+                      style={{ background: YELLOW, color: "#1A1A1A" }}
+                    >
+                      Je souhaite visiter cet espace
+                    </button>
+                  ) : (
+                    <Link href={`/properties/${id}/dossier`}>
+                      <button className="w-full py-3.5 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                        Je dépose ma candidature
+                      </button>
+                    </Link>
+                  )
+                ) : (
+                  <button disabled className="w-full py-3.5 rounded-xl font-semibold text-sm mb-3 opacity-50 cursor-not-allowed bg-gray-200 text-gray-500">
+                    Bien indisponible
+                  </button>
+                )}
+
+                {/* Planifier visite (residential only) */}
+                {!isCommercialType && (
+                  <button
+                    onClick={openVisitScheduler}
+                    className="w-full py-3 rounded-xl font-medium text-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors mb-4 flex items-center justify-center gap-2"
+                  >
+                    📅 Planifier une visite physique
+                  </button>
+                )}
+
+                <div className="border-t border-gray-100 my-4" />
+
+                {/* Honoraires */}
+                <div className="mb-3">
+                  <div className="flex items-center justify-between text-sm mb-1">
+                    <span className="text-gray-500 flex items-center gap-1.5">
+                      <FileText className="w-4 h-4" />
+                      {isCommercialType ? "Frais de dossier" : "Honoraires locataire"}
+                    </span>
+                    <span className="font-semibold" style={{ color: "#1A1A1A" }}>
+                      {isCommercialType ? "500 CA$" : "375 CA$"}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setHonorairesOpen(!honorairesOpen)}
+                    className="flex items-center gap-1 text-xs font-medium transition-colors"
+                    style={{ color: YELLOW }}
+                  >
+                    {honorairesOpen ? "Masquer le détail" : "Voir le détail"}
+                    <ChevronDown className={`w-3 h-3 transition-transform ${honorairesOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {honorairesOpen && (
+                    <div className="mt-2 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 text-xs text-gray-600 space-y-2">
+                      {isCommercialType ? (
+                        <>
+                          <div className="flex justify-between"><span>Constitution du bail commercial</span><span className="font-semibold">300 CA$</span></div>
+                          <div className="flex justify-between"><span>État des lieux d'entrée</span><span className="font-semibold">200 CA$</span></div>
+                          <div className="border-t border-gray-200 pt-2 text-gray-400">Frais facturés à la signature du bail commercial.</div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex justify-between"><span>Constitution du bail</span><span className="font-semibold">185 CA$</span></div>
+                          <div className="flex justify-between"><span>État des lieux d'entrée</span><span className="font-semibold">190 CA$</span></div>
+                          <div className="border-t border-gray-200 pt-2 text-gray-400">Facturés une seule fois à la signature, à la charge du locataire.</div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-gray-100 my-4" />
+
+                {/* Badge contextuel */}
+                {isCommercialType ? (
+                  <div className="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold" style={{ background: "#EFF6FF", color: "#1D4ED8" }}>
+                    <Info className="w-3.5 h-3.5" />
+                    Bail commercial 3-6-9 — Loyer HT
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold" style={{ background: "#F0FDF4", color: "#16A34A" }}>
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    Éligible aux aides au logement (RGI, PHAP)
+                  </div>
+                )}
+              </div>
+            </div>
+
           {/* ═══ RIGHT COL sticky — hidden on mobile (bottom bar shows instead) ═══ */}
           <div className="hidden lg:block w-80 shrink-0 sticky top-20">
             <div className="rounded-2xl border border-gray-200 shadow-lg bg-white p-6">
@@ -801,9 +906,6 @@ export default function PropertyDetailPage() {
                   📅 Planifier une visite physique
                 </button>
               )}
-              <Dialog open={visitOpen} onOpenChange={setVisitOpen}>
-                <VisitSchedulerDialog availableDates={availableDates?.map(d => typeof d === "string" ? d : String(d))} />
-              </Dialog>
 
               <div className="border-t border-gray-100 my-4" />
 
@@ -868,6 +970,11 @@ export default function PropertyDetailPage() {
 
         </div>
       </div>
+
+      {/* Visit scheduler dialog — accessible from both mobile and desktop */}
+      <Dialog open={visitOpen} onOpenChange={setVisitOpen}>
+        <VisitSchedulerDialog availableDates={availableDates?.map(d => typeof d === "string" ? d : String(d))} />
+      </Dialog>
 
       {/* SEO Footer */}
       <div className="border-t border-gray-100 py-10 bg-white">
