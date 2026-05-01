@@ -675,20 +675,6 @@ export default function PropertiesPage() {
               />
             </Suspense>
           </div>
-        ) : !apiLoaded ? (
-          /* ── Loading skeleton ── */
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="rounded-lg overflow-hidden bg-white animate-pulse" style={{ border: "1px solid #E8E8E8" }}>
-                <div className="bg-gray-100" style={{ height: 170 }} />
-                <div className="p-3 space-y-2">
-                  <div className="h-4 bg-gray-100 rounded w-3/4" />
-                  <div className="h-3 bg-gray-100 rounded w-1/2" />
-                  <div className="h-3 bg-gray-100 rounded w-full" />
-                </div>
-              </div>
-            ))}
-          </div>
         ) : !hasApiData && hasCategoryFilter && !activeFilterCount ? (
           /* ── Catégorie vide (pas encore d'annonces dans ce type) ── */
           <div className="flex flex-col items-center justify-center py-24 text-center">
