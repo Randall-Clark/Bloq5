@@ -87,6 +87,16 @@ const AMENITY_ICON_MAP: Record<string, IconComp> = {
   "Micro-ondes": Zap,
   "Lave-vaisselle": Droplets,
   "Machine à café": Coffee,
+  /* Commercial / bureau */
+  "Extincteur": Flame,
+  "Contrôle d'accès badge": Key,
+  "Salle de réunion partagée": BookOpen,
+  "Cuisine / kitchenette": Coffee,
+  "Imprimante réseau": Printer,
+  "Climatisation réversible": Wind,
+  "Accès PMR": CheckCircle,
+  "Casiers sécurisés": Layers,
+  "Vestiaires": Shirt,
 };
 
 const NEARBY_ITEMS = [
@@ -105,7 +115,7 @@ const CHARGES_ITEMS = [
   { icon: Zap, label: "Électricité" },
   { icon: Trash2, label: "Taxes ordures" },
   { icon: Droplets, label: "Eau chaude" },
-  { icon: Wind, label: "Eau courante" },
+  { icon: Droplets, label: "Eau courante" },
   { icon: Wifi, label: "Internet Fibre" },
 ];
 
@@ -115,6 +125,15 @@ const STATIC_AMENITIES = [
   "Literie fournie", "Oreillers & couvertures", "Fer à repasser",
   "Téléviseur câble standard", "Réfrigérateur", "Micro-ondes",
   "Lave-vaisselle", "Machine à café",
+];
+
+/* Commodités par défaut pour les espaces professionnels (bureau / commercial) */
+const STATIC_COMMERCIAL_AMENITIES = [
+  "Détecteur de fumée", "Détecteur de CO", "Extincteur",
+  "Caméras sécurité extérieures", "Contrôle d'accès badge",
+  "Salle de réunion partagée", "Cuisine / kitchenette",
+  "Imprimante réseau", "Climatisation réversible",
+  "Accès PMR", "Casiers sécurisés", "Vestiaires",
 ];
 
 function getEarliestVisitDate(): Date {
@@ -348,7 +367,9 @@ export default function PropertyDetailPage() {
   );
   const allImgs = imgs;
 
-  const amenities: string[] = property.amenities?.length ? property.amenities : STATIC_AMENITIES;
+  const amenities: string[] = property.amenities?.length
+    ? property.amenities
+    : isCommercialType ? STATIC_COMMERCIAL_AMENITIES : STATIC_AMENITIES;
 
   const selectedCity = country.cities?.[0]?.name || city;
 
@@ -546,13 +567,14 @@ export default function PropertyDetailPage() {
               <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Informations détaillées</h2>
               {/* Info items grid — adapté au type */}
               {(() => {
+                /* Commercial grid = structural/contractual info only (no utilities — they appear below in "services inclus") */
                 const items: { icon: IconComp; label: string; sublabel: string }[] = isCommercialType ? [
                   { icon: MapPin, label: `${area} m²`, sublabel: "Superficie totale" },
                   { icon: ChevronRight, label: isOffice ? "Bureaux" : "Local commercial", sublabel: "Type d'espace" },
-                  { icon: Car, label: "Inclus", sublabel: "Stationnement" },
-                  { icon: Wifi, label: "Fibre optique", sublabel: "Connexion" },
-                  { icon: Zap, label: "Tri-phasé", sublabel: "Électricité" },
-                  { icon: Wind, label: "Incluse", sublabel: "Climatisation" },
+                  { icon: Key, label: "Sécurisé / badge", sublabel: "Accès" },
+                  { icon: FileText, label: "Bail 3-6-9 ans", sublabel: "Type de bail" },
+                  { icon: Layers, label: `${Math.max(1, Math.floor(area / 8))} postes`, sublabel: "Capacité" },
+                  { icon: Car, label: `Inclus`, sublabel: "Stationnement" },
                 ] : [
                   { icon: MapPin, label: `${area} m²`, sublabel: "Superficie" },
                   ...(beds > 0 ? [{ icon: Bed as IconComp, label: `${beds} chambre${beds > 1 ? "s" : ""}`, sublabel: "Chambres" }] : []),
@@ -598,7 +620,9 @@ export default function PropertyDetailPage() {
 
             {/* Équipements */}
             <section className="mb-8">
-              <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Équipements et commodités</h2>
+              <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>
+                {isCommercialType ? "Équipements professionnels" : "Équipements et commodités"}
+              </h2>
               <div className="grid grid-cols-2 gap-2.5">
                 {amenities.map((a: string) => {
                   const Icon = AMENITY_ICON_MAP[a] ?? CheckCircle;

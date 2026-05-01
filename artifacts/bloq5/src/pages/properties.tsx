@@ -107,7 +107,13 @@ function PropCard({ id, idx, city, price, area, rooms, baths, arrond, title, cur
   baths: number; arrond: string; title: string; currency: string;
   status?: string; type?: string;
 }) {
-  const status = (propStatus === "rented" ? "occupied" : propStatus === "available" ? cardStatus(idx) : cardStatus(idx)) as "available" | "soon" | "occupied";
+  /* Map real DB status to card badge status.
+     Only fall back to the idx-based rotation when there is no real status (static fallback cards). */
+  const status: "available" | "soon" | "occupied" =
+    propStatus === "rented"      ? "occupied"
+    : propStatus === "available"  ? "available"
+    : propStatus === "maintenance" ? "soon"
+    : cardStatus(idx);  // only for static fallback rows (no API data)
   const isOccupied = status === "occupied";
   const isCommercialType = type === "office" || type === "commercial";
   const isCoLiving = type === "co-living";
@@ -674,7 +680,6 @@ export default function PropertiesPage() {
           {[
             { icon: Home,       label: "Maisons",      v: "house" },
             { icon: Building2,  label: "Appartements", v: "apartment" },
-            { icon: LayoutGrid, label: "Condos",        v: "condo" },
             { icon: Users,      label: "Colocations",  v: "co-living" },
             { icon: Briefcase,  label: "Bureaux",      v: "office" },
             { icon: Store,      label: "Commerciales", v: "commercial" },
