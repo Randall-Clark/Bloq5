@@ -48,6 +48,29 @@ function FloorPlanSVG() {
   );
 }
 
+function CommercialFloorPlanSVG({ area, isOffice }: { area: number; isOffice: boolean }) {
+  return (
+    <svg viewBox="0 0 400 260" className="w-full" style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 8 }}>
+      {/* Exterior wall */}
+      <rect x="20" y="20" width="360" height="220" fill="none" stroke="#1A1A1A" strokeWidth="3"/>
+      {/* Main open area */}
+      <rect x="20" y="20" width="240" height="220" fill="#F8F8F8" stroke="#1A1A1A" strokeWidth="1.5"/>
+      <text x="140" y="130" textAnchor="middle" fontSize="11" fill="#555">{isOffice ? "Espace bureaux ouvert" : "Surface commerciale"}</text>
+      <text x="140" y="148" textAnchor="middle" fontSize="9" fill="#9CA3AF">{Math.round(area * 0.65)} m²</text>
+      {/* Side rooms */}
+      <rect x="260" y="20" width="120" height="80" fill="#F0F0F0" stroke="#1A1A1A" strokeWidth="1.5"/>
+      <text x="320" y="64" textAnchor="middle" fontSize="9" fill="#555">{isOffice ? "Salle réunion" : "Réserve"}</text>
+      <rect x="260" y="100" width="120" height="80" fill="#F0F0F0" stroke="#1A1A1A" strokeWidth="1.5"/>
+      <text x="320" y="144" textAnchor="middle" fontSize="9" fill="#555">{isOffice ? "Bureau privé" : "Bureau"}</text>
+      <rect x="260" y="180" width="120" height="60" fill="#E8F4FD" stroke="#1A1A1A" strokeWidth="1.5"/>
+      <text x="320" y="214" textAnchor="middle" fontSize="9" fill="#555">Sanitaires</text>
+      {/* Dimensions */}
+      <text x="200" y="255" textAnchor="middle" fontSize="8" fill="#9CA3AF">← {Math.round(Math.sqrt(area * 1.5))} m →</text>
+      <text x="8" y="130" textAnchor="middle" fontSize="8" fill="#9CA3AF" transform="rotate(-90,8,130)">← {Math.round(Math.sqrt(area * 0.7))} m →</text>
+    </svg>
+  );
+}
+
 type IconComp = React.ComponentType<LucideProps>;
 const AMENITY_ICON_MAP: Record<string, IconComp> = {
   "Détecteur de fumée": Flame,
@@ -308,9 +331,17 @@ export default function PropertyDetailPage() {
   const city = property.city || "Montréal";
   const price = property.price ?? 1390;
   const area = property.area ?? 65;
-  const beds = property.bedrooms ?? 2;
+  const beds = property.bedrooms ?? 0;
   const baths = property.bathrooms ?? 1;
-  const addr = `102, Rue Sainte-Catherine O, ${city}, QC H2X 1Z3`;
+  const addr = property.address || `${city}, Canada`;
+
+  /* Type helpers */
+  const propType = property.type ?? "apartment";
+  const isResidential = !["office", "commercial"].includes(propType);
+  const isCommercialType = propType === "office" || propType === "commercial";
+  const isOffice = propType === "office";
+  const typeLabel = isOffice ? "Bureau" : propType === "commercial" ? "Local commercial"
+    : propType === "house" ? "Maison" : propType === "co-living" ? "Colocation" : "Appartement";
 
   const imgs = Array.from({ length: 5 }, (_, i) =>
     property.images?.[i] || `https://picsum.photos/seed/prop${property.id}${i + 1}/800/500`
@@ -415,13 +446,22 @@ export default function PropertyDetailPage() {
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 flex items-center gap-3 shadow-lg">
           <div className="flex-1">
             <span className="text-xl font-extrabold" style={{ color: "#1A1A1A" }}>{price} CA$</span>
-            <span className="text-gray-400 text-xs">/mois</span>
+            <span className="text-gray-400 text-xs">/mois {isCommercialType ? "HT" : "cc"}</span>
           </div>
-          <Link href={`/properties/${id}/dossier`} className="flex-shrink-0">
-            <button className="py-3 px-5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
-              Déposer ma candidature
+          {isCommercialType ? (
+            <button
+              onClick={openVisitScheduler}
+              className="flex-shrink-0 py-3 px-5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}
+            >
+              Visiter cet espace
             </button>
-          </Link>
+          ) : (
+            <Link href={`/properties/${id}/dossier`} className="flex-shrink-0">
+              <button className="py-3 px-5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                Déposer ma candidature
+              </button>
+            </Link>
+          )}
         </div>
       )}
 
@@ -442,7 +482,10 @@ export default function PropertyDetailPage() {
                   <MapPin className="w-3.5 h-3.5 flex-shrink-0" /> {addr}
                 </p>
                 <p className="text-sm text-gray-400 mb-3">
-                  {beds > 0 ? `${beds} Ch.` : ""}{beds > 0 && baths > 0 ? " · " : ""}{baths > 0 ? `${baths} Sdb` : ""}
+                  {typeLabel}
+                  {isResidential && beds > 0 ? ` · ${beds} Ch.` : ""}
+                  {isResidential && baths > 0 ? ` · ${baths} Sdb` : ""}
+                  {isCommercialType ? ` · ${area} m²` : ""}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <span className="text-xs px-3 py-1 rounded-full font-medium" style={{ background: "#F5F5F5", color: "#555" }}>Réf : {ref}</span>
@@ -463,17 +506,33 @@ export default function PropertyDetailPage() {
             <section className="mb-8">
               <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1A1A" }}>Description</h2>
               <div className="text-sm text-gray-600 leading-relaxed space-y-3">
-                <p>
-                  {property.description ||
-                    `BLOQ5 vous présente ce logement de ${area} m² idéalement situé au cœur de ${city}. Ce bien dispose de ${beds} chambre${beds > 1 ? "s" : ""} lumineuse${beds > 1 ? "s" : ""}, d'un salon spacieux et d'une cuisine entièrement équipée (réfrigérateur, micro-ondes, plaques de cuisson). La salle de bain privative est dotée d'une douche. Le chauffage et la connexion Internet fibre sont inclus.`
-                  }
-                </p>
-                <p>
-                  L'unité est accessible par escalier depuis l'entrée principale sécurisée. Une buanderie commune est disponible au sous-sol. Stationnement intérieur disponible.
-                </p>
-                <p>
-                  Situé en plein cœur du Quartier des Spectacles, ce logement bénéficie d'une localisation exceptionnelle à deux pas de l'UQAM, de la station de métro Place-des-Arts (ligne Verte), de nombreux commerces, épiceries, restaurants et cafés.
-                </p>
+                {property.description ? (
+                  <p>{property.description}</p>
+                ) : isCommercialType ? (
+                  <>
+                    <p>
+                      BLOQ5 vous présente cet {typeLabel.toLowerCase()} de {area} m² idéalement situé à {city}. Cet espace professionnel offre un environnement de travail moderne, lumineux et fonctionnel, adapté aux entreprises en croissance.
+                    </p>
+                    <p>
+                      Les locaux bénéficient d'une connexion Internet fibre dédiée, d'une climatisation réversible, de systèmes de sécurité et d'un accès PMR. {propType === "office" ? "Les bureaux sont cloisonnables selon vos besoins organisationnels." : "L'espace commercial jouit d'une devanture visible et d'un fort passage piétonnier."}
+                    </p>
+                    <p>
+                      Situé dans un secteur dynamique de {city}, ce bien profite d'une desserte excellente (transports en commun, stationnements à proximité) et d'un tissu commercial et professionnel dense.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      BLOQ5 vous présente ce {typeLabel.toLowerCase()} de {area} m² idéalement situé au cœur de {city}. {beds > 0 ? `Ce bien dispose de ${beds} chambre${beds > 1 ? "s" : ""} lumineuse${beds > 1 ? "s" : ""}, d'un salon spacieux et d'une cuisine entièrement équipée.` : "Ce logement spacieux offre un espace de vie ouvert et lumineux."}
+                    </p>
+                    <p>
+                      L'unité est accessible depuis l'entrée principale sécurisée. Une buanderie commune est disponible. Stationnement inclus.
+                    </p>
+                    <p>
+                      Idéalement situé à {city}, ce logement bénéficie d'une localisation exceptionnelle à proximité des transports, commerces, épiceries et restaurants.
+                    </p>
+                  </>
+                )}
               </div>
               {/* Publié par BLOQ5 badge */}
               <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 w-fit mt-5">
@@ -485,29 +544,50 @@ export default function PropertyDetailPage() {
             {/* Informations détaillées */}
             <section className="mb-8">
               <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Informations détaillées</h2>
-              {/* Info items grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
-                {[
+              {/* Info items grid — adapté au type */}
+              {(() => {
+                const items: { icon: IconComp; label: string; sublabel: string }[] = isCommercialType ? [
+                  { icon: MapPin, label: `${area} m²`, sublabel: "Superficie totale" },
+                  { icon: ChevronRight, label: isOffice ? "Bureaux" : "Local commercial", sublabel: "Type d'espace" },
+                  { icon: Car, label: "Inclus", sublabel: "Stationnement" },
+                  { icon: Wifi, label: "Fibre optique", sublabel: "Connexion" },
+                  { icon: Zap, label: "Tri-phasé", sublabel: "Électricité" },
+                  { icon: Wind, label: "Incluse", sublabel: "Climatisation" },
+                ] : [
                   { icon: MapPin, label: `${area} m²`, sublabel: "Superficie" },
-                  { icon: Bed, label: `${beds} chambre${beds > 1 ? "s" : ""}`, sublabel: "Chambres" },
-                  { icon: Bath, label: `${baths} salle${baths > 1 ? "s" : ""}`, sublabel: "Salle de bain" },
-                  { icon: ChevronRight, label: "3e étage", sublabel: "Étage" },
-                  { icon: Car, label: "1 inclus", sublabel: "Stationnement" },
-                  { icon: Wand2, label: id % 2 === 1 ? "Meublé" : "Non meublé", sublabel: "Ameublement" },
-                ].map(({ icon: Icon, label, sublabel }) => (
-                  <div key={sublabel} className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3">
-                    <Icon className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
-                    <div>
-                      <div className="text-xs font-semibold text-gray-800">{label}</div>
-                      <div className="text-[10px] text-gray-400">{sublabel}</div>
-                    </div>
+                  ...(beds > 0 ? [{ icon: Bed as IconComp, label: `${beds} chambre${beds > 1 ? "s" : ""}`, sublabel: "Chambres" }] : []),
+                  ...(baths > 0 ? [{ icon: Bath as IconComp, label: `${baths} salle${baths > 1 ? "s" : ""}`, sublabel: "Salle de bain" }] : []),
+                  { icon: ChevronRight as IconComp, label: "1er étage", sublabel: "Étage" },
+                  { icon: Car as IconComp, label: "1 inclus", sublabel: "Stationnement" },
+                  { icon: Wand2 as IconComp, label: id % 2 === 1 ? "Meublé" : "Non meublé", sublabel: "Ameublement" },
+                ];
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
+                    {items.map(({ icon: Icon, label, sublabel }) => (
+                      <div key={sublabel} className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3">
+                        <Icon className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
+                        <div>
+                          <div className="text-xs font-semibold text-gray-800">{label}</div>
+                          <div className="text-[10px] text-gray-400">{sublabel}</div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()}
               {/* Ce qui est inclus */}
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-3">Ce qui est inclus</p>
+              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-3">
+                {isCommercialType ? "Services inclus dans le loyer" : "Ce qui est inclus"}
+              </p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {CHARGES_ITEMS.map(({ icon: Icon, label }) => (
+                {(isCommercialType ? [
+                  { icon: Wifi, label: "Internet fibre" },
+                  { icon: Trash2, label: "Collecte des déchets" },
+                  { icon: Wind, label: "Climatisation" },
+                  { icon: Zap, label: "Électricité commune" },
+                  { icon: Droplets, label: "Eau" },
+                  { icon: Car, label: "Stationnement" },
+                ] : CHARGES_ITEMS).map(({ icon: Icon, label }) => (
                   <div key={label} className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3">
                     <Icon className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
                     <span className="text-xs font-medium text-gray-700">{label}</span>
@@ -532,23 +612,29 @@ export default function PropertyDetailPage() {
               </div>
             </section>
 
-            {/* Plans d'étage */}
+            {/* Plans d'étage / Plans de masse */}
             <section className="mb-8">
-              <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Plans d'étage</h2>
+              <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>
+                {isCommercialType ? "Plan de l'espace" : "Plans d'étage"}
+              </h2>
               <div className="rounded-xl border border-gray-100 overflow-hidden">
                 <button
                   onClick={() => setFloorOpen(!floorOpen)}
                   className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold"
                   style={{ background: "#F5F5F5", color: "#1A1A1A" }}
                 >
-                  <span>{floorOpen ? "∧" : "∨"} Premier étage</span>
-                  <span className="flex items-center gap-3 text-xs font-medium text-gray-500">
-                    <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" />{beds} Chambre{beds > 1 ? "s" : ""}</span>
-                    <span>🚿 {baths} Salle de bain</span>
-                  </span>
+                  <span>{floorOpen ? "∧" : "∨"} {isCommercialType ? `Espace principal — ${area} m²` : "Premier étage"}</span>
+                  {!isCommercialType && (
+                    <span className="flex items-center gap-3 text-xs font-medium text-gray-500">
+                      {beds > 0 && <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" />{beds} Chambre{beds > 1 ? "s" : ""}</span>}
+                      {baths > 0 && <span>🚿 {baths} Salle de bain</span>}
+                    </span>
+                  )}
                 </button>
                 {floorOpen && (
-                  <div className="p-5"><FloorPlanSVG /></div>
+                  <div className="p-5">
+                    {isCommercialType ? <CommercialFloorPlanSVG area={area} isOffice={isOffice} /> : <FloorPlanSVG />}
+                  </div>
                 )}
               </div>
             </section>
@@ -582,7 +668,7 @@ export default function PropertyDetailPage() {
                     <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7 ml-1"><polygon points="5,3 19,12 5,21" /></svg>
                   </button>
                 </div>
-                <div className="absolute bottom-3 left-4 text-xs text-white/70">102 Rue Sainte-Catherine O, {city} – {beds} Ch. – Appartement</div>
+                <div className="absolute bottom-3 left-4 text-xs text-white/70">{addr} – {isCommercialType ? `${area} m² – ${typeLabel}` : `${beds} Ch. – ${typeLabel}`}</div>
                 <div className="absolute bottom-3 right-4 bg-white text-gray-600 text-xs font-bold px-2.5 py-1 rounded-md">Matterport</div>
               </div>
             </section>
@@ -621,10 +707,13 @@ export default function PropertyDetailPage() {
             <section className="mb-8">
               <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Pièces jointes</h2>
               <div className="grid grid-cols-2 gap-4">
-                {[
+                {(isCommercialType ? [
+                  { name: "Bail-Commercial.pdf", iconBg: "#EBF5FB", iconColor: "#1565C0", label: "PDF" },
+                  { name: "État-Lieux-Commercial.pdf", iconBg: "#E0F7FA", iconColor: "#00838F", label: "PDF" },
+                ] : [
                   { name: "Bail-Logement.pdf", iconBg: "#EBF5FB", iconColor: "#1565C0", label: "PDF" },
                   { name: "Règlement-Immeuble.pdf", iconBg: "#E0F7FA", iconColor: "#00838F", label: "DOC" },
-                ].map(f => (
+                ]).map(f => (
                   <div key={f.name} className="flex items-center justify-between px-4 py-3.5 rounded-xl" style={{ background: "#F5F5F5" }}>
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-black" style={{ background: f.iconBg, color: f.iconColor }}>{f.label}</div>
@@ -657,13 +746,22 @@ export default function PropertyDetailPage() {
                 </span>
               </div>
 
-              {/* CTA candidature */}
+              {/* CTA — adapté au type de bien */}
               {isAvailable ? (
-                <Link href={`/properties/${id}/dossier`}>
-                  <button className="w-full py-4 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
-                    Je dépose ma candidature
+                isCommercialType ? (
+                  <button
+                    onClick={openVisitScheduler}
+                    className="w-full py-4 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}
+                  >
+                    Je souhaite visiter cet espace
                   </button>
-                </Link>
+                ) : (
+                  <Link href={`/properties/${id}/dossier`}>
+                    <button className="w-full py-4 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                      Je dépose ma candidature
+                    </button>
+                  </Link>
+                )
               ) : (
                 <button disabled className="w-full py-4 rounded-xl font-semibold text-sm mb-3 opacity-50 cursor-not-allowed bg-gray-200 text-gray-500">
                   Bien indisponible
@@ -671,23 +769,30 @@ export default function PropertyDetailPage() {
               )}
 
               {/* Planifier visite */}
-              <button
-                onClick={openVisitScheduler}
-                className="w-full py-3 rounded-xl font-medium text-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors mb-4 flex items-center justify-center gap-2"
-              >
-                📅 Planifier une visite physique
-              </button>
+              {!isCommercialType && (
+                <button
+                  onClick={openVisitScheduler}
+                  className="w-full py-3 rounded-xl font-medium text-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors mb-4 flex items-center justify-center gap-2"
+                >
+                  📅 Planifier une visite physique
+                </button>
+              )}
               <Dialog open={visitOpen} onOpenChange={setVisitOpen}>
                 <VisitSchedulerDialog availableDates={availableDates?.map(d => typeof d === "string" ? d : String(d))} />
               </Dialog>
 
               <div className="border-t border-gray-100 my-4" />
 
-              {/* Honoraires with expand */}
+              {/* Honoraires — différents selon type */}
               <div className="mb-3">
                 <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-500 flex items-center gap-1.5"><FileText className="w-4 h-4" />Honoraires locataire</span>
-                  <span className="font-semibold" style={{ color: "#1A1A1A" }}>375 CA$</span>
+                  <span className="text-gray-500 flex items-center gap-1.5">
+                    <FileText className="w-4 h-4" />
+                    {isCommercialType ? "Frais de dossier" : "Honoraires locataire"}
+                  </span>
+                  <span className="font-semibold" style={{ color: "#1A1A1A" }}>
+                    {isCommercialType ? "500 CA$" : "375 CA$"}
+                  </span>
                 </div>
                 <button
                   onClick={() => setHonorairesOpen(!honorairesOpen)}
@@ -699,28 +804,41 @@ export default function PropertyDetailPage() {
                 </button>
                 {honorairesOpen && (
                   <div className="mt-2 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 text-xs text-gray-600 space-y-2">
-                    <div className="flex justify-between">
-                      <span>Constitution du bail</span>
-                      <span className="font-semibold">185 CA$</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>État des lieux d'entrée</span>
-                      <span className="font-semibold">190 CA$</span>
-                    </div>
-                    <div className="border-t border-gray-200 pt-2 text-gray-400">
-                      Ces honoraires sont facturés une seule fois à la signature du bail, à la charge du locataire, conformément à la réglementation en vigueur au Québec.
-                    </div>
+                    {isCommercialType ? (
+                      <>
+                        <div className="flex justify-between"><span>Constitution du bail commercial</span><span className="font-semibold">300 CA$</span></div>
+                        <div className="flex justify-between"><span>État des lieux d'entrée</span><span className="font-semibold">200 CA$</span></div>
+                        <div className="border-t border-gray-200 pt-2 text-gray-400">
+                          Frais facturés à la signature du bail commercial, conformément à la réglementation québécoise.
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between"><span>Constitution du bail</span><span className="font-semibold">185 CA$</span></div>
+                        <div className="flex justify-between"><span>État des lieux d'entrée</span><span className="font-semibold">190 CA$</span></div>
+                        <div className="border-t border-gray-200 pt-2 text-gray-400">
+                          Ces honoraires sont facturés une seule fois à la signature du bail, à la charge du locataire.
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
 
               <div className="border-t border-gray-100 my-4" />
 
-              {/* Aide badge */}
-              <div className="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold" style={{ background: "#F0FDF4", color: "#16A34A" }}>
-                <CheckCircle className="w-3.5 h-3.5" />
-                Éligible aux aides au logement (RGI, PHAP)
-              </div>
+              {/* Badge contextuel */}
+              {isCommercialType ? (
+                <div className="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold" style={{ background: "#EFF6FF", color: "#1D4ED8" }}>
+                  <Info className="w-3.5 h-3.5" />
+                  Bail commercial 3-6-9 — Loyer HT
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold" style={{ background: "#F0FDF4", color: "#16A34A" }}>
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  Éligible aux aides au logement (RGI, PHAP)
+                </div>
+              )}
             </div>
           </div>
 

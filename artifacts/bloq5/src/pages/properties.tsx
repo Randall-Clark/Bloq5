@@ -102,15 +102,22 @@ const NEARBY_REGIONS_MAP: Record<string, string[]> = {
 };
 
 /* ── Property card ── */
-function PropCard({ idx, city, price, area, rooms, baths, arrond, title, currency }: {
-  idx: number; city: string; price: number; area: number; rooms: number;
+function PropCard({ id, idx, city, price, area, rooms, baths, arrond, title, currency, status: propStatus, type }: {
+  id: number; idx: number; city: string; price: number; area: number; rooms: number;
   baths: number; arrond: string; title: string; currency: string;
+  status?: string; type?: string;
 }) {
-  const status = cardStatus(idx);
+  const status = (propStatus === "rented" ? "occupied" : propStatus === "available" ? cardStatus(idx) : cardStatus(idx)) as "available" | "soon" | "occupied";
   const isOccupied = status === "occupied";
+  const isCommercialType = type === "office" || type === "commercial";
+  const isCoLiving = type === "co-living";
+
+  const typeLabel = isCommercialType
+    ? (type === "office" ? "Bureau" : "Commercial")
+    : isCoLiving ? "Colocation" : type === "house" ? "Maison" : "Appartement";
 
   return (
-    <Link href={`/properties/${idx + 1}`}>
+    <Link href={`/properties/${id}`}>
       <div
         className="rounded-lg overflow-hidden bg-white cursor-pointer group transition-shadow hover:shadow-lg"
         style={{ border: "1px solid #E8E8E8" }}
@@ -119,16 +126,21 @@ function PropCard({ idx, city, price, area, rooms, baths, arrond, title, currenc
         <div className="relative" style={{ height: 170 }}>
           <StatusBadge status={status} idx={idx} />
           <img
-            src={`https://picsum.photos/seed/prop${idx + 1}/370/170`}
+            src={`https://picsum.photos/seed/prop${id}/370/170`}
             alt={title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
+          {/* Type badge */}
+          <span className="absolute bottom-2 right-2 text-xs px-2 py-0.5 rounded-full font-medium"
+            style={{ background: "rgba(0,0,0,0.55)", color: "white" }}>
+            {typeLabel}
+          </span>
         </div>
 
         {/* Body */}
         <div className="p-3">
           <h3 className="font-semibold text-sm mb-2 line-clamp-1" style={{ color: "#1A1A1A", fontSize: 14 }}>
-            {title} — location {rooms > 1 ? "meublée" : "meublée"}
+            {title}
           </h3>
 
           {/* Characteristics */}
@@ -137,14 +149,18 @@ function PropCard({ idx, city, price, area, rooms, baths, arrond, title, currenc
               <Maximize2 className="w-3.5 h-3.5" style={{ color: YELLOW }} />
               {area} m²
             </span>
-            <span className="flex items-center gap-1">
-              <Bed className="w-3.5 h-3.5" style={{ color: YELLOW }} />
-              {rooms} pièce{rooms > 1 ? "s" : ""}
-            </span>
-            <span className="flex items-center gap-1">
-              <Bath className="w-3.5 h-3.5" style={{ color: YELLOW }} />
-              {baths} sdb
-            </span>
+            {!isCommercialType && rooms > 0 && (
+              <span className="flex items-center gap-1">
+                <Bed className="w-3.5 h-3.5" style={{ color: YELLOW }} />
+                {rooms} ch.
+              </span>
+            )}
+            {baths > 0 && (
+              <span className="flex items-center gap-1">
+                <Bath className="w-3.5 h-3.5" style={{ color: YELLOW }} />
+                {baths} sdb
+              </span>
+            )}
           </div>
 
           {/* Footer */}
@@ -162,7 +178,8 @@ function PropCard({ idx, city, price, area, rooms, baths, arrond, title, currenc
             )}
             {!isOccupied && (
               <span className="text-sm font-bold" style={{ color: "#1A1A1A" }}>
-                {price.toLocaleString("fr-FR")} <span className="text-xs font-normal text-gray-400">{currency}/mois cc</span>
+                {typeof price === "number" ? price.toLocaleString("fr-FR") : price}
+                {" "}<span className="text-xs font-normal text-gray-400">{currency}/mois</span>
               </span>
             )}
           </div>
@@ -307,18 +324,34 @@ export default function PropertiesPage() {
   }
   const pageNumbers = getPageNumbers(currentPage, totalPages);
 
-  const displayCards = Array.from({ length: ITEMS_PER_PAGE }, (_, i) => {
-    const ap = apiProps[i];
-    return {
-      idx:   i,
-      title: ap?.title       ?? TYPES[i % TYPES.length],
-      price: ap?.price       ?? PRICES[i % PRICES.length],
-      area:  ap?.area        ?? AREAS[i % AREAS.length],
-      rooms: ap?.bedrooms    ?? ROOMS[i % ROOMS.length],
-      baths: ap?.bathrooms   ?? BATHS[i % BATHS.length],
-      arrond: ap?.city       ?? ARRONDISSEMENTS[i % ARRONDISSEMENTS.length],
-    };
-  });
+  /* Build display cards:
+     - If API returned real rows → use exactly those rows (with their real IDs for routing)
+     - If no API data yet / no results → use static fallbacks (for browsing experience) */
+  const displayCards = hasApiData
+    ? apiProps.map((ap, i) => ({
+        id:     ap.id,
+        idx:    i,
+        title:  ap.title,
+        price:  Number(ap.price),
+        area:   Number(ap.area ?? AREAS[i % AREAS.length]),
+        rooms:  ap.bedrooms   ?? ROOMS[i % ROOMS.length],
+        baths:  ap.bathrooms  ?? BATHS[i % BATHS.length],
+        arrond: ap.city       ?? ARRONDISSEMENTS[i % ARRONDISSEMENTS.length],
+        type:   ap.type,
+        status: ap.status,
+      }))
+    : Array.from({ length: ITEMS_PER_PAGE }, (_, i) => ({
+        id:     i + 1,
+        idx:    i,
+        title:  TYPES[i % TYPES.length],
+        price:  PRICES[i % PRICES.length],
+        area:   AREAS[i % AREAS.length],
+        rooms:  ROOMS[i % ROOMS.length],
+        baths:  BATHS[i % BATHS.length],
+        arrond: ARRONDISSEMENTS[i % ARRONDISSEMENTS.length],
+        type:   "apartment" as const,
+        status: (["available", "available", "available", "available", "rented", "available", "available"] as const)[i % 7],
+      }));
 
   return (
     <div className="min-h-screen bg-white font-sans" style={{ color: "#1A1A1A" }}>
@@ -724,7 +757,7 @@ export default function PropertiesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
             {displayCards.map((card) => (
               <PropCard
-                key={card.idx}
+                key={card.id}
                 {...card}
                 city={city}
                 currency={country.currency.symbol}
