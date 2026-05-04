@@ -54,48 +54,46 @@ const clerkAppearance = {
   theme: shadcn,
   cssLayerName: "clerk",
   options: {
-    logoPlacement: "inside" as const,
-    logoLinkUrl: basePath || "/",
-    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
+    logoPlacement: "none" as const,
   },
   variables: {
-    colorPrimary: "hsl(30 100% 48%)", // Amber
-    colorForeground: "hsl(235 66% 15%)", // Navy base
-    colorMutedForeground: "hsl(215 16% 47%)",
-    colorDanger: "hsl(0 84% 60%)",
-    colorBackground: "hsl(0 0% 100%)",
-    colorInput: "hsl(214 32% 91%)",
-    colorInputForeground: "hsl(235 66% 15%)",
-    colorNeutral: "hsl(214 32% 91%)",
+    colorPrimary: "#F5A623",
+    colorForeground: "#1A1A1A",
+    colorMutedForeground: "#6B7280",
+    colorDanger: "#EF4444",
+    colorBackground: "#FFFFFF",
+    colorInput: "#F9FAFB",
+    colorInputForeground: "#1A1A1A",
+    colorNeutral: "#E5E7EB",
     fontFamily: "'Inter', sans-serif",
-    borderRadius: "0.5rem",
+    borderRadius: "0.75rem",
+    fontSize: "1rem",
+    spacingUnit: "1.1rem",
   },
   elements: {
-    rootBox: "w-full flex justify-center",
-    cardBox: "bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-xl border border-gray-100",
-    card: "!shadow-none !border-0 !bg-transparent !rounded-none",
+    rootBox: "w-full",
+    cardBox: "w-full shadow-none border-0",
+    card: "!shadow-none !border-0 !bg-transparent !rounded-none !p-0",
     footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
-    headerTitle: "text-2xl font-bold text-[#1a237e]",
-    headerSubtitle: "text-gray-500",
-    socialButtonsBlockButtonText: "font-semibold",
-    formFieldLabel: "font-medium text-[#1a237e]",
-    footerActionLink: "text-[#f57c00] hover:text-[#e65100]",
+    headerTitle: "!text-2xl !font-bold !text-[#1A1A1A]",
+    headerSubtitle: "!text-gray-500 !text-sm",
+    socialButtonsBlockButtonText: "font-semibold text-[#1A1A1A]",
+    socialButtonsBlockButton: "!border !border-gray-200 hover:!bg-gray-50 !rounded-xl !h-12",
+    formFieldLabel: "font-medium text-[#1A1A1A] text-sm",
+    formFieldInput: "!bg-gray-50 !border !border-gray-200 focus:!border-[#F5A623] !rounded-xl !h-12 !text-base",
+    formButtonPrimary: "!bg-[#F5A623] hover:!bg-[#e09520] !text-white !font-bold !rounded-xl !h-12 !text-base",
+    footerActionLink: "!text-[#F5A623] hover:!text-[#e09520] font-semibold",
     footerActionText: "text-gray-500",
-    dividerText: "text-gray-400",
-    identityPreviewEditButton: "text-[#f57c00]",
+    dividerText: "text-gray-400 text-sm",
+    dividerLine: "bg-gray-200",
+    identityPreviewEditButton: "text-[#F5A623]",
     formFieldSuccessText: "text-green-600",
     alertText: "text-sm",
-    logoBox: "h-12 flex items-center justify-center mb-4",
-    logoImage: "h-full w-auto",
-    socialButtonsBlockButton: "border-gray-200 hover:bg-gray-50",
-    formButtonPrimary: "bg-[#f57c00] hover:bg-[#e65100] text-white",
-    formFieldInput: "bg-gray-50 border-gray-200 focus:border-[#f57c00] focus:ring-[#f57c00]",
-    footerAction: "mt-4",
-    dividerLine: "bg-gray-200",
-    alert: "border-red-200 bg-red-50 text-red-800",
-    otpCodeFieldInput: "border-gray-200 focus:border-[#f57c00]",
-    formFieldRow: "mb-4",
-    main: "p-8",
+    alert: "!border-red-200 !bg-red-50 !text-red-800 !rounded-xl",
+    otpCodeFieldInput: "!border-gray-200 focus:!border-[#F5A623] !rounded-xl",
+    formFieldRow: "mb-3",
+    main: "!p-0",
+    logoBox: "hidden",
   },
 };
 
@@ -134,19 +132,98 @@ function LocationGuard() {
   return null;
 }
 
+function AuthLayout({ children, mode }: { children: React.ReactNode; mode: "signin" | "signup" }) {
+  const bgImage = `${import.meta.env.BASE_URL}images/hero-interior.png`;
+  return (
+    <div className="flex min-h-[100dvh] bg-white">
+      {/* Left panel — branding */}
+      <div
+        className="hidden lg:flex lg:w-[52%] relative flex-col justify-between p-12 overflow-hidden"
+        style={{
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/30" />
+
+        {/* Logo */}
+        <div className="relative z-10">
+          <a href={basePath || "/"} className="inline-block">
+            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="bloq5" className="h-10 brightness-0 invert" />
+          </a>
+        </div>
+
+        {/* Center tagline */}
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 bg-[#F5A623]/20 border border-[#F5A623]/40 rounded-full px-4 py-1.5 mb-6">
+            <span className="w-2 h-2 rounded-full bg-[#F5A623] inline-block" />
+            <span className="text-[#F5A623] text-sm font-semibold">Gestion immobilière simplifiée</span>
+          </div>
+          <h1 className="text-white text-4xl font-bold leading-tight mb-4">
+            {mode === "signin"
+              ? "Retrouvez vos propriétés et candidatures"
+              : "Commencez à gérer vos locations dès aujourd'hui"}
+          </h1>
+          <p className="text-white/70 text-lg leading-relaxed max-w-md">
+            Recherche, candidatures et suivi de vos dossiers locatifs — tout en un seul endroit.
+          </p>
+        </div>
+
+        {/* Bottom trust signals */}
+        <div className="relative z-10 flex gap-8">
+          {[
+            { num: "2 400+", label: "Propriétés actives" },
+            { num: "98%", label: "Satisfaction locataires" },
+            { num: "48h", label: "Délai de réponse moyen" },
+          ].map(({ num, label }) => (
+            <div key={label}>
+              <div className="text-[#F5A623] text-2xl font-bold">{num}</div>
+              <div className="text-white/60 text-xs mt-0.5">{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div className="flex-1 flex flex-col justify-center items-center px-6 py-12 lg:px-16 overflow-y-auto">
+        {/* Mobile logo */}
+        <div className="lg:hidden mb-8">
+          <a href={basePath || "/"}>
+            <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="bloq5" className="h-9" />
+          </a>
+        </div>
+
+        <div className="w-full max-w-[460px]">
+          {children}
+        </div>
+
+        <p className="mt-8 text-xs text-gray-400 text-center max-w-xs">
+          En continuant, vous acceptez les{" "}
+          <a href="#" className="underline hover:text-gray-600">Conditions d'utilisation</a>{" "}
+          et la{" "}
+          <a href="#" className="underline hover:text-gray-600">Politique de confidentialité</a>{" "}
+          de bloq5.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function SignInPage() {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-gray-50 px-4">
+    <AuthLayout mode="signin">
       <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
-    </div>
+    </AuthLayout>
   );
 }
 
 function SignUpPage() {
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-gray-50 px-4">
+    <AuthLayout mode="signup">
       <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
-    </div>
+    </AuthLayout>
   );
 }
 
