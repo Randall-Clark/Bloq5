@@ -3,19 +3,19 @@ import { useLocation } from "wouter";
 import { authClient } from "@/lib/auth-client";
 import {
   Building2, CheckCircle2, ChevronRight, ClipboardList,
-  FileText, LayoutDashboard, ShieldCheck, Sparkles, X
+  LayoutDashboard, ShieldCheck, Sparkles,
 } from "lucide-react";
 
 const YELLOW = "#F5A623";
-const NAVY   = "#1A237E";
+const DARK   = "#1A1A1A";
 const STORAGE_KEY = "bloq5_pro_onboarded";
 
-/* ── Content of each slide ── */
+/* ── Slides content ── */
 const SLIDES = [
   {
     icon: Sparkles,
     title: "Bienvenue sur bloq5 Pro",
-    subtitle: "La plateforme de gestion locative pour les propriétaires et gestionnaires professionnels.",
+    subtitle: "Gérez vos biens, recevez des candidatures et suivez vos revenus — tout au même endroit.",
     content: (
       <ul className="space-y-3 mt-4">
         {[
@@ -44,7 +44,10 @@ const SLIDES = [
           { num: "3", title: "Gérez depuis votre dashboard", desc: "Suivez les demandes, communiquez avec les candidats et analysez vos stats." },
         ].map((step) => (
           <div key={step.num} className="flex items-start gap-4">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-bold" style={{ background: NAVY }}>
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold"
+              style={{ background: YELLOW, color: DARK }}
+            >
               {step.num}
             </div>
             <div>
@@ -59,27 +62,26 @@ const SLIDES = [
   {
     icon: ShieldCheck,
     title: "Conditions d'utilisation",
-    subtitle: "En utilisant bloq5 Pro, vous acceptez les points suivants.",
+    subtitle: "Quelques règles simples à respecter pour utiliser bloq5 Pro.",
     content: (
-      <div className="space-y-3 mt-4 text-sm text-gray-600 leading-relaxed max-h-48 overflow-y-auto pr-1">
-        <p><strong className="text-gray-800">Contenu des annonces :</strong> Vous êtes responsable de l'exactitude des informations publiées. Tout contenu trompeur ou frauduleux entraînera la suppression du compte.</p>
-        <p><strong className="text-gray-800">Données personnelles :</strong> Les informations des locataires collectées via la plateforme doivent être traitées conformément à la Loi 25 du Québec et au RGPD.</p>
-        <p><strong className="text-gray-800">Utilisation de la plateforme :</strong> bloq5 Pro est réservé à un usage professionnel ou semi-professionnel. La revente de l'accès ou l'automatisation non autorisée est interdite.</p>
-        <p><strong className="text-gray-800">Facturation :</strong> L'abonnement est mensuel et renouvelé automatiquement. La résiliation peut être effectuée à tout moment depuis l'espace Abonnement.</p>
-        <p><strong className="text-gray-800">Responsabilité :</strong> bloq5 agit en tant qu'intermédiaire technologique et n'est pas responsable des décisions prises entre propriétaires et locataires.</p>
+      <div className="space-y-3 mt-4 text-sm text-gray-600 leading-relaxed max-h-44 overflow-y-auto pr-1">
+        <p><strong className="text-gray-800">Vos annonces :</strong> Vous êtes responsable des informations que vous publiez. Elles doivent être exactes et honnêtes.</p>
+        <p><strong className="text-gray-800">Données des locataires :</strong> Traitez les informations personnelles reçues avec respect et en conformité avec les lois en vigueur.</p>
+        <p><strong className="text-gray-800">Usage de la plateforme :</strong> bloq5 Pro est réservé à un usage immobilier légitime. Toute utilisation abusive entraîne la suspension du compte.</p>
+        <p><strong className="text-gray-800">Abonnement :</strong> Le forfait se renouvelle chaque mois. Vous pouvez annuler à tout moment depuis votre espace Abonnement.</p>
+        <p><strong className="text-gray-800">Rôle de bloq5 :</strong> Nous mettons en relation propriétaires et locataires. Les décisions finales vous appartiennent.</p>
       </div>
     ),
   },
   {
     icon: LayoutDashboard,
     title: "Tout est prêt !",
-    subtitle: "Votre espace propriétaire est configuré. Commencez à gérer vos biens dès maintenant.",
+    subtitle: "Votre espace propriétaire est configuré. Publiez votre premier bien dès maintenant.",
     content: (
       <div className="mt-4 p-4 rounded-xl border border-gray-100 bg-gray-50">
         <p className="text-sm text-gray-600 leading-relaxed">
-          En cliquant sur <strong>"Faire une annonce"</strong>, vous accéderez à votre tableau de bord
-          propriétaire où vous pourrez ajouter votre premier bien, recevoir des candidatures et
-          suivre vos performances en temps réel.
+          Cliquez sur <strong className="text-gray-900">"Faire une annonce"</strong> pour créer
+          votre première annonce et commencer à recevoir des candidatures de locataires qualifiés.
         </p>
       </div>
     ),
@@ -91,8 +93,8 @@ const TERMS_STEP = 2;
 export default function ProPricingPage() {
   const [, navigate]  = useLocation();
   const { data: session } = authClient.useSession();
-  const [step, setStep]       = useState(0);
-  const [visible, setVisible] = useState(false);
+  const [step, setStep]           = useState(0);
+  const [visible, setVisible]     = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
@@ -105,18 +107,15 @@ export default function ProPricingPage() {
 
   function finish() {
     localStorage.setItem(STORAGE_KEY, "1");
-    if (session) {
-      navigate("/pro/properties/new");
-    } else {
-      navigate("/sign-up");
-    }
+    navigate(session ? "/pro/properties/new" : "/sign-up");
   }
 
   if (!visible) return null;
 
-  const slide   = SLIDES[step];
-  const isLast  = step === SLIDES.length - 1;
-  const Icon    = slide.icon;
+  const slide  = SLIDES[step];
+  const isLast = step === SLIDES.length - 1;
+  const Icon   = slide.icon;
+  const blocked = step === TERMS_STEP && !termsAccepted;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -124,7 +123,7 @@ export default function ProPricingPage() {
 
         {/* Header */}
         <div className="px-8 pt-8 pb-0">
-          {/* Progress dots */}
+          {/* Progress */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex gap-2">
               {SLIDES.map((_, i) => (
@@ -132,7 +131,7 @@ export default function ProPricingPage() {
                   key={i}
                   className="h-1.5 rounded-full transition-all duration-300"
                   style={{
-                    width: i === step ? 24 : 8,
+                    width:      i === step ? 24 : 8,
                     background: i <= step ? YELLOW : "#E5E7EB",
                   }}
                 />
@@ -147,7 +146,7 @@ export default function ProPricingPage() {
               <Icon className="w-6 h-6" style={{ color: YELLOW }} />
             </div>
             <div>
-              <h2 className="text-xl font-bold" style={{ color: "#1A1A1A" }}>{slide.title}</h2>
+              <h2 className="text-xl font-bold" style={{ color: DARK }}>{slide.title}</h2>
               <p className="text-sm text-gray-500 mt-0.5">{slide.subtitle}</p>
             </div>
           </div>
@@ -157,9 +156,9 @@ export default function ProPricingPage() {
         <div className="px-8 pb-4">
           {slide.content}
 
-          {/* Terms checkbox — only on the conditions step */}
+          {/* Checkbox on terms step */}
           {step === TERMS_STEP && (
-            <label className="flex items-start gap-3 mt-4 cursor-pointer select-none group">
+            <label className="flex items-start gap-3 mt-4 cursor-pointer select-none">
               <div className="relative flex items-center justify-center mt-0.5">
                 <input
                   type="checkbox"
@@ -193,7 +192,7 @@ export default function ProPricingPage() {
         {/* Divider */}
         <div className="h-px bg-gray-100 mx-8" />
 
-        {/* Footer buttons */}
+        {/* Footer */}
         <div className="px-8 py-5 flex items-center justify-between gap-3">
           <button
             onClick={() => step > 0 && setStep(s => s - 1)}
@@ -205,21 +204,21 @@ export default function ProPricingPage() {
           {isLast ? (
             <button
               onClick={finish}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
-              style={{ background: NAVY }}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+              style={{ background: YELLOW, color: DARK }}
             >
               <Building2 className="w-4 h-4" />
               Faire une annonce
             </button>
           ) : (
             <button
-              onClick={() => setStep(s => s + 1)}
-              disabled={step === TERMS_STEP && !termsAccepted}
+              onClick={() => !blocked && setStep(s => s + 1)}
+              disabled={blocked}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all"
               style={{
-                background: (step === TERMS_STEP && !termsAccepted) ? "#E5E7EB" : YELLOW,
-                color:      (step === TERMS_STEP && !termsAccepted) ? "#9CA3AF" : "#1A1A1A",
-                cursor:     (step === TERMS_STEP && !termsAccepted) ? "not-allowed" : "pointer",
+                background: blocked ? "#E5E7EB" : YELLOW,
+                color:      blocked ? "#9CA3AF" : DARK,
+                cursor:     blocked ? "not-allowed" : "pointer",
               }}
             >
               Suivant
