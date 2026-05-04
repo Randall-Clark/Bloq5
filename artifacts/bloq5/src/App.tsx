@@ -302,9 +302,6 @@ function SignUpPage() {
 
 /* ── Route Guards ── */
 function HomeRedirect() {
-  const { data: session, isPending } = authClient.useSession();
-  if (isPending) return null;
-  if (session) return <Redirect to="/profile" />;
   return <HomePage />;
 }
 
