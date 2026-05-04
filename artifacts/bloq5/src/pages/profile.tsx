@@ -12,12 +12,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import UserLayout from "@/components/layout/user-layout";
-import { User, MessageSquare, Heart, Calendar, Loader2 } from "lucide-react";
+import { User, MessageSquare, Heart, Calendar, Loader2, Building2, LayoutDashboard } from "lucide-react";
 import { Link } from "wouter";
 import { authClient } from "@/lib/auth-client";
 
 const YELLOW = "#F5A623";
-const NAVY  = "#1A237E";
+const NAVY   = "#1A237E";
 
 const profileSchema = z.object({
   firstName: z.string().min(1, "Le prénom est requis"),
@@ -26,15 +26,45 @@ const profileSchema = z.object({
 });
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
+function ProButton({ role }: { role: string }) {
+  const isPro = role === "owner" || role === "manager";
+
+  if (isPro) {
+    return (
+      <Link href="/pro/dashboard">
+        <span
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
+          style={{ background: NAVY, color: "#fff" }}
+        >
+          <LayoutDashboard className="w-4 h-4" />
+          Dashboard Pro
+        </span>
+      </Link>
+    );
+  }
+
+  return (
+    <Link href="/pro">
+      <span
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
+        style={{ background: YELLOW, color: "#1A1A1A" }}
+      >
+        <Building2 className="w-4 h-4" />
+        Devenir Pro
+      </span>
+    </Link>
+  );
+}
+
 export default function ProfilePage() {
   const { toast }      = useToast();
   const queryClient    = useQueryClient();
   const { data: session } = authClient.useSession();
 
-  const { data: profile,      isLoading: pL } = useGetProfile();
-  const { data: requestsData, isLoading: rL } = useListRentalRequests();
-  const { data: favoritesData,isLoading: fL } = useListFavorites();
-  const { data: visitsData,   isLoading: vL } = useListVisits();
+  const { data: profile,       isLoading: pL } = useGetProfile();
+  const { data: requestsData,  isLoading: rL } = useListRentalRequests();
+  const { data: favoritesData, isLoading: fL } = useListFavorites();
+  const { data: visitsData,    isLoading: vL } = useListVisits();
   const updateProfile = useUpdateProfile();
 
   const form = useForm<ProfileFormValues>({
@@ -58,7 +88,6 @@ export default function ProfilePage() {
     });
   }
 
-  /* ── loading state ── */
   if (pL || rL || fL || vL) {
     return (
       <UserLayout>
@@ -69,7 +98,6 @@ export default function ProfilePage() {
     );
   }
 
-  /* ── counts ── */
   const cnt = (d: unknown) =>
     Array.isArray(d) ? d.length : ((d as any)?.data?.length ?? 0);
   const requestsCount  = cnt(requestsData);
@@ -77,28 +105,30 @@ export default function ProfilePage() {
   const visitsCount    = cnt(visitsData);
   const hasStats       = requestsCount > 0 || favoritesCount > 0 || visitsCount > 0;
 
-  const displayName =
-    profile?.firstName ||
-    session?.user?.name?.split(" ")[0] ||
-    null;
+  const displayName = profile?.firstName || session?.user?.name?.split(" ")[0] || null;
+  const role = profile?.role ?? "tenant";
 
   const stats = [
-    { label: "Demandes actives", value: requestsCount, icon: MessageSquare, href: "/profile/requests" },
+    { label: "Demandes actives", value: requestsCount,  icon: MessageSquare, href: "/profile/requests"  },
     { label: "Favoris",          value: favoritesCount, icon: Heart,         href: "/profile/favorites" },
-    { label: "Visites prévues",  value: visitsCount,    icon: Calendar,      href: "/profile/visits" },
+    { label: "Visites prévues",  value: visitsCount,    icon: Calendar,      href: "/profile/visits"    },
   ];
 
   return (
     <UserLayout>
-      {/* Greeting */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold" style={{ color: "#1A1A1A" }}>
-          {displayName ? `Bonjour, ${displayName} 👋` : "Bienvenue sur bloq5"}
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">Gérez votre profil et suivez vos activités.</p>
+
+      {/* Header row: greeting + Pro button */}
+      <div className="flex items-start justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-bold" style={{ color: "#1A1A1A" }}>
+            {displayName ? `Bonjour, ${displayName} 👋` : "Bienvenue sur bloq5"}
+          </h1>
+          <p className="text-gray-500 text-sm mt-1">Gérez votre profil et suivez vos activités.</p>
+        </div>
+        {profile && <ProButton role={role} />}
       </div>
 
-      {/* Stats — only shown when there is real data */}
+      {/* Stats cards — only when real data exists */}
       {hasStats && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           {stats.map((stat) => (
@@ -174,11 +204,30 @@ export default function ProfilePage() {
             <p className="text-xs text-gray-400 mt-1">L'adresse e-mail ne peut pas être modifiée.</p>
           </div>
 
+          {/* Role badge */}
+          {profile && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Statut :</span>
+              <span
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
+                style={
+                  role === "owner"
+                    ? { background: "#EEF2FF", color: NAVY }
+                    : role === "manager"
+                    ? { background: "#FFF3E0", color: "#E65100" }
+                    : { background: "#F3F4F6", color: "#6B7280" }
+                }
+              >
+                {role === "owner" ? "Propriétaire" : role === "manager" ? "Gestionnaire" : "Locataire"}
+              </span>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={updateProfile.isPending}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-            style={{ background: YELLOW }}
+            style={{ background: YELLOW, color: "#1A1A1A" }}
           >
             {updateProfile.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
             {updateProfile.isPending ? "Enregistrement..." : "Enregistrer les modifications"}
