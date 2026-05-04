@@ -1,95 +1,193 @@
-import PublicLayout from "@/components/layout/public-layout";
-import { useListSubscriptionPlans } from "@workspace/api-client-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, X } from "lucide-react";
-import { Link } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import { authClient } from "@/lib/auth-client";
+import {
+  Building2, CheckCircle2, ChevronRight, ClipboardList,
+  FileText, LayoutDashboard, ShieldCheck, Sparkles, X
+} from "lucide-react";
+
+const YELLOW = "#F5A623";
+const NAVY   = "#1A237E";
+const STORAGE_KEY = "bloq5_pro_onboarded";
+
+/* ── Content of each slide ── */
+const SLIDES = [
+  {
+    icon: Sparkles,
+    title: "Bienvenue sur bloq5 Pro",
+    subtitle: "La plateforme de gestion locative pour les propriétaires et gestionnaires professionnels.",
+    content: (
+      <ul className="space-y-3 mt-4">
+        {[
+          "Publiez vos annonces en quelques minutes",
+          "Recevez et gérez les candidatures locatives",
+          "Suivez vos revenus et votre taux d'occupation",
+          "Collaborez avec vos gestionnaires d'immeuble",
+        ].map((item) => (
+          <li key={item} className="flex items-start gap-3 text-sm text-gray-700">
+            <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: YELLOW }} />
+            {item}
+          </li>
+        ))}
+      </ul>
+    ),
+  },
+  {
+    icon: ClipboardList,
+    title: "Comment ça fonctionne",
+    subtitle: "Trois étapes simples pour gérer votre parc immobilier.",
+    content: (
+      <div className="space-y-4 mt-4">
+        {[
+          { num: "1", title: "Créez votre première annonce", desc: "Renseignez les infos du bien, ajoutez des photos et publiez en un clic." },
+          { num: "2", title: "Recevez des candidatures qualifiées", desc: "Les locataires soumettent leur dossier directement via la plateforme." },
+          { num: "3", title: "Gérez depuis votre dashboard", desc: "Suivez les demandes, communiquez avec les candidats et analysez vos stats." },
+        ].map((step) => (
+          <div key={step.num} className="flex items-start gap-4">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-bold" style={{ background: NAVY }}>
+              {step.num}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{step.title}</p>
+              <p className="text-sm text-gray-500 mt-0.5">{step.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    icon: ShieldCheck,
+    title: "Conditions d'utilisation",
+    subtitle: "En utilisant bloq5 Pro, vous acceptez les points suivants.",
+    content: (
+      <div className="space-y-3 mt-4 text-sm text-gray-600 leading-relaxed max-h-48 overflow-y-auto pr-1">
+        <p><strong className="text-gray-800">Contenu des annonces :</strong> Vous êtes responsable de l'exactitude des informations publiées. Tout contenu trompeur ou frauduleux entraînera la suppression du compte.</p>
+        <p><strong className="text-gray-800">Données personnelles :</strong> Les informations des locataires collectées via la plateforme doivent être traitées conformément à la Loi 25 du Québec et au RGPD.</p>
+        <p><strong className="text-gray-800">Utilisation de la plateforme :</strong> bloq5 Pro est réservé à un usage professionnel ou semi-professionnel. La revente de l'accès ou l'automatisation non autorisée est interdite.</p>
+        <p><strong className="text-gray-800">Facturation :</strong> L'abonnement est mensuel et renouvelé automatiquement. La résiliation peut être effectuée à tout moment depuis l'espace Abonnement.</p>
+        <p><strong className="text-gray-800">Responsabilité :</strong> bloq5 agit en tant qu'intermédiaire technologique et n'est pas responsable des décisions prises entre propriétaires et locataires.</p>
+      </div>
+    ),
+  },
+  {
+    icon: LayoutDashboard,
+    title: "Tout est prêt !",
+    subtitle: "Votre espace propriétaire est configuré. Commencez à gérer vos biens dès maintenant.",
+    content: (
+      <div className="mt-4 p-4 rounded-xl border border-gray-100 bg-gray-50">
+        <p className="text-sm text-gray-600 leading-relaxed">
+          En cliquant sur <strong>"Faire une annonce"</strong>, vous accéderez à votre tableau de bord
+          propriétaire où vous pourrez ajouter votre premier bien, recevoir des candidatures et
+          suivre vos performances en temps réel.
+        </p>
+      </div>
+    ),
+  },
+];
 
 export default function ProPricingPage() {
-  const { data: plans, isLoading } = useListSubscriptionPlans();
+  const [, navigate]  = useLocation();
+  const { data: session } = authClient.useSession();
+  const [step, setStep]   = useState(0);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem(STORAGE_KEY)) {
+      navigate("/pro/dashboard");
+    } else {
+      setVisible(true);
+    }
+  }, []);
+
+  function finish() {
+    localStorage.setItem(STORAGE_KEY, "1");
+    if (session) {
+      navigate("/pro/properties/new");
+    } else {
+      navigate("/sign-up");
+    }
+  }
+
+  if (!visible) return null;
+
+  const slide   = SLIDES[step];
+  const isLast  = step === SLIDES.length - 1;
+  const Icon    = slide.icon;
 
   return (
-    <PublicLayout>
-      <div className="bg-[#f8f9fa] dark:bg-[#0a0a0a] min-h-screen py-24">
-        <div className="container mx-auto px-6">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-[#1a237e] dark:text-white mb-6">
-              bloq<span className="text-[#f57c00]">5</span> Pro
-            </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-400">
-              L'outil de gestion locative de nouvelle génération pour les professionnels de l'immobilier et les propriétaires exigeants.
-            </p>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-[500px] w-full" />)}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {plans?.map((plan) => (
-                <Card 
-                  key={plan.id} 
-                  className={`rounded-none border-2 flex flex-col ${
-                    plan.name.toLowerCase().includes('pro') && !plan.isEnterprise
-                      ? 'border-[#f57c00] shadow-xl relative scale-105 z-10' 
-                      : 'border-gray-200 dark:border-gray-800 shadow-sm'
-                  }`}
-                >
-                  {plan.name.toLowerCase().includes('pro') && !plan.isEnterprise && (
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#f57c00] text-white px-4 py-1 text-xs font-bold uppercase tracking-wider">
-                      Le plus populaire
-                    </div>
-                  )}
-                  <CardHeader className="text-center pb-8 pt-10">
-                    <CardTitle className="text-2xl font-bold text-[#1a237e] dark:text-white mb-2">{plan.name}</CardTitle>
-                    <div className="flex justify-center items-end gap-1">
-                      {plan.price !== null ? (
-                        <>
-                          <span className="text-4xl font-extrabold text-gray-900 dark:text-white">{plan.price}€</span>
-                          <span className="text-gray-500 mb-1">/{plan.interval === 'month' ? 'mois' : 'an'}</span>
-                        </>
-                      ) : (
-                        <span className="text-4xl font-extrabold text-gray-900 dark:text-white">Sur devis</span>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    <ul className="space-y-4">
-                      {plan.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-3">
-                          <CheckCircle2 className="h-5 w-5 text-[#f57c00] shrink-0" />
-                          <span className="text-gray-600 dark:text-gray-300 text-sm">{feature}</span>
-                        </li>
-                      ))}
-                      {plan.maxProperties && (
-                        <li className="flex items-start gap-3">
-                          <CheckCircle2 className="h-5 w-5 text-[#f57c00] shrink-0" />
-                          <span className="text-gray-600 dark:text-gray-300 text-sm font-semibold">Jusqu'à {plan.maxProperties} propriétés</span>
-                        </li>
-                      )}
-                    </ul>
-                  </CardContent>
-                  <CardFooter className="pt-8 pb-10">
-                    <Link href="/sign-up" className="w-full">
-                      <Button 
-                        className={`w-full rounded-none h-12 text-base font-bold ${
-                          plan.name.toLowerCase().includes('pro') && !plan.isEnterprise
-                            ? 'bg-[#f57c00] hover:bg-[#e65100] text-white' 
-                            : 'bg-[#1a237e] hover:bg-[#0d47a1] text-white'
-                        }`}
-                      >
-                        {plan.isEnterprise ? "Contactez-nous" : "Commencer"}
-                      </Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
+        {/* Header */}
+        <div className="px-8 pt-8 pb-0">
+          {/* Progress dots */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex gap-2">
+              {SLIDES.map((_, i) => (
+                <div
+                  key={i}
+                  className="h-1.5 rounded-full transition-all duration-300"
+                  style={{
+                    width: i === step ? 24 : 8,
+                    background: i <= step ? YELLOW : "#E5E7EB",
+                  }}
+                />
               ))}
             </div>
+            <span className="text-xs text-gray-400 font-medium">{step + 1} / {SLIDES.length}</span>
+          </div>
+
+          {/* Icon + title */}
+          <div className="flex items-start gap-4 mb-2">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#FFF8EE" }}>
+              <Icon className="w-6 h-6" style={{ color: YELLOW }} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold" style={{ color: "#1A1A1A" }}>{slide.title}</h2>
+              <p className="text-sm text-gray-500 mt-0.5">{slide.subtitle}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="px-8 pb-4">
+          {slide.content}
+        </div>
+
+        {/* Divider */}
+        <div className="h-px bg-gray-100 mx-8" />
+
+        {/* Footer buttons */}
+        <div className="px-8 py-5 flex items-center justify-between gap-3">
+          <button
+            onClick={() => step > 0 && setStep(s => s - 1)}
+            className={`text-sm font-medium transition-colors ${step === 0 ? "invisible" : "text-gray-400 hover:text-gray-700"}`}
+          >
+            ← Précédent
+          </button>
+
+          {isLast ? (
+            <button
+              onClick={finish}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
+              style={{ background: NAVY }}
+            >
+              <Building2 className="w-4 h-4" />
+              Faire une annonce
+            </button>
+          ) : (
+            <button
+              onClick={() => setStep(s => s + 1)}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+              style={{ background: YELLOW, color: "#1A1A1A" }}
+            >
+              Suivant
+              <ChevronRight className="w-4 h-4" />
+            </button>
           )}
         </div>
       </div>
-    </PublicLayout>
+    </div>
   );
 }

@@ -362,6 +362,12 @@ function AppRoutes() {
   );
 }
 
+function ConditionalLocationPopup() {
+  const [location] = useLocation();
+  if (location.startsWith("/pro")) return null;
+  return <LocationPopup />;
+}
+
 function App() {
   return (
     <WouterRouter base={basePath}>
@@ -369,7 +375,7 @@ function App() {
         <TooltipProvider>
           <AppRoutes />
           <Toaster />
-          <LocationPopup />
+          <ConditionalLocationPopup />
           <CountryChangeBanner />
         </TooltipProvider>
       </LocationProvider>

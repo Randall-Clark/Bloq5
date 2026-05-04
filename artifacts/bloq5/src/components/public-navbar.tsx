@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Menu, X, User } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
@@ -8,6 +8,8 @@ const YELLOW = "#F5A623";
 export function PublicNavbar({ activeItem }: { activeItem?: "biens" }) {
   const [open, setOpen] = useState(false);
   const { data: session, isPending } = authClient.useSession();
+  const [location] = useLocation();
+  const isProPage = location.startsWith("/pro");
 
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
@@ -49,13 +51,15 @@ export function PublicNavbar({ activeItem }: { activeItem?: "biens" }) {
                 >
                   Se connecter
                 </Link>
-                <Link
-                  href="/sign-up"
-                  className="hidden sm:flex items-center gap-1.5 text-sm font-bold rounded-md px-3 py-1.5 transition-opacity hover:opacity-85"
-                  style={{ background: YELLOW, color: "#1A1A1A" }}
-                >
-                  <span className="hidden lg:inline">Vous êtes </span>propriétaire ?
-                </Link>
+                {!isProPage && (
+                  <Link
+                    href="/sign-up"
+                    className="hidden sm:flex items-center gap-1.5 text-sm font-bold rounded-md px-3 py-1.5 transition-opacity hover:opacity-85"
+                    style={{ background: YELLOW, color: "#1A1A1A" }}
+                  >
+                    <span className="hidden lg:inline">Vous êtes </span>propriétaire ?
+                  </Link>
+                )}
               </>
             )
           )}
@@ -87,9 +91,11 @@ export function PublicNavbar({ activeItem }: { activeItem?: "biens" }) {
                 <Link href="/sign-in" className="text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-4 py-2.5 text-center hover:bg-gray-50 transition-colors" onClick={() => setOpen(false)}>
                   Se connecter
                 </Link>
-                <Link href="/sign-up" className="text-sm font-bold rounded-md px-4 py-2.5 text-center transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }} onClick={() => setOpen(false)}>
-                  Vous êtes propriétaire ?
-                </Link>
+                {!isProPage && (
+                  <Link href="/sign-up" className="text-sm font-bold rounded-md px-4 py-2.5 text-center transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }} onClick={() => setOpen(false)}>
+                    Vous êtes propriétaire ?
+                  </Link>
+                )}
               </>
             )}
           </div>
