@@ -470,12 +470,11 @@ export default function PropertyDetailPage() {
             <span className="text-gray-400 text-xs">/mois {isCommercialType ? "HT" : "cc"}</span>
           </div>
           {isCommercialType ? (
-            <button
-              onClick={openVisitScheduler}
-              className="flex-shrink-0 py-3 px-5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}
-            >
-              Visiter cet espace
-            </button>
+            <Link href={`/properties/${id}/application`} className="flex-shrink-0">
+              <button className="py-3 px-5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                Déposer ma candidature
+              </button>
+            </Link>
           ) : (
             <Link href={`/properties/${id}/application`} className="flex-shrink-0">
               <button className="py-3 px-5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
@@ -770,21 +769,11 @@ export default function PropertyDetailPage() {
 
                 {/* Main CTA */}
                 {isAvailable ? (
-                  isCommercialType ? (
-                    <button
-                      onClick={openVisitScheduler}
-                      className="w-full py-3.5 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85"
-                      style={{ background: YELLOW, color: "#1A1A1A" }}
-                    >
-                      Je souhaite visiter cet espace
+                  <Link href={`/properties/${id}/application`}>
+                    <button className="w-full py-3.5 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                      Je dépose ma candidature
                     </button>
-                  ) : (
-                    <Link href={`/properties/${id}/application`}>
-                      <button className="w-full py-3.5 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
-                        Je dépose ma candidature
-                      </button>
-                    </Link>
-                  )
+                  </Link>
                 ) : (
                   <button disabled className="w-full py-3.5 rounded-xl font-semibold text-sm mb-3 opacity-50 cursor-not-allowed bg-gray-200 text-gray-500">
                     Bien indisponible
@@ -877,20 +866,11 @@ export default function PropertyDetailPage() {
 
               {/* CTA — adapté au type de bien */}
               {isAvailable ? (
-                isCommercialType ? (
-                  <button
-                    onClick={openVisitScheduler}
-                    className="w-full py-4 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}
-                  >
-                    Je souhaite visiter cet espace
+                <Link href={`/properties/${id}/application`}>
+                  <button className="w-full py-4 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                    Je dépose ma candidature
                   </button>
-                ) : (
-                  <Link href={`/properties/${id}/application`}>
-                    <button className="w-full py-4 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
-                      Je dépose ma candidature
-                    </button>
-                  </Link>
-                )
+                </Link>
               ) : (
                 <button disabled className="w-full py-4 rounded-xl font-semibold text-sm mb-3 opacity-50 cursor-not-allowed bg-gray-200 text-gray-500">
                   Bien indisponible
