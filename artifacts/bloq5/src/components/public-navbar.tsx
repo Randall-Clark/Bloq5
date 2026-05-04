@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 const YELLOW = "#F5A623";
 
 export function PublicNavbar({ activeItem }: { activeItem?: "biens" }) {
   const [open, setOpen] = useState(false);
+  const { data: session, isPending } = authClient.useSession();
 
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
@@ -29,19 +31,34 @@ export function PublicNavbar({ activeItem }: { activeItem?: "biens" }) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            href="/sign-in"
-            className="hidden sm:block text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors"
-          >
-            Se connecter
-          </Link>
-          <Link
-            href="/sign-up"
-            className="hidden sm:flex items-center gap-1.5 text-sm font-bold rounded-md px-3 py-1.5 transition-opacity hover:opacity-85"
-            style={{ background: YELLOW, color: "#1A1A1A" }}
-          >
-            <span className="hidden lg:inline">Vous êtes </span>propriétaire ?
-          </Link>
+          {!isPending && (
+            session ? (
+              <Link
+                href="/profile"
+                className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold rounded-md px-3 py-1.5 transition-opacity hover:opacity-85"
+                style={{ background: YELLOW, color: "#1A1A1A" }}
+              >
+                <User className="w-4 h-4" />
+                Mon compte
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  className="hidden sm:block text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors"
+                >
+                  Se connecter
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="hidden sm:flex items-center gap-1.5 text-sm font-bold rounded-md px-3 py-1.5 transition-opacity hover:opacity-85"
+                  style={{ background: YELLOW, color: "#1A1A1A" }}
+                >
+                  <span className="hidden lg:inline">Vous êtes </span>propriétaire ?
+                </Link>
+              </>
+            )
+          )}
           <button
             className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:bg-gray-50"
             onClick={() => setOpen((v) => !v)}
@@ -61,12 +78,20 @@ export function PublicNavbar({ activeItem }: { activeItem?: "biens" }) {
           <a href="#" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-50" onClick={() => setOpen(false)}>Articles</a>
           <a href="#" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-50" onClick={() => setOpen(false)}>Contact</a>
           <div className="pt-3 flex flex-col gap-2">
-            <Link href="/sign-in" className="text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-4 py-2.5 text-center hover:bg-gray-50 transition-colors" onClick={() => setOpen(false)}>
-              Se connecter
-            </Link>
-            <Link href="/sign-up" className="text-sm font-bold rounded-md px-4 py-2.5 text-center transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }} onClick={() => setOpen(false)}>
-              Vous êtes propriétaire ?
-            </Link>
+            {session ? (
+              <Link href="/profile" className="text-sm font-bold rounded-md px-4 py-2.5 text-center transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }} onClick={() => setOpen(false)}>
+                Mon compte
+              </Link>
+            ) : (
+              <>
+                <Link href="/sign-in" className="text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-4 py-2.5 text-center hover:bg-gray-50 transition-colors" onClick={() => setOpen(false)}>
+                  Se connecter
+                </Link>
+                <Link href="/sign-up" className="text-sm font-bold rounded-md px-4 py-2.5 text-center transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }} onClick={() => setOpen(false)}>
+                  Vous êtes propriétaire ?
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -1,7 +1,11 @@
 import { ReactNode } from "react";
 import { Link } from "wouter";
+import { User } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
+  const { data: session, isPending } = authClient.useSession();
+
   return (
     <div className="min-h-[100dvh] flex flex-col bg-white dark:bg-[#0a0a0a]">
       <header className="fixed top-0 w-full bg-white/90 dark:bg-black/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 z-50 transition-all duration-300">
@@ -11,10 +15,21 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             <Link href="/properties" className="text-sm font-semibold tracking-wide text-gray-800 dark:text-gray-200 hover:text-[#f57c00] transition-colors">Annonces</Link>
             <Link href="/pro" className="text-sm font-semibold tracking-wide text-gray-800 dark:text-gray-200 hover:text-[#f57c00] transition-colors">Devenir Pro</Link>
             <div className="w-px h-6 bg-gray-300 dark:bg-gray-700"></div>
-            <Link href="/sign-in" className="text-sm font-semibold text-[#1a237e] dark:text-white hover:text-[#f57c00] transition-colors">Se connecter</Link>
-            <Link href="/sign-up" className="inline-flex h-10 items-center justify-center rounded-none bg-[#f57c00] px-6 text-sm font-bold text-white transition-colors hover:bg-[#e65100]">
-              Créer un compte
-            </Link>
+            {!isPending && (
+              session ? (
+                <Link href="/profile" className="inline-flex items-center gap-2 h-10 px-6 rounded-none bg-[#1a237e] text-sm font-bold text-white transition-colors hover:bg-[#0d47a1]">
+                  <User className="h-4 w-4" />
+                  Mon compte
+                </Link>
+              ) : (
+                <>
+                  <Link href="/sign-in" className="text-sm font-semibold text-[#1a237e] dark:text-white hover:text-[#f57c00] transition-colors">Se connecter</Link>
+                  <Link href="/sign-up" className="inline-flex h-10 items-center justify-center rounded-none bg-[#f57c00] px-6 text-sm font-bold text-white transition-colors hover:bg-[#e65100]">
+                    Créer un compte
+                  </Link>
+                </>
+              )
+            )}
           </nav>
         </div>
       </header>
@@ -35,7 +50,12 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
               <ul className="space-y-4 text-blue-200">
                 <li><Link href="/properties" className="hover:text-white transition-colors">Annonces</Link></li>
                 <li><Link href="/pro" className="hover:text-white transition-colors">Espace Pro</Link></li>
-                <li><Link href="/sign-in" className="hover:text-white transition-colors">Connexion</Link></li>
+                <li>
+                  {session
+                    ? <Link href="/profile" className="hover:text-white transition-colors">Mon compte</Link>
+                    : <Link href="/sign-in" className="hover:text-white transition-colors">Connexion</Link>
+                  }
+                </li>
               </ul>
             </div>
             <div>
