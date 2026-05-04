@@ -149,7 +149,7 @@ export default function ProfilePage() {
                 )}
               />
               <div className="space-y-2">
-                <FormLabel>Email</FormLabel>
+                <label className="text-sm font-medium text-[#1A1A1A]">Email</label>
                 <Input value={profile?.email || ""} disabled className="rounded-none bg-gray-50 text-gray-500" />
                 <p className="text-xs text-gray-500">L'email ne peut pas être modifié.</p>
               </div>
