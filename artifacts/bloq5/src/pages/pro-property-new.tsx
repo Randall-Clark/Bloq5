@@ -135,7 +135,7 @@ export default function ProPropertyNewPage() {
                   name="price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Loyer mensuel (€) *</FormLabel>
+                      <FormLabel>Loyer mensuel (CA$) *</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} value={field.value ?? ""} className="rounded-none focus-visible:ring-[#f57c00]" />
                       </FormControl>

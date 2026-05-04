@@ -33,6 +33,7 @@ import ProRequestDetailPage from "@/pages/pro-request-detail";
 import ProManagersPage from "@/pages/pro-managers";
 import ProSubscriptionPage from "@/pages/pro-subscription";
 import PropertyApplicationPage from "@/pages/property-application";
+import ProPropertyEditPage from "@/pages/pro-property-edit";
 
 const queryClient = new QueryClient();
 
@@ -309,6 +310,7 @@ function ClerkProviderWithRoutes() {
           <Route path="/pro/dashboard" component={() => <ProtectedRoute component={ProDashboardPage} />} />
           <Route path="/pro/properties" component={() => <ProtectedRoute component={ProPropertiesPage} />} />
           <Route path="/pro/properties/new" component={() => <ProtectedRoute component={ProPropertyNewPage} />} />
+          <Route path="/pro/properties/:id/edit" component={() => <ProtectedRoute component={ProPropertyEditPage} />} />
           <Route path="/pro/requests" component={() => <ProtectedRoute component={ProRequestsPage} />} />
           <Route path="/pro/requests/:id" component={() => <ProtectedRoute component={ProRequestDetailPage} />} />
           <Route path="/pro/managers" component={() => <ProtectedRoute component={ProManagersPage} />} />
