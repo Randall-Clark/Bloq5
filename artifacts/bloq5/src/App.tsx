@@ -33,6 +33,7 @@ import ProManagersPage from "@/pages/pro-managers";
 import ProSubscriptionPage from "@/pages/pro-subscription";
 import PropertyApplicationPage from "@/pages/property-application";
 import ProPropertyEditPage from "@/pages/pro-property-edit";
+import ProProfilePage from "@/pages/pro-profile";
 
 const queryClient = new QueryClient();
 
@@ -355,6 +356,7 @@ function AppRoutes() {
         <Route path="/pro/requests/:id" component={() => <ProtectedRoute component={ProRequestDetailPage} />} />
         <Route path="/pro/managers" component={() => <ProtectedRoute component={ProManagersPage} />} />
         <Route path="/pro/subscription" component={() => <ProtectedRoute component={ProSubscriptionPage} />} />
+        <Route path="/pro/profile"      component={() => <ProtectedRoute component={ProProfilePage} />} />
 
         <Route component={NotFound} />
       </Switch>

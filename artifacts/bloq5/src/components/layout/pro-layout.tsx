@@ -1,7 +1,10 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Building2, MessageSquare, Users, CreditCard, LogOut } from "lucide-react";
+import { LayoutDashboard, Building2, MessageSquare, Users, CreditCard, LogOut, UserCircle } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+
+const YELLOW = "#F5A623";
+const DARK   = "#1A1A1A";
 
 const NAV_ITEMS = [
   { href: "/pro/dashboard",    label: "Dashboard",      icon: LayoutDashboard },
@@ -9,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/pro/requests",     label: "Demandes",       icon: MessageSquare },
   { href: "/pro/managers",     label: "Gestionnaires",  icon: Users },
   { href: "/pro/subscription", label: "Abonnement",     icon: CreditCard },
+  { href: "/pro/profile",      label: "Profil Pro",     icon: UserCircle },
 ];
 
 export default function ProLayout({ children }: { children: ReactNode }) {
@@ -19,20 +23,30 @@ export default function ProLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col" style={{ background: "#F8F9FA" }}>
+    <div className="min-h-[100dvh] flex flex-col" style={{ background: "#F5F5F5" }}>
       <div className="flex flex-1 overflow-hidden">
 
-        {/* Sidebar */}
-        <aside className="w-64 shrink-0 flex flex-col" style={{ background: "#1A237E" }}>
+        {/* ── Sidebar ── */}
+        <aside
+          className="w-64 shrink-0 flex flex-col"
+          style={{ background: DARK, minHeight: "100dvh" }}
+        >
           {/* Logo */}
-          <div className="px-6 py-6 border-b border-white/10">
-            <Link href="/" className="text-2xl font-extrabold tracking-tighter text-white">
-              bloq<span style={{ color: "#F5A623" }}>5</span>
-              <span className="ml-2 text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.1)", color: "#F5A623" }}>Pro</span>
+          <div className="px-6 py-5 border-b border-white/10">
+            <Link href="/" className="inline-flex items-center gap-2">
+              <span className="text-2xl font-black tracking-tight text-white">
+                BLOQ<span style={{ color: YELLOW }}>5</span>
+              </span>
+              <span
+                className="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded"
+                style={{ background: YELLOW, color: DARK }}
+              >
+                Pro
+              </span>
             </Link>
           </div>
 
-          {/* Nav links */}
+          {/* Nav */}
           <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
             {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
               const active = isActive(href);
@@ -40,12 +54,14 @@ export default function ProLayout({ children }: { children: ReactNode }) {
                 <Link
                   key={href}
                   href={href}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
                   style={
                     active
-                      ? { background: "#F5A623", color: "#fff" }
-                      : { color: "rgba(219,234,254,0.85)" }
+                      ? { background: YELLOW, color: DARK, fontWeight: 700 }
+                      : { color: "rgba(255,255,255,0.6)" }
                   }
+                  onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+                  onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.6)"; }}
                 >
                   <Icon className="h-4 w-4 flex-shrink-0" />
                   {label}
@@ -54,14 +70,14 @@ export default function ProLayout({ children }: { children: ReactNode }) {
             })}
           </nav>
 
-          {/* Disconnect */}
-          <div className="px-3 pb-5 border-t border-white/10 pt-3">
+          {/* Disconnect — separated from footer by a clear gap */}
+          <div className="px-3 py-4 border-t border-white/10">
             <button
               onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/"; } } })}
-              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-              style={{ color: "rgba(219,234,254,0.7)" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.color = "rgba(219,234,254,0.7)")}
+              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
+              style={{ color: "rgba(255,255,255,0.45)" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)"; }}
             >
               <LogOut className="h-4 w-4 flex-shrink-0" />
               Déconnexion
@@ -69,28 +85,29 @@ export default function ProLayout({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        {/* Main content */}
+        {/* ── Main content ── */}
         <main className="flex-1 overflow-y-auto flex flex-col min-h-0">
           <div className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
             {children}
           </div>
 
-          {/* Footer */}
-          <footer style={{ background: "#1A237E" }} className="text-white mt-auto">
-            <div className="max-w-7xl mx-auto px-6 py-8">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl font-extrabold tracking-tighter">
-                    bloq<span style={{ color: "#F5A623" }}>5</span>
-                  </span>
-                  <span className="text-xs px-2 py-0.5 rounded font-bold uppercase tracking-widest" style={{ background: "rgba(245,166,35,0.2)", color: "#F5A623" }}>Pro</span>
-                </div>
-                <div className="flex items-center gap-6 text-xs" style={{ color: "rgba(219,234,254,0.6)" }}>
+          {/* Footer — dark, matches site style, separate from sidebar disconnect */}
+          <footer style={{ background: DARK }} className="mt-auto">
+            <div className="max-w-7xl mx-auto px-6 py-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <span className="text-base font-black tracking-tight text-white">
+                  BLOQ<span style={{ color: YELLOW }}>5</span>
+                  <span
+                    className="ml-2 text-[9px] font-bold tracking-widest uppercase px-1.5 py-0.5 rounded"
+                    style={{ background: YELLOW, color: DARK }}
+                  >Pro</span>
+                </span>
+                <div className="flex items-center gap-5 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
                   <a href="#" className="hover:text-white transition-colors">Mentions légales</a>
                   <a href="#" className="hover:text-white transition-colors">Confidentialité</a>
                   <a href="#" className="hover:text-white transition-colors">Support</a>
                 </div>
-                <p className="text-xs" style={{ color: "rgba(219,234,254,0.5)" }}>
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
                   &copy; {new Date().getFullYear()} bloq5. Tous droits réservés.
                 </p>
               </div>
