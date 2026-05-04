@@ -1,7 +1,7 @@
 import { useRoute, Link, useLocation } from "wouter";
 import { useGetProperty } from "@workspace/api-client-react";
 import { useState, useEffect, useRef } from "react";
-import { CheckCircle, ChevronDown } from "lucide-react";
+import { CheckCircle, ChevronDown, ArrowLeft } from "lucide-react";
 
 const YELLOW = "#F5A623";
 const LAVENDER_BG = "linear-gradient(180deg, #EAE8F5 0%, #F5F5FA 50%, #FFFFFF 100%)";
@@ -765,9 +765,29 @@ export default function PropertyApplicationPage() {
     }
   }
 
+  function handleBack() {
+    if (step === 0) {
+      navigate(`/properties/${id}`);
+    } else {
+      goTo((step - 1) as Step);
+    }
+  }
+
   return (
     <>
       <ProgressBar step={step} />
+
+      {/* Back arrow — visible on all steps except confirmation */}
+      {step !== 6 && (
+        <button
+          onClick={handleBack}
+          aria-label="Retour"
+          className="fixed top-4 left-4 z-[200] w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center transition-all hover:shadow-lg hover:scale-105 active:scale-95"
+          style={{ border: "1px solid #E8E8E8" }}
+        >
+          <ArrowLeft className="w-5 h-5 text-[#1A1A1A]" />
+        </button>
+      )}
 
       {step === 0 && (
         <div
