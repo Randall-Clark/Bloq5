@@ -477,7 +477,7 @@ export default function PropertyDetailPage() {
               Visiter cet espace
             </button>
           ) : (
-            <Link href={`/properties/${id}/dossier`} className="flex-shrink-0">
+            <Link href={`/properties/${id}/application`} className="flex-shrink-0">
               <button className="py-3 px-5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
                 Déposer ma candidature
               </button>
@@ -779,7 +779,7 @@ export default function PropertyDetailPage() {
                       Je souhaite visiter cet espace
                     </button>
                   ) : (
-                    <Link href={`/properties/${id}/dossier`}>
+                    <Link href={`/properties/${id}/application`}>
                       <button className="w-full py-3.5 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
                         Je dépose ma candidature
                       </button>
@@ -885,7 +885,7 @@ export default function PropertyDetailPage() {
                     Je souhaite visiter cet espace
                   </button>
                 ) : (
-                  <Link href={`/properties/${id}/dossier`}>
+                  <Link href={`/properties/${id}/application`}>
                     <button className="w-full py-4 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
                       Je dépose ma candidature
                     </button>

@@ -1,0 +1,144 @@
+quand l'utilisateur clique sur "Je dépose ma candidature" depuis la fiche propriété. Couleur principale : jaune #F5A623. Toutes les étapes sont en français, contexte canadien.
+
+SYSTÈME DE NAVIGATION GÉNÉRAL
+Le fichier contient 7 écrans gérés par un système de state JS. Une variable currentStep (0 à 6) contrôle quel écran est visible via display: block / none. Chaque écran occupe 100vw × 100vh. La transition entre écrans se fait avec un opacity fade de 0.2s ease.
+Barre de progression optionnelle en haut (fine ligne jaune #F5A623, hauteur 3px) qui avance à chaque étape — sauf sur l'écran 0 (modal).
+
+ÉCRAN 0 — MODAL "COMMENT ÇA MARCHE" (inspiré dm1)
+Fond : l'écran affiche en arrière-plan une version flouée filter: blur(6px) de la page de sélection du type d'occupant (dm2 — grille 2×2 avec les 4 options Locataire seul, Couple, Famille, Colocation) — simulée par un div avec fond dégradé lavande #E8E6F0 contenant 4 cartes blanches floues.
+Overlay : background: rgba(70, 80, 110, 0.55) couvrant tout l'écran, position: fixed, z-index: 100.
+Modal centré : fond blanc #FFFFFF, border-radius 20px, padding 36px, largeur 480px, ombre 0 20px 60px rgba(0,0,0,0.2).
+
+Bouton fermer ✕ en haut à droite : 28px, fond #F5F5F5, border-radius 50%, couleur #666
+Titre h2 20px gras noir : "Trouvez votre prochain logement depuis chez vous !"
+4 étapes numérotées (liste verticale, espacement 20px) :
+
+Cercle numéro : 28px, bordure 2px solid #F5A623, couleur #F5A623, font-weight 600
+Titre étape : 15px gras noir
+Description : 13px gris #666, line-height 1.5
+Étape 1 : "Visite virtuelle du logement" — "Choisissez votre logement grâce à la visite virtuelle 3D."
+Étape 2 : "Dépôt de votre dossier en ligne" — "Candidatez et déposez les pièces justificatives de votre dossier en ligne."
+Étape 3 : "Signature électronique de votre bail" — "Vous signez votre contrat de location en ligne grâce à DocuSeal."
+Étape 4 : "Emménagement" — "Vous choisissez la date de votre état des lieux, que nous réalisons physiquement avec vous."
+
+
+Bouton CTA pleine largeur : "J'ai compris →" — fond jaune #F5A623, texte blanc, border-radius 30px, padding 16px, font-size 16px, font-weight 600 — au clic : currentStep = 1, fade vers écran 1
+
+
+FOND COMMUN ÉCRANS 1 À 6
+Tous les écrans partagent :
+
+Fond : dégradé vertical linear-gradient(180deg, #EAE8F5 0%, #F5F5FA 50%, #FFFFFF 100%) — lavande très clair en haut, blanc en bas (exactement comme les captures dm2 à dm7)
+Navbar minimaliste : uniquement en haut à droite, avatar circle jaune #F5A623 avec initiales "AB" + nom "Alex Beaulieu ▾" (outline pill blanc, bordure 1px solid #E0E0E0, border-radius 20px) — visible à partir de l'écran 3 (après connexion)
+Bouton "Suivant →" centré en bas : fond jaune #F5A623, texte blanc ou foncé, border-radius 30px, padding 14px 40px, font-weight 600, font-size 15px
+Titre principal centré, 22px gras #1A1A1A, avec le dernier mot du titre souligné d'un trait rouge-orangé #E05A2B (hauteur 3px, width 60px, centré sous le mot, style <u> stylisé via border-bottom: 3px solid #E05A2B; text-decoration: none)
+
+
+ÉCRAN 1 — "Qui occupera le logement ?" (dm2)
+Titre : "Qui occupera le logement ?"
+Sous-titre : "Votre candidature concerne le 102 Rue Sainte-Catherine O – App. 3 situé au 102 Rue Sainte-Catherine O, Montréal." — les deux parties en gras jaune #F5A623, reste en gris
+Grille 2×2 de cartes radio (largeur ~520px, centrée) :
+
+Chaque carte : fond blanc, border 1.5px solid #E8E8E8, border-radius 14px, padding 20px 24px, display flex align-items center, gap 16px, cursor pointer
+Radio circle à gauche : 20px, bordure 2px solid #CCCCCC — quand sélectionné : bordure 2px solid #F5A623, point intérieur jaune #F5A623
+Icône SVG centrale (personnages stylisés navy #2D2D6B, 36px)
+Label texte : 15px gras #1A1A1A
+Au survol : bordure 1.5px solid #F5A623, fond #FFFBF3
+Au clic : bordure 2px solid #F5A623, légère ombre jaune 0 0 0 3px rgba(245,166,35,0.15)
+
+4 options :
+
+👤 Locataire seul(e)
+👫 Couple (sans enfant)
+👨‍👩‍👧 Famille
+👥 Colocation
+
+Bouton "Suivant →" — au clic : écran 2
+
+ÉCRAN 2 — "Informations candidat·e" (dm3)
+Titre : "Informations candidat·e" (soulignement rouge-orangé sous "candidat·e")
+Sous-titre : "Vous avez déjà un compte ? Connectez-vous" — lien jaune #F5A623
+Carte formulaire (fond blanc, border-radius 16px, padding 32px, bordure 1px solid #E8E8E8, largeur 600px, centrée, ombre légère) :
+Grille 2 colonnes, gap 20px :
+
+Prénom : label gris 13px au-dessus, input texte pleine largeur, border 1px solid #E0E0E0, border-radius 8px, padding 12px, focus border jaune #F5A623
+Nom : idem
+Email : idem, pleine largeur (2 colonnes)
+Téléphone : drapeau 🇨🇦 + indicatif +1 à gauche dans l'input + placeholder "514 123 4567"
+
+Texte légal en bas (hors carte), 11px gris #999, largeur 600px centré :
+"BLOQ5 inc. est un professionnel de l'immobilier titulaire de la carte professionnelle n°CPI 6901 2019 000 039 604. Pour en savoir plus sur la gestion de vos données personnelles, reportez-vous à nos CGU et notre politique de confidentialité."
+Bouton "Suivant →" — au clic : écran 3
+
+ÉCRAN 3 — "Comment nous avez-vous connu ?" (dm4)
+Titre : "Comment nous avez-vous connu ?"
+Grille 2×4 de cartes radio (même style que écran 1), largeur ~540px centrée :
+Chaque carte : radio + logo stylisé SVG/emoji + label texte
+8 options avec logos simulés :
+
+🟠 Kijiji (carré orange avec "K" blanc)
+📍 Realtor.ca (pin vert)
+🔵 Centris (carré bleu avec "C")
+🏠 Zumper (maison jaune fond noir)
+🔴 Facebook (cercle bleu "f")
+💼 LinkedIn (carré bleu "in")
+🏢 Recommandation (icône personnes)
+❓ Autre (cercle avec "?")
+
+Bouton "Suivant →" — au clic : écran 4
+
+ÉCRAN 4 — "Informations sur votre location" (dm5 + dm6)
+Navbar : avatar "AB" visible en haut à droite
+Titre : "Informations sur votre location" (soulignement rouge-orangé)
+Carte formulaire (même style, largeur 560px, centrée) :
+
+Bandeau info en haut de la carte : fond lavande clair #EAE8F5, border-radius 8px, padding 12px 16px, texte 13px :
+"Le logement sera libre le 01 juillet et les propriétaires préfèrent en général les candidats qui peuvent emménager le plus tôt possible." — "01 juillet" en jaune #F5A623 gras
+Champ date : label "À quelle date souhaitez-vous faire débuter votre bail ? *" 13px gris + hint ⓘ au plus tôt le 01/07/2026 (texte bleu clair #5C9BF5, icône info) — input type date, border 1px solid #E0E0E0, border-radius 8px
+Note italique gris #999 11px : "*Il s'agit ici de choisir la date à laquelle commencera votre bail. Vous aurez ensuite la possibilité d'emménager à une date ultérieure selon votre besoin."
+Dropdown "Combien de temps prévoyez-vous de rester ?" : select stylisé, placeholder "Sélectionner...", border 1px solid #E0E0E0, border-radius 8px, padding 12px
+
+Options : 1 à 3 mois · 4 à 6 mois · 7 à 9 mois · 10 à 12 mois · Plus d'un an · Je ne sais pas
+Dropdown JS custom (liste blanche, border-radius 12px, ombre légère, items hover fond #F5F5F5)
+
+
+
+Bouton "Suivant ✦" (icône étoile animée en rotation CSS) — au clic : écran 5
+
+ÉCRAN 5 — "Quelques informations sur vous" (dm7)
+Navbar : avatar "AB" visible
+Titre : "Quelques informations sur vous" (soulignement rouge-orangé)
+Sous-titre : "Ces informations sont indispensables pour présenter votre dossier au propriétaire."
+Carte formulaire (largeur 600px, centrée, même style) :
+
+Sous-titre dans la carte : "Alex Beaulieu" — 16px gras #1A1A1A
+
+Grille 2 colonnes :
+
+Date de naissance : input type date
+Citoyenneté/Statut : select (Citoyen canadien · Résident permanent · Visa étudiant · Visa travail · Autre)
+Lieu de naissance : input texte, pleine largeur (2 colonnes)
+Situation personnelle : select (Célibataire · En couple · Marié(e) · Autre)
+Revenu net par mois (en CAD $) : input number, placeholder "ex: 3 500"
+Description : textarea 4 lignes, pleine largeur, placeholder vide
+Hint sous le textarea : ⓘ Dites-nous en un peu plus sur vous :) — texte bleu #5C9BF5, 13px
+
+Bouton "Suivant →" — au clic : écran 6
+
+ÉCRAN 6 — CONFIRMATION (écran final)
+Fond : même dégradé lavande
+Contenu centré verticalement et horizontalement :
+
+Icône checkmark animé : cercle jaune #F5A623 80px avec ✓ blanc 36px — animation scale(0) → scale(1) en 0.4s ease au chargement de l'écran
+Titre h2 : "Candidature envoyée !" — 24px gras noir
+Sous-titre : "Merci Alex ! Votre dossier a bien été transmis au propriétaire du 102 Rue Sainte-Catherine O, Montréal. Vous recevrez une réponse par courriel sous 48h."
+Petit encadré gris clair, border-radius 12px, padding 20px, largeur 480px :
+
+Récapitulatif : Type d'occupant · Date de début souhaitée · Durée prévue
+Chaque ligne : label gris #999 13px + valeur noir gras 14px
+
+
+Deux boutons côte à côte :
+
+"Voir mes candidatures" — fond jaune #F5A623, texte foncé, border-radius 24px
+"Retour à l'annonce" — fond transparent, bordure 1px solid #E0E0E0, border-radius 24px
