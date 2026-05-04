@@ -780,15 +780,13 @@ export default function PropertyDetailPage() {
                   </button>
                 )}
 
-                {/* Planifier visite (residential only) */}
-                {!isCommercialType && (
-                  <button
-                    onClick={openVisitScheduler}
-                    className="w-full py-3 rounded-xl font-medium text-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors mb-4 flex items-center justify-center gap-2"
-                  >
-                    📅 Planifier une visite physique
-                  </button>
-                )}
+                {/* Planifier visite */}
+                <button
+                  onClick={openVisitScheduler}
+                  className="w-full py-3 rounded-xl font-medium text-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors mb-4 flex items-center justify-center gap-2"
+                >
+                  📅 {isCommercialType ? "Planifier une visite de l'espace" : "Planifier une visite physique"}
+                </button>
 
                 <div className="border-t border-gray-100 my-4" />
 
@@ -878,14 +876,12 @@ export default function PropertyDetailPage() {
               )}
 
               {/* Planifier visite */}
-              {!isCommercialType && (
-                <button
-                  onClick={openVisitScheduler}
-                  className="w-full py-3 rounded-xl font-medium text-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors mb-4 flex items-center justify-center gap-2"
-                >
-                  📅 Planifier une visite physique
-                </button>
-              )}
+              <button
+                onClick={openVisitScheduler}
+                className="w-full py-3 rounded-xl font-medium text-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors mb-4 flex items-center justify-center gap-2"
+              >
+                📅 {isCommercialType ? "Planifier une visite de l'espace" : "Planifier une visite physique"}
+              </button>
 
               <div className="border-t border-gray-100 my-4" />
 
