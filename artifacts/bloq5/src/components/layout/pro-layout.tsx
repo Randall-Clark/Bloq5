@@ -1,11 +1,10 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Building2, MessageSquare, Users, CreditCard, LogOut } from "lucide-react";
-import { useClerk } from "@clerk/react";
+import { authClient } from "@/lib/auth-client";
 
 export default function ProLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  const { signOut } = useClerk();
 
   const navItems = [
     { href: "/pro/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -46,7 +45,7 @@ export default function ProLayout({ children }: { children: ReactNode }) {
         </nav>
         <div className="absolute bottom-0 w-full p-4 border-t border-white/10">
           <button 
-            onClick={() => signOut()}
+            onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/"; } } })}
             className="flex w-full items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-blue-200 hover:bg-white/10 hover:text-white transition-colors"
           >
             <LogOut className="h-5 w-5 opacity-90" />

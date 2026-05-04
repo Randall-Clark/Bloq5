@@ -6,3 +6,4 @@ export * from "./visits";
 export * from "./messages";
 export * from "./managers";
 export * from "./subscriptions";
+export * from "./auth";

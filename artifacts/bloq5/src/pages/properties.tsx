@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, lazy, Suspense } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useListProperties } from "@workspace/api-client-react";
 import { useLocation_ } from "@/context/location-context";
-import { useUser } from "@clerk/react";
+import { authClient } from "@/lib/auth-client";
 import { countryPrep } from "@/data/countries";
 import { PublicNavbar } from "@/components/public-navbar";
 import {
@@ -221,7 +221,8 @@ export default function PropertiesPage() {
   const [alertFreq, setAlertFreq] = useState<"immediate" | "daily" | "weekly">("daily");
   const [alertSaved, setAlertSaved] = useState(false);
   const filterBarRef = useRef<HTMLDivElement>(null);
-  const { isSignedIn } = useUser();
+  const { data: authSession } = authClient.useSession();
+  const isSignedIn = !!authSession;
   const [, navigate] = useLocation();
 
   const ITEMS_PER_PAGE = 12;

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, getAuth } from "@clerk/express";
+import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
 import { managersTable, insertManagerSchema } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -9,21 +9,19 @@ const router = Router();
 
 router.get("/api/managers", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const managers = await db.select().from(managersTable).where(eq(managersTable.ownerId, userId)).orderBy(managersTable.createdAt);
     res.json(managers);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.post("/api/managers", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const parsed = insertManagerSchema.safeParse({ ...req.body, ownerId: userId });
     if (!parsed.success) { res.status(400).json({ error: parsed.error.issues }); return; }
@@ -31,15 +29,14 @@ router.post("/api/managers", requireAuth(), async (req: Request, res: Response):
     const [manager] = await db.insert(managersTable).values(parsed.data).returning();
     res.status(201).json(manager);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.delete("/api/managers/:id", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID invalide" }); return; }
@@ -51,7 +48,7 @@ router.delete("/api/managers/:id", requireAuth(), async (req: Request, res: Resp
     await db.delete(managersTable).where(and(eq(managersTable.id, id), eq(managersTable.ownerId, userId)));
     res.status(204).send();
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });

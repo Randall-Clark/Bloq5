@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, getAuth } from "@clerk/express";
+import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
 import { propertiesTable, insertPropertySchema } from "@workspace/db/schema";
 import { eq, sql, ilike, and, gte, lte } from "drizzle-orm";
@@ -40,7 +40,7 @@ router.get("/api/properties", async (req: Request, res: Response): Promise<void>
     const total = Number(countResult[0]?.count ?? 0);
     res.json({ data: properties, total, page: pageNum, limit: limitNum, totalPages: Math.ceil(total / limitNum) });
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -50,7 +50,7 @@ router.get("/api/properties/featured", async (req: Request, res: Response): Prom
     const properties = await db.select().from(propertiesTable).where(eq(propertiesTable.isFeatured, true)).limit(6).orderBy(propertiesTable.createdAt);
     res.json(properties);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -66,7 +66,7 @@ router.get("/api/properties/:id", async (req: Request, res: Response): Promise<v
     await db.update(propertiesTable).set({ views: sql`${propertiesTable.views} + 1` }).where(eq(propertiesTable.id, id));
     res.json({ ...property, views: property.views + 1 });
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
@@ -81,15 +81,14 @@ router.get("/api/properties/:id/available-dates", async (req: Request, res: Resp
 
     res.json(property.availableDates ?? []);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.post("/api/properties", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const parsed = insertPropertySchema.safeParse({ ...req.body, ownerId: userId });
     if (!parsed.success) { res.status(400).json({ error: parsed.error.issues }); return; }
@@ -97,14 +96,14 @@ router.post("/api/properties", requireAuth(), async (req: Request, res: Response
     const [property] = await db.insert(propertiesTable).values(parsed.data).returning();
     res.status(201).json(property);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.put("/api/properties/:id", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
+    const { id: userId } = getAuthUser(req);
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID invalide" }); return; }
 
@@ -115,14 +114,14 @@ router.put("/api/properties/:id", requireAuth(), async (req: Request, res: Respo
     const [updated] = await db.update(propertiesTable).set({ ...req.body, updatedAt: new Date() }).where(eq(propertiesTable.id, id)).returning();
     res.json(updated);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.delete("/api/properties/:id", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
+    const { id: userId } = getAuthUser(req);
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID invalide" }); return; }
 
@@ -133,7 +132,7 @@ router.delete("/api/properties/:id", requireAuth(), async (req: Request, res: Re
     await db.delete(propertiesTable).where(eq(propertiesTable.id, id));
     res.status(204).send();
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });

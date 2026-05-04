@@ -4,7 +4,7 @@ import {
   getGetPropertyAvailableDatesQueryKey
 } from "@workspace/api-client-react";
 import { useState } from "react";
-import { useUser } from "@clerk/react";
+import { authClient } from "@/lib/auth-client";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
 import { useLocation_ } from "@/context/location-context";
@@ -286,7 +286,8 @@ export default function PropertyDetailPage() {
   const id = params?.id ? parseInt(params.id) : 0;
   const { toast } = useToast();
   const { country } = useLocation_();
-  const { isSignedIn } = useUser();
+  const { data: authSession } = authClient.useSession();
+  const isSignedIn = !!authSession;
   const [, navigate] = useLocation();
 
   const [lightboxOpen, setLightboxOpen] = useState(false);

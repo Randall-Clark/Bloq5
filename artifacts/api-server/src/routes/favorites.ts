@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, getAuth } from "@clerk/express";
+import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
 import { favoritesTable, propertiesTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
@@ -9,8 +9,7 @@ const router = Router();
 
 router.get("/api/favorites", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const favorites = await db
       .select({ id: favoritesTable.id, propertyId: favoritesTable.propertyId, createdAt: favoritesTable.createdAt, property: propertiesTable })
@@ -20,15 +19,14 @@ router.get("/api/favorites", requireAuth(), async (req: Request, res: Response):
 
     res.json(favorites);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.post("/api/favorites", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const { propertyId } = req.body;
     if (!propertyId) { res.status(400).json({ error: "propertyId requis" }); return; }
@@ -43,21 +41,20 @@ router.post("/api/favorites", requireAuth(), async (req: Request, res: Response)
     const [favorite] = await db.insert(favoritesTable).values({ userId, propertyId: parseInt(String(propertyId)) }).returning();
     res.status(201).json(favorite);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.delete("/api/favorites/:propertyId", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const propertyId = parseInt(String(req.params.propertyId));
     await db.delete(favoritesTable).where(and(eq(favoritesTable.userId, userId), eq(favoritesTable.propertyId, propertyId)));
     res.status(204).send();
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });

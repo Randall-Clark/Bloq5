@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, getAuth } from "@clerk/express";
+import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
 import { propertiesTable, rentalRequestsTable } from "@workspace/db/schema";
 import { eq, sql } from "drizzle-orm";
@@ -9,8 +9,7 @@ const router = Router();
 
 router.get("/api/dashboard/stats", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const properties = await db.select().from(propertiesTable).where(eq(propertiesTable.ownerId, userId));
     const propertyIds = properties.map((p) => p.id);
@@ -40,15 +39,14 @@ router.get("/api/dashboard/stats", requireAuth(), async (req: Request, res: Resp
 
     res.json({ totalProperties, totalViews, totalRequests, activeRequests, approvedRequests, estimatedRevenue, propertiesAvailable, propertiesRented, occupancyRate });
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.get("/api/dashboard/properties", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const properties = await db.select().from(propertiesTable).where(eq(propertiesTable.ownerId, userId)).orderBy(propertiesTable.createdAt);
 
@@ -63,7 +61,7 @@ router.get("/api/dashboard/properties", requireAuth(), async (req: Request, res:
 
     res.json(result);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });

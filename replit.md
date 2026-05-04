@@ -33,7 +33,7 @@ French-language real estate rental management platform.
 ### Architecture
 - **Frontend**: React + Vite at `/` (port from `$PORT`) — artifact `bloq5`
 - **Backend**: Express 5 API at `/api` (port 8080) — artifact `api-server`
-- **Auth**: Clerk (dev keys)
+- **Auth**: better-auth (email/password + OAuth: Google & GitHub via env vars)
 - **DB**: PostgreSQL + Drizzle ORM (`@workspace/db`)
 - **API codegen**: Orval from `lib/api-spec/openapi.yaml` → `lib/api-client-react`
 

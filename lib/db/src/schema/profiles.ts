@@ -16,7 +16,7 @@ export const userRoleEnum = pgEnum("user_role", [
 
 export const profilesTable = pgTable("profiles", {
   id: serial("id").primaryKey(),
-  clerkId: text("clerk_id").notNull().unique(),
+  userId: text("clerk_id").notNull().unique(),
   firstName: text("first_name").notNull().default(""),
   lastName: text("last_name").notNull().default(""),
   email: text("email").notNull(),

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, getAuth } from "@clerk/express";
+import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
 import { messagesTable, rentalRequestsTable, propertiesTable, profilesTable } from "@workspace/db/schema";
 import { eq, and, gt } from "drizzle-orm";
@@ -22,8 +22,7 @@ async function canAccessConversation(userId: string, requestId: number): Promise
 
 router.get("/api/messages/conversation/:requestId", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const requestId = parseInt(String(req.params.requestId));
     if (isNaN(requestId)) { res.status(400).json({ error: "ID invalide" }); return; }
@@ -39,15 +38,14 @@ router.get("/api/messages/conversation/:requestId", requireAuth(), async (req: R
 
     res.json(messages);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.post("/api/messages", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const { requestId, content } = req.body;
     if (!requestId || !content) { res.status(400).json({ error: "requestId et content requis" }); return; }
@@ -59,22 +57,21 @@ router.post("/api/messages", requireAuth(), async (req: Request, res: Response):
     const [request] = await db.select({ conversationEnded: rentalRequestsTable.conversationEnded }).from(rentalRequestsTable).where(eq(rentalRequestsTable.id, requestIdNum));
     if (request?.conversationEnded === 1) { res.status(400).json({ error: "La conversation a été clôturée" }); return; }
 
-    const [profile] = await db.select({ firstName: profilesTable.firstName, lastName: profilesTable.lastName }).from(profilesTable).where(eq(profilesTable.clerkId, userId));
+    const [profile] = await db.select({ firstName: profilesTable.firstName, lastName: profilesTable.lastName }).from(profilesTable).where(eq(profilesTable.userId, userId));
     const senderName = profile ? `${profile.firstName} ${profile.lastName}`.trim() || "Utilisateur" : "Utilisateur";
 
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const [message] = await db.insert(messagesTable).values({ requestId: requestIdNum, senderId: userId, senderName, content, expiresAt }).returning();
     res.status(201).json(message);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.delete("/api/conversations/:requestId", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const requestId = parseInt(String(req.params.requestId));
     if (isNaN(requestId)) { res.status(400).json({ error: "ID invalide" }); return; }
@@ -88,7 +85,7 @@ router.delete("/api/conversations/:requestId", requireAuth(), async (req: Reques
     await db.update(rentalRequestsTable).set({ conversationEnded: 1, updatedAt: new Date() }).where(eq(rentalRequestsTable.id, requestId));
     res.status(204).send();
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });

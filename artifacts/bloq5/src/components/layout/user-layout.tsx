@@ -1,11 +1,10 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { User, MessageSquare, Heart, Calendar, LogOut } from "lucide-react";
-import { useClerk } from "@clerk/react";
+import { authClient } from "@/lib/auth-client";
 
 export default function UserLayout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  const { signOut } = useClerk();
 
   const navItems = [
     { href: "/profile", label: "Mon Profil", icon: User },
@@ -44,7 +43,7 @@ export default function UserLayout({ children }: { children: ReactNode }) {
         </nav>
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-gray-800">
           <button 
-            onClick={() => signOut()}
+            onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/"; } } })}
             className="flex w-full items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <LogOut className="h-5 w-5" />

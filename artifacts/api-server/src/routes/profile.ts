@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, getAuth } from "@clerk/express";
+import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
 import { profilesTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
@@ -9,15 +9,14 @@ const router = Router();
 
 router.get("/api/profile", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId, email } = getAuthUser(req);
 
-    let [profile] = await db.select().from(profilesTable).where(eq(profilesTable.clerkId, userId));
+    let [profile] = await db.select().from(profilesTable).where(eq(profilesTable.userId, userId));
 
     if (!profile) {
       [profile] = await db.insert(profilesTable).values({
-        clerkId: userId,
-        email: "",
+        userId,
+        email,
         firstName: "",
         lastName: "",
       }).returning();
@@ -25,15 +24,14 @@ router.get("/api/profile", requireAuth(), async (req: Request, res: Response): P
 
     res.json(profile);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.put("/api/profile", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId, email: authEmail } = getAuthUser(req);
 
     const allowed = ["firstName", "lastName", "phone", "role", "avatarUrl", "email"];
     const updates: Record<string, unknown> = { updatedAt: new Date() };
@@ -41,24 +39,24 @@ router.put("/api/profile", requireAuth(), async (req: Request, res: Response): P
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
 
-    const existing = await db.select().from(profilesTable).where(eq(profilesTable.clerkId, userId));
+    const existing = await db.select().from(profilesTable).where(eq(profilesTable.userId, userId));
 
     let profile;
     if (existing.length === 0) {
       [profile] = await db.insert(profilesTable).values({
-        clerkId: userId,
-        email: String(req.body.email ?? ""),
+        userId,
+        email: String(req.body.email ?? authEmail),
         firstName: String(req.body.firstName ?? ""),
         lastName: String(req.body.lastName ?? ""),
         ...updates,
       }).returning();
     } else {
-      [profile] = await db.update(profilesTable).set(updates).where(eq(profilesTable.clerkId, userId)).returning();
+      [profile] = await db.update(profilesTable).set(updates).where(eq(profilesTable.userId, userId)).returning();
     }
 
     res.json(profile);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });

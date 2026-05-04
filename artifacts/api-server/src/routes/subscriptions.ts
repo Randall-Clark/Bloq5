@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, getAuth } from "@clerk/express";
+import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
 import { subscriptionsTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
@@ -67,14 +67,13 @@ const PLANS = [
 
 const router = Router();
 
-router.get("/api/subscriptions/plans", async (req: Request, res: Response): Promise<void> => {
+router.get("/api/subscriptions/plans", async (_req: Request, res: Response): Promise<void> => {
   res.json(PLANS);
 });
 
 router.get("/api/subscriptions/current", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     let [subscription] = await db.select().from(subscriptionsTable).where(eq(subscriptionsTable.ownerId, userId));
 
@@ -85,7 +84,7 @@ router.get("/api/subscriptions/current", requireAuth(), async (req: Request, res
     const plan = PLANS.find((p) => p.id === subscription.planId) ?? PLANS[0];
     res.json({ ...subscription, plan });
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });

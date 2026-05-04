@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, getAuth } from "@clerk/express";
+import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
 import {
   rentalRequestsTable,
@@ -13,8 +13,7 @@ const router = Router();
 
 router.get("/api/rental-requests", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const requests = await db
       .select({
@@ -38,15 +37,14 @@ router.get("/api/rental-requests", requireAuth(), async (req: Request, res: Resp
 
     res.json(requests.map((r) => ({ ...r, propertyImage: Array.isArray(r.propertyImage) ? r.propertyImage[0] ?? null : null })));
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.post("/api/rental-requests", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const existingRequests = await db.select({ id: rentalRequestsTable.id }).from(rentalRequestsTable).where(eq(rentalRequestsTable.userId, userId));
     if (existingRequests.length >= 3) {
@@ -60,14 +58,14 @@ router.post("/api/rental-requests", requireAuth(), async (req: Request, res: Res
     const [request] = await db.insert(rentalRequestsTable).values(parsed.data).returning();
     res.status(201).json(request);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.get("/api/rental-requests/:id", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
+    const { id: userId } = getAuthUser(req);
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID invalide" }); return; }
 
@@ -101,14 +99,14 @@ router.get("/api/rental-requests/:id", requireAuth(), async (req: Request, res: 
 
     res.json({ ...request, propertyImage: Array.isArray(request.propertyImage) ? request.propertyImage[0] ?? null : null });
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.patch("/api/rental-requests/:id/status", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
+    const { id: userId } = getAuthUser(req);
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID invalide" }); return; }
 
@@ -122,14 +120,14 @@ router.patch("/api/rental-requests/:id/status", requireAuth(), async (req: Reque
     const [updated] = await db.update(rentalRequestsTable).set({ status, statusNote, updatedAt: new Date() }).where(eq(rentalRequestsTable.id, id)).returning();
     res.json(updated);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.get("/api/properties/:id/rental-requests", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
+    const { id: userId } = getAuthUser(req);
     const id = parseInt(String(req.params.id));
     if (isNaN(id)) { res.status(400).json({ error: "ID invalide" }); return; }
 
@@ -159,7 +157,7 @@ router.get("/api/properties/:id/rental-requests", requireAuth(), async (req: Req
 
     res.json(requests.map((r) => ({ ...r, propertyImage: Array.isArray(r.propertyImage) ? r.propertyImage[0] ?? null : null })));
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });

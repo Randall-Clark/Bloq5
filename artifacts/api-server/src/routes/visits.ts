@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth, getAuth } from "@clerk/express";
+import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
 import { visitsTable, propertiesTable, insertVisitSchema } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
@@ -9,8 +9,7 @@ const router = Router();
 
 router.get("/api/visits", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const visits = await db
       .select({
@@ -30,15 +29,14 @@ router.get("/api/visits", requireAuth(), async (req: Request, res: Response): Pr
 
     res.json(visits.map((v) => ({ ...v, propertyImage: Array.isArray(v.propertyImage) ? v.propertyImage[0] ?? null : null })));
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
 
 router.post("/api/visits", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = getAuth(req);
-    if (!userId) { res.status(401).json({ error: "Non autorisé" }); return; }
+    const { id: userId } = getAuthUser(req);
 
     const parsed = insertVisitSchema.safeParse({
       ...req.body,
@@ -50,7 +48,7 @@ router.post("/api/visits", requireAuth(), async (req: Request, res: Response): P
     const [visit] = await db.insert(visitsTable).values(parsed.data).returning();
     res.status(201).json(visit);
   } catch (error) {
-    console.error(error);
+    req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
