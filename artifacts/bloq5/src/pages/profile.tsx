@@ -204,25 +204,6 @@ export default function ProfilePage() {
             <p className="text-xs text-gray-400 mt-1">L'adresse e-mail ne peut pas être modifiée.</p>
           </div>
 
-          {/* Role badge */}
-          {profile && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700">Statut :</span>
-              <span
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
-                style={
-                  role === "owner"
-                    ? { background: "#EEF2FF", color: NAVY }
-                    : role === "manager"
-                    ? { background: "#FFF3E0", color: "#E65100" }
-                    : { background: "#F3F4F6", color: "#6B7280" }
-                }
-              >
-                {role === "owner" ? "Propriétaire" : role === "manager" ? "Gestionnaire" : "Locataire"}
-              </span>
-            </div>
-          )}
-
           <button
             type="submit"
             disabled={updateProfile.isPending}
