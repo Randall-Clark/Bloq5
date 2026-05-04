@@ -86,11 +86,14 @@ const SLIDES = [
   },
 ];
 
+const TERMS_STEP = 2;
+
 export default function ProPricingPage() {
   const [, navigate]  = useLocation();
   const { data: session } = authClient.useSession();
-  const [step, setStep]   = useState(0);
+  const [step, setStep]       = useState(0);
   const [visible, setVisible] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
     if (localStorage.getItem(STORAGE_KEY)) {
@@ -153,6 +156,38 @@ export default function ProPricingPage() {
         {/* Content */}
         <div className="px-8 pb-4">
           {slide.content}
+
+          {/* Terms checkbox — only on the conditions step */}
+          {step === TERMS_STEP && (
+            <label className="flex items-start gap-3 mt-4 cursor-pointer select-none group">
+              <div className="relative flex items-center justify-center mt-0.5">
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={e => setTermsAccepted(e.target.checked)}
+                  className="sr-only"
+                />
+                <div
+                  className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-colors"
+                  style={{
+                    borderColor: termsAccepted ? YELLOW : "#D1D5DB",
+                    background:  termsAccepted ? YELLOW : "#fff",
+                  }}
+                >
+                  {termsAccepted && (
+                    <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <span className="text-sm text-gray-700 leading-snug">
+                Je reconnais avoir lu et accepté les{" "}
+                <strong className="text-gray-900">conditions d'utilisation</strong>{" "}
+                du compte Pro bloq5 pour la publication d'annonces immobilières.
+              </span>
+            </label>
+          )}
         </div>
 
         {/* Divider */}
@@ -179,8 +214,13 @@ export default function ProPricingPage() {
           ) : (
             <button
               onClick={() => setStep(s => s + 1)}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
-              style={{ background: YELLOW, color: "#1A1A1A" }}
+              disabled={step === TERMS_STEP && !termsAccepted}
+              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all"
+              style={{
+                background: (step === TERMS_STEP && !termsAccepted) ? "#E5E7EB" : YELLOW,
+                color:      (step === TERMS_STEP && !termsAccepted) ? "#9CA3AF" : "#1A1A1A",
+                cursor:     (step === TERMS_STEP && !termsAccepted) ? "not-allowed" : "pointer",
+              }}
             >
               Suivant
               <ChevronRight className="w-4 h-4" />
