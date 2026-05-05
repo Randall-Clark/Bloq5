@@ -24,13 +24,13 @@ export default function ProLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-[100dvh] flex flex-col" style={{ background: "#F5F5F5" }}>
-      <div className="flex flex-1 overflow-hidden">
 
-        {/* ── Sidebar ── */}
-        <aside
-          className="w-64 shrink-0 flex flex-col"
-          style={{ background: DARK, minHeight: "100dvh" }}
-        >
+      {/* ── Sidebar + content row ── */}
+      <div className="flex flex-1 min-h-0">
+
+        {/* Sidebar — height driven by the row, stops above footer */}
+        <aside className="w-64 shrink-0 flex flex-col" style={{ background: DARK }}>
+
           {/* Logo */}
           <div className="px-6 py-5 border-b border-white/10">
             <Link href="/pro/dashboard" className="inline-flex items-center gap-2">
@@ -95,36 +95,36 @@ export default function ProLayout({ children }: { children: ReactNode }) {
           </div>
         </aside>
 
-        {/* ── Main content ── */}
-        <main className="flex-1 overflow-y-auto flex flex-col min-h-0">
-          <div className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-6 md:p-8 max-w-7xl w-full mx-auto">
             {children}
           </div>
-
-          {/* Footer — dark, matches site style, separate from sidebar disconnect */}
-          <footer style={{ background: DARK }} className="mt-auto">
-            <div className="max-w-7xl mx-auto px-6 py-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                <span className="text-base font-black tracking-tight text-white">
-                  BLOQ<span style={{ color: YELLOW }}>5</span>
-                  <span
-                    className="ml-2 text-[9px] font-bold tracking-widest uppercase px-1.5 py-0.5 rounded"
-                    style={{ background: YELLOW, color: DARK }}
-                  >Pro</span>
-                </span>
-                <div className="flex items-center gap-5 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                  <a href="#" className="hover:text-white transition-colors">Mentions légales</a>
-                  <a href="#" className="hover:text-white transition-colors">Confidentialité</a>
-                  <a href="#" className="hover:text-white transition-colors">Support</a>
-                </div>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
-                  &copy; {new Date().getFullYear()} bloq5. Tous droits réservés.
-                </p>
-              </div>
-            </div>
-          </footer>
         </main>
       </div>
+
+      {/* Footer — spans full width below sidebar + content */}
+      <footer style={{ background: DARK }}>
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <span className="text-base font-black tracking-tight text-white">
+              BLOQ<span style={{ color: YELLOW }}>5</span>
+              <span
+                className="ml-2 text-[9px] font-bold tracking-widest uppercase px-1.5 py-0.5 rounded"
+                style={{ background: YELLOW, color: DARK }}
+              >Pro</span>
+            </span>
+            <div className="flex items-center gap-5 text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+              <a href="#" className="hover:text-white transition-colors">Mentions légales</a>
+              <a href="#" className="hover:text-white transition-colors">Confidentialité</a>
+              <a href="#" className="hover:text-white transition-colors">Support</a>
+            </div>
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+              &copy; {new Date().getFullYear()} bloq5. Tous droits réservés.
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
