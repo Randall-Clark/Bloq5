@@ -320,7 +320,7 @@ function ForgotPasswordPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const result = await authClient.forgetPassword({
+    const result = await authClient.requestPasswordReset({
       email,
       redirectTo: `${window.location.origin}${basePath}/reset-password`,
     });
