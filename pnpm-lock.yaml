@@ -40,7 +40,7 @@ catalogs:
       specifier: ^2.1.1
       version: 2.1.1
     drizzle-orm:
-      specifier: ^0.45.2
+      specifier: 0.45.2
       version: 0.45.2
     framer-motion:
       specifier: ^12.23.24
@@ -191,6 +191,9 @@ importers:
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.2(@types/pg@8.18.0)(kysely@0.28.17)(pg@8.20.0)
+      drizzle-zod:
+        specifier: ^0.8.3
+        version: 0.8.3(drizzle-orm@0.45.2(@types/pg@8.18.0)(kysely@0.28.17)(pg@8.20.0))(zod@4.3.6)
       express:
         specifier: ^5
         version: 5.2.1
@@ -5092,6 +5095,11 @@ snapshots:
     dependencies:
       drizzle-orm: 0.45.2(@types/pg@8.18.0)(kysely@0.28.17)(pg@8.20.0)
       zod: 3.25.76
+
+  drizzle-zod@0.8.3(drizzle-orm@0.45.2(@types/pg@8.18.0)(kysely@0.28.17)(pg@8.20.0))(zod@4.3.6):
+    dependencies:
+      drizzle-orm: 0.45.2(@types/pg@8.18.0)(kysely@0.28.17)(pg@8.20.0)
+      zod: 4.3.6
 
   dunder-proto@1.0.1:
     dependencies:

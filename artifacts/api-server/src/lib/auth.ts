@@ -27,6 +27,10 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false,
     minPasswordLength: 8,
+    sendResetPassword: async ({ user, url }) => {
+      // In production, send a real email. For now, log the reset link.
+      console.log(`[bloq5] Lien de réinitialisation pour ${user.email}: ${url}`);
+    },
   },
   socialProviders: {
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET

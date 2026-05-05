@@ -44,7 +44,7 @@ function LocationGuard() {
   const { isReady, country } = useLocation_();
   const [location, navigate] = useLocation();
   useEffect(() => {
-    const exempt = ["/coming-soon", "/sign-in", "/sign-up"];
+    const exempt = ["/coming-soon", "/sign-in", "/sign-up", "/forgot-password", "/reset-password"];
     if (isReady && !isActiveCountry(country.code) && !exempt.some(p => location.startsWith(p))) {
       navigate("/coming-soon");
     }
@@ -67,8 +67,14 @@ function AuthQueryInvalidator() {
 }
 
 /* ── Auth Layout (split screen) ── */
-function AuthLayout({ children, mode }: { children: React.ReactNode; mode: "signin" | "signup" }) {
+function AuthLayout({ children, mode }: { children: React.ReactNode; mode: "signin" | "signup" | "forgot" | "reset" }) {
   const bgImage = `${import.meta.env.BASE_URL}images/hero-interior.png`;
+  const titles: Record<typeof mode, string> = {
+    signin: "Retrouvez vos propriétés et candidatures",
+    signup: "Commencez à gérer vos locations dès aujourd'hui",
+    forgot: "Récupérez l'accès à votre compte",
+    reset:  "Choisissez un nouveau mot de passe",
+  };
   return (
     <div className="flex min-h-[100dvh] bg-white">
       {/* Left panel */}
@@ -87,11 +93,7 @@ function AuthLayout({ children, mode }: { children: React.ReactNode; mode: "sign
             <span className="w-2 h-2 rounded-full bg-[#F5A623] inline-block" />
             <span className="text-[#F5A623] text-sm font-semibold">Gestion immobilière simplifiée</span>
           </div>
-          <h1 className="text-white text-4xl font-bold leading-tight mb-4">
-            {mode === "signin"
-              ? "Retrouvez vos propriétés et candidatures"
-              : "Commencez à gérer vos locations dès aujourd'hui"}
-          </h1>
+          <h1 className="text-white text-4xl font-bold leading-tight mb-4">{titles[mode]}</h1>
           <p className="text-white/70 text-lg leading-relaxed max-w-md">
             Recherche, candidatures et suivi de vos dossiers locatifs — tout en un seul endroit.
           </p>
@@ -216,7 +218,13 @@ function SignInPage() {
               className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-12 px-4 text-base transition-colors" />
           </div>
           <div>
-            <label className="block font-medium text-[#1A1A1A] text-sm mb-1.5">Mot de passe</label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block font-medium text-[#1A1A1A] text-sm">Mot de passe</label>
+              <a href={`${basePath}/forgot-password`}
+                className="text-xs text-[#F5A623] hover:text-[#e09520] font-medium">
+                Mot de passe oublié ?
+              </a>
+            </div>
             <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
               className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-12 px-4 text-base transition-colors" />
@@ -301,6 +309,281 @@ function SignUpPage() {
   );
 }
 
+/* ── Forgot Password Page ── */
+function ForgotPasswordPage() {
+  const [email, setEmail]     = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent]       = useState(false);
+  const [error, setError]     = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    const result = await authClient.forgetPassword({
+      email,
+      redirectTo: `${window.location.origin}${basePath}/reset-password`,
+    });
+    setLoading(false);
+    if (result.error) {
+      setError(result.error.message ?? "Une erreur est survenue. Veuillez réessayer.");
+    } else {
+      setSent(true);
+    }
+  }
+
+  return (
+    <AuthLayout mode="forgot">
+      <div>
+        {sent ? (
+          /* Success state */
+          <div className="text-center">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+              style={{ background: "#FFF8EE" }}>
+              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="#F5A623" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">Vérifiez votre boîte mail</h2>
+            <p className="text-gray-500 text-sm leading-relaxed mb-1">
+              Si un compte existe pour <strong className="text-gray-800">{email}</strong>, vous recevrez un lien de réinitialisation.
+            </p>
+            <p className="text-gray-400 text-xs mb-8">
+              Vérifiez également votre dossier spam.
+            </p>
+            <a href={`${basePath}/sign-in`}
+              className="inline-block w-full text-center bg-[#F5A623] hover:bg-[#e09520] text-white font-bold rounded-xl h-12 leading-[3rem] text-base transition-colors">
+              Retour à la connexion
+            </a>
+            <button type="button" onClick={() => { setSent(false); setEmail(""); }}
+              className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600 transition-colors">
+              Renvoyer le lien
+            </button>
+          </div>
+        ) : (
+          /* Form state */
+          <>
+            <div className="mb-8">
+              <a href={`${basePath}/sign-in`}
+                className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors mb-6">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15,18 9,12 15,6" />
+                </svg>
+                Retour à la connexion
+              </a>
+              <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">Mot de passe oublié ?</h2>
+              <p className="text-gray-500 text-sm leading-relaxed">
+                Entrez l'adresse e-mail associée à votre compte. Nous vous enverrons un lien pour réinitialiser votre mot de passe.
+              </p>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <div className="border border-red-200 bg-red-50 text-red-800 rounded-xl px-4 py-3 text-sm">{error}</div>
+              )}
+              <div>
+                <label className="block font-medium text-[#1A1A1A] text-sm mb-1.5">Adresse e-mail</label>
+                <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="vous@exemple.com"
+                  className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-12 px-4 text-base transition-colors" />
+              </div>
+              <button type="submit" disabled={loading}
+                className="w-full bg-[#F5A623] hover:bg-[#e09520] text-white font-bold rounded-xl h-12 text-base transition-colors disabled:opacity-60">
+                {loading ? "Envoi en cours…" : "Envoyer le lien de réinitialisation"}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </AuthLayout>
+  );
+}
+
+/* ── Reset Password Page ── */
+function ResetPasswordPage() {
+  const [, navigate]          = useLocation();
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm]   = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
+  const [done, setDone]         = useState(false);
+  const [showPassword, setShowPassword]  = useState(false);
+  const [showConfirm, setShowConfirm]    = useState(false);
+
+  /* Extract token from URL query params */
+  const token = new URLSearchParams(window.location.search).get("token") ?? "";
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (password.length < 8) { setError("Le mot de passe doit contenir au moins 8 caractères."); return; }
+    if (password !== confirm)  { setError("Les mots de passe ne correspondent pas."); return; }
+    if (!token)                { setError("Lien invalide ou expiré. Demandez un nouveau lien."); return; }
+    setLoading(true);
+    const result = await authClient.resetPassword({ newPassword: password, token });
+    setLoading(false);
+    if (result.error) {
+      setError(result.error.message ?? "Ce lien est invalide ou a expiré.");
+    } else {
+      setDone(true);
+    }
+  }
+
+  /* Password strength indicator */
+  function strength(p: string): { score: number; label: string; color: string } {
+    if (p.length === 0) return { score: 0, label: "", color: "" };
+    let s = 0;
+    if (p.length >= 8)  s++;
+    if (p.length >= 12) s++;
+    if (/[A-Z]/.test(p)) s++;
+    if (/[0-9]/.test(p)) s++;
+    if (/[^A-Za-z0-9]/.test(p)) s++;
+    if (s <= 1) return { score: s, label: "Très faible", color: "#EF4444" };
+    if (s === 2) return { score: s, label: "Faible", color: "#F97316" };
+    if (s === 3) return { score: s, label: "Moyen", color: "#EAB308" };
+    if (s === 4) return { score: s, label: "Fort", color: "#22C55E" };
+    return { score: s, label: "Très fort", color: "#16A34A" };
+  }
+  const str = strength(password);
+
+  if (done) {
+    return (
+      <AuthLayout mode="reset">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+            style={{ background: "#F0FDF4" }}>
+            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="#22C55E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20,6 9,17 4,12" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">Mot de passe mis à jour !</h2>
+          <p className="text-gray-500 text-sm mb-8 leading-relaxed">
+            Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.
+          </p>
+          <button
+            onClick={() => navigate("/sign-in")}
+            className="w-full bg-[#F5A623] hover:bg-[#e09520] text-white font-bold rounded-xl h-12 text-base transition-colors">
+            Se connecter
+          </button>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  if (!token) {
+    return (
+      <AuthLayout mode="reset">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+            style={{ background: "#FFF5F5" }}>
+            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">Lien invalide</h2>
+          <p className="text-gray-500 text-sm mb-8">Ce lien de réinitialisation est invalide ou a expiré.</p>
+          <a href={`${basePath}/forgot-password`}
+            className="inline-block w-full text-center bg-[#F5A623] hover:bg-[#e09520] text-white font-bold rounded-xl h-12 leading-[3rem] text-base transition-colors">
+            Demander un nouveau lien
+          </a>
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  return (
+    <AuthLayout mode="reset">
+      <div>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">Nouveau mot de passe</h2>
+          <p className="text-gray-500 text-sm leading-relaxed">
+            Choisissez un mot de passe sécurisé d'au moins 8 caractères.
+          </p>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="border border-red-200 bg-red-50 text-red-800 rounded-xl px-4 py-3 text-sm">{error}</div>
+          )}
+
+          {/* New password */}
+          <div>
+            <label className="block font-medium text-[#1A1A1A] text-sm mb-1.5">Nouveau mot de passe</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Minimum 8 caractères"
+                className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-12 px-4 pr-11 text-base transition-colors"
+              />
+              <button type="button" onClick={() => setShowPassword(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                {showPassword
+                  ? <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  : <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                }
+              </button>
+            </div>
+            {/* Strength meter */}
+            {password.length > 0 && (
+              <div className="mt-2">
+                <div className="flex gap-1">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className="flex-1 h-1 rounded-full transition-all"
+                      style={{ background: i <= str.score ? str.color : "#E5E7EB" }} />
+                  ))}
+                </div>
+                <p className="text-xs mt-1" style={{ color: str.color }}>{str.label}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Confirm password */}
+          <div>
+            <label className="block font-medium text-[#1A1A1A] text-sm mb-1.5">Confirmer le mot de passe</label>
+            <div className="relative">
+              <input
+                type={showConfirm ? "text" : "password"}
+                required
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-12 px-4 pr-11 text-base transition-colors"
+              />
+              <button type="button" onClick={() => setShowConfirm(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                {showConfirm
+                  ? <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  : <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                }
+              </button>
+            </div>
+            {confirm.length > 0 && password !== confirm && (
+              <p className="text-xs text-red-500 mt-1">Les mots de passe ne correspondent pas.</p>
+            )}
+            {confirm.length > 0 && password === confirm && (
+              <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12"/></svg>
+                Les mots de passe correspondent.
+              </p>
+            )}
+          </div>
+
+          <button type="submit" disabled={loading}
+            className="w-full bg-[#F5A623] hover:bg-[#e09520] text-white font-bold rounded-xl h-12 text-base transition-colors disabled:opacity-60">
+            {loading ? "Réinitialisation…" : "Réinitialiser mon mot de passe"}
+          </button>
+        </form>
+        <p className="mt-6 text-center text-sm text-gray-500">
+          Vous vous souvenez de votre mot de passe ?{" "}
+          <a href={`${basePath}/sign-in`} className="text-[#F5A623] hover:text-[#e09520] font-semibold">Se connecter</a>
+        </p>
+      </div>
+    </AuthLayout>
+  );
+}
+
 /* ── Route Guards ── */
 function HomeRedirect() {
   return <HomePage />;
@@ -337,8 +620,10 @@ function AppRoutes() {
         <Route path="/pro" component={ProPricingPage} />
 
         {/* Auth Routes */}
-        <Route path="/sign-in" component={SignInPage} />
-        <Route path="/sign-up" component={SignUpPage} />
+        <Route path="/sign-in"           component={SignInPage} />
+        <Route path="/sign-up"           component={SignUpPage} />
+        <Route path="/forgot-password"   component={ForgotPasswordPage} />
+        <Route path="/reset-password"    component={ResetPasswordPage} />
 
         {/* Tenant Protected Routes */}
         <Route path="/profile" component={() => <ProtectedRoute component={ProfilePage} />} />
