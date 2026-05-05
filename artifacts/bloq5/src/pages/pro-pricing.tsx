@@ -5,6 +5,7 @@ import {
   Building2, CheckCircle2, ChevronRight, ClipboardList,
   LayoutDashboard, ShieldCheck, Sparkles, Phone, MessageSquare,
 } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 const YELLOW = "#F5A623";
 const DARK   = "#1A1A1A";
@@ -89,23 +90,17 @@ const TERMS_STEP = 2;
 
 /* ── Phone verification overlay ── */
 function PhoneVerification({ onSuccess }: { onSuccess: () => void }) {
-  const [phone, setPhone]       = useState("");
+  const [phone,    setPhone]    = useState("");
+  const [dialCode, setDialCode] = useState("+1");
   const [codeSent, setCodeSent] = useState(false);
-  const [digits, setDigits]     = useState(["", "", "", "", "", ""]);
-  const [error, setError]       = useState("");
-  const [sending, setSending]   = useState(false);
+  const [digits,   setDigits]   = useState(["", "", "", "", "", ""]);
+  const [error,    setError]    = useState("");
+  const [sending,  setSending]  = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  function formatPhone(v: string) {
-    const nums = v.replace(/\D/g, "").slice(0, 10);
-    if (nums.length <= 3)  return nums;
-    if (nums.length <= 6)  return `(${nums.slice(0,3)}) ${nums.slice(3)}`;
-    return `(${nums.slice(0,3)}) ${nums.slice(3,6)}-${nums.slice(6)}`;
-  }
 
   function sendCode() {
     const nums = phone.replace(/\D/g, "");
-    if (nums.length < 10) { setError("Numéro invalide — 10 chiffres requis."); return; }
+    if (nums.length < 4) { setError("Numéro trop court — vérifiez le numéro saisi."); return; }
     setError("");
     setSending(true);
     /* Simulated SMS send — replace with real SMS provider in production */
@@ -155,18 +150,13 @@ function PhoneVerification({ onSuccess }: { onSuccess: () => void }) {
             /* Step 1 — phone number */
             <>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Numéro de téléphone (Canada)</label>
-                <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-4 h-12 focus-within:border-[#F5A623] transition-colors">
-                  <span className="text-sm text-gray-400 font-medium shrink-0">🇨🇦 +1</span>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={e => { setPhone(formatPhone(e.target.value)); setError(""); }}
-                    placeholder="(514) 000-0000"
-                    className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
-                    onKeyDown={e => e.key === "Enter" && sendCode()}
-                  />
-                </div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Numéro de téléphone</label>
+                <PhoneInput
+                  value={phone}
+                  dialCode={dialCode}
+                  onChange={(v, d) => { setPhone(v); setDialCode(d); setError(""); }}
+                  placeholder="000 000 0000"
+                />
               </div>
               {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
               <button
@@ -183,7 +173,7 @@ function PhoneVerification({ onSuccess }: { onSuccess: () => void }) {
             /* Step 2 — 6-digit code */
             <>
               <p className="text-xs text-gray-500">
-                Code envoyé au <strong className="text-gray-800">+1 {phone}</strong>
+                Code envoyé au <strong className="text-gray-800">{dialCode} {phone}</strong>
               </p>
               <div className="flex gap-2 justify-center my-2">
                 {digits.map((d, i) => (

@@ -10,6 +10,7 @@ import {
   Mail, Phone, Shield, Building2, Pencil,
   CheckCircle2, X, AlertCircle, Loader2,
 } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 const YELLOW = "#F5A623";
 const DARK   = "#1A1A1A";
@@ -53,13 +54,6 @@ function CodeInput({
   );
 }
 
-/* ─── Phone formatter ─── */
-function fmtPhone(v: string) {
-  const n = v.replace(/\D/g, "").slice(0, 10);
-  if (n.length <= 3)  return n;
-  if (n.length <= 6)  return `(${n.slice(0,3)}) ${n.slice(3)}`;
-  return `(${n.slice(0,3)}) ${n.slice(3,6)}-${n.slice(6)}`;
-}
 
 /* ═══════════════════════════════════════════════
    Email edit modal
@@ -184,14 +178,14 @@ function PhoneEditModal({
   onSaved: (newPhone: string) => void;
 }) {
   type Step = "verify_old" | "new_phone" | "verify_new";
-  const [step,     setStep]    = useState<Step>(currentPhone ? "verify_old" : "new_phone");
-  const [sending,  setSending] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
-  const [digits,   setDigits]  = useState(Array(6).fill(""));
-  const [newPhone, setNewPhone] = useState("");
-  const [newCodeSent, setNewCodeSent] = useState(false);
-  const [newDigits,   setNewDigits]   = useState(Array(6).fill(""));
-  const [error,    setError]   = useState("");
+  const [step,      setStep]     = useState<Step>(currentPhone ? "verify_old" : "new_phone");
+  const [sending,   setSending]  = useState(false);
+  const [codeSent,  setCodeSent] = useState(false);
+  const [digits,    setDigits]   = useState(Array(6).fill(""));
+  const [newPhone,  setNewPhone] = useState("");
+  const [newDial,   setNewDial]  = useState("+1");
+  const [newDigits, setNewDigits] = useState(Array(6).fill(""));
+  const [error,     setError]    = useState("");
   const updateProfile = useUpdateProfile();
 
   function sendOldCode() {
@@ -209,17 +203,17 @@ function PhoneEditModal({
 
   function sendNewCode() {
     const nums = newPhone.replace(/\D/g, "");
-    if (nums.length < 10) { setError("Numéro invalide — 10 chiffres requis."); return; }
+    if (nums.length < 4) { setError("Numéro trop court — vérifiez le numéro saisi."); return; }
     setError("");
     setSending(true);
     /* Simulated — replace with real SMS provider in production */
-    setTimeout(() => { setSending(false); setNewCodeSent(true); setStep("verify_new"); }, 800);
+    setTimeout(() => { setSending(false); setStep("verify_new"); }, 800);
   }
 
   function verifyNew() {
     if (newDigits.join("").length < 6) { setError("Entrez les 6 chiffres reçus."); return; }
     setError("");
-    const fmt = `+1 ${newPhone}`;
+    const fmt = `${newDial} ${newPhone}`;
     updateProfile.mutate(
       { data: { phone: fmt } },
       { onSuccess: () => onSaved(fmt), onError: () => setError("Erreur lors de la mise à jour.") }
@@ -272,18 +266,13 @@ function PhoneEditModal({
               {currentPhone ? "Identité vérifiée. " : ""}Saisissez le nouveau numéro de téléphone.
             </p>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Nouveau numéro (Canada)</label>
-              <div className="flex items-center gap-2 border border-gray-200 focus-within:border-[#F5A623] rounded-xl px-4 h-12 transition-colors">
-                <span className="text-sm text-gray-400 font-medium shrink-0">🇨🇦 +1</span>
-                <input
-                  type="tel"
-                  value={newPhone}
-                  onChange={e => { setNewPhone(fmtPhone(e.target.value)); setError(""); }}
-                  placeholder="(514) 000-0000"
-                  className="flex-1 bg-transparent outline-none text-sm font-medium text-gray-900 placeholder:text-gray-400"
-                  onKeyDown={e => e.key === "Enter" && sendNewCode()}
-                />
-              </div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Nouveau numéro</label>
+              <PhoneInput
+                value={newPhone}
+                dialCode={newDial}
+                onChange={(v, d) => { setNewPhone(v); setNewDial(d); setError(""); }}
+                placeholder="000 000 0000"
+              />
             </div>
             {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
             <button
@@ -302,7 +291,7 @@ function PhoneEditModal({
         {step === "verify_new" && (
           <>
             <p className="text-xs text-gray-400 text-center">
-              Code envoyé au <strong className="text-gray-700">+1 {newPhone}</strong>
+              Code envoyé au <strong className="text-gray-700">{newDial} {newPhone}</strong>
             </p>
             <CodeInput digits={newDigits} setDigits={setNewDigits} />
             {error && <p className="text-xs text-red-500 text-center font-medium">{error}</p>}
