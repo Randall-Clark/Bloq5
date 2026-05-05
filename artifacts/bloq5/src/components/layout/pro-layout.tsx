@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Building2, MessageSquare, Users, CreditCard, LogOut, UserCircle } from "lucide-react";
+import { LayoutDashboard, Building2, MessageSquare, Users, CreditCard, LogOut, UserCircle, ExternalLink } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
 const YELLOW = "#F5A623";
@@ -33,7 +33,7 @@ export default function ProLayout({ children }: { children: ReactNode }) {
         >
           {/* Logo */}
           <div className="px-6 py-5 border-b border-white/10">
-            <Link href="/" className="inline-flex items-center gap-2">
+            <Link href="/pro/dashboard" className="inline-flex items-center gap-2">
               <span className="text-2xl font-black tracking-tight text-white">
                 BLOQ<span style={{ color: YELLOW }}>5</span>
               </span>
@@ -70,8 +70,18 @@ export default function ProLayout({ children }: { children: ReactNode }) {
             })}
           </nav>
 
-          {/* Disconnect — separated from footer by a clear gap */}
-          <div className="px-3 py-4 border-t border-white/10">
+          {/* Bottom actions */}
+          <div className="px-3 py-4 border-t border-white/10 space-y-0.5">
+            <Link
+              href="/"
+              className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
+              style={{ color: "rgba(255,255,255,0.45)" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)"; }}
+            >
+              <ExternalLink className="h-4 w-4 flex-shrink-0" />
+              Vue client
+            </Link>
             <button
               onClick={() => authClient.signOut({ fetchOptions: { onSuccess: () => { window.location.href = "/"; } } })}
               className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"

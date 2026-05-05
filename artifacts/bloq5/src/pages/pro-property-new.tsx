@@ -454,6 +454,7 @@ export default function ProPropertyNew() {
   /* Co-living rooms */
   type CoLivingRoom = { price: string; status: "available" | "rented" | "soon"; availableFrom: string };
   const [coLivingRooms, setCoLivingRooms] = useState<CoLivingRoom[]>([]);
+  const [samePriceForAll, setSamePriceForAll] = useState(false);
 
   /* Nearby places */
   const [nearbyPlaces, setNearbyPlaces] = useState<string[]>([]);
@@ -738,7 +739,26 @@ export default function ProPropertyNew() {
               {/* Co-living rooms */}
               {watchType === "co-living" && coLivingRooms.length > 0 && (
                 <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
-                  <p className="text-xs font-bold text-amber-800 uppercase tracking-widest">Détail des chambres</p>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <p className="text-xs font-bold text-amber-800 uppercase tracking-widest">Détail des chambres</p>
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <span
+                        onClick={() => {
+                          const next = !samePriceForAll;
+                          setSamePriceForAll(next);
+                          if (next && coLivingRooms.length > 0) {
+                            const ref = coLivingRooms[0].price;
+                            setCoLivingRooms(p => p.map(r => ({ ...r, price: ref })));
+                          }
+                        }}
+                        className="w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                        style={{ background: samePriceForAll ? YELLOW : "white", borderColor: samePriceForAll ? YELLOW : "#D1D5DB" }}
+                      >
+                        {samePriceForAll && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                      </span>
+                      <span className="text-xs font-semibold text-amber-900">Même loyer pour toutes les chambres</span>
+                    </label>
+                  </div>
                   {coLivingRooms.map((room, i) => (
                     <div key={i} className="bg-white rounded-xl p-4 border border-amber-100 space-y-3">
                       <p className="text-sm font-bold text-gray-800">Chambre {i + 1}</p>
@@ -748,9 +768,16 @@ export default function ProPropertyNew() {
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">$</span>
                             <input type="number" value={room.price} min={0}
-                              onChange={e => setCoLivingRooms(p => p.map((r, j) => j === i ? { ...r, price: e.target.value } : r))}
+                              disabled={samePriceForAll && i > 0}
+                              onChange={e => {
+                                const val = e.target.value;
+                                setCoLivingRooms(p => samePriceForAll
+                                  ? p.map(r => ({ ...r, price: val }))
+                                  : p.map((r, j) => j === i ? { ...r, price: val } : r)
+                                );
+                              }}
                               placeholder="850"
-                              className="w-full bg-white border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-10 pl-7 pr-4 text-sm transition-colors" />
+                              className="w-full bg-white border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-10 pl-7 pr-4 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed" />
                           </div>
                         </div>
                         <div>
