@@ -71,7 +71,7 @@ export default function ProLayout({ children }: { children: ReactNode }) {
           </nav>
 
           {/* Bottom actions */}
-          <div className="px-3 py-4 border-t border-white/10 space-y-0.5">
+          <div className="px-3 pt-4 pb-0 space-y-0.5">
             <Link
               href="/"
               className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
@@ -93,6 +93,7 @@ export default function ProLayout({ children }: { children: ReactNode }) {
               Déconnexion
             </button>
           </div>
+          <div className="mx-3 mt-4 border-t border-white/10" />
         </aside>
 
         {/* Main content */}
