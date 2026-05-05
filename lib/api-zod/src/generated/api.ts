@@ -124,6 +124,21 @@ export const CreatePropertyBody = zod.object({
     )
     .optional(),
   isFeatured: zod.boolean().optional(),
+  apartmentNumber: zod.string().nullish(),
+  buildingFloors: zod.number().nullish(),
+  housingAidEligible: zod.boolean().optional(),
+  dpeClass: zod.string().nullish(),
+  dpeAnnualCostMin: zod.number().nullish(),
+  dpeAnnualCostMax: zod.number().nullish(),
+  attachments: zod
+    .array(
+      zod.object({
+        name: zod.string(),
+        url: zod.string(),
+      }),
+    )
+    .optional(),
+  floorPlan: zod.string().nullish(),
 });
 
 /**
@@ -227,6 +242,18 @@ export const GetPropertyResponse = zod
       ownerEmail: zod.string(),
       ownerPhone: zod.string().nullish(),
       availableDates: zod.array(zod.string()),
+      apartmentNumber: zod.string().nullish(),
+      buildingFloors: zod.number().nullish(),
+      housingAidEligible: zod.boolean(),
+      dpeClass: zod.string().nullish(),
+      dpeAnnualCostMin: zod.number().nullish(),
+      dpeAnnualCostMax: zod.number().nullish(),
+      attachments: zod.array(
+        zod.object({
+          name: zod.string(),
+          url: zod.string(),
+        }),
+      ),
     }),
   );
 

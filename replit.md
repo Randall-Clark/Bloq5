@@ -62,7 +62,14 @@ Changing to `app.use("/api", router)` would cause all routes to 404.
 43 demo properties (Montréal, Toronto, Québec, Vancouver, etc.) — owner ID `seed_owner_bloq5`.
 Old demo seed: owner IDs `demo_owner_1`/`demo_owner_2` (6 Paris/France properties, may still exist).
 
+### New Property Fields (Phase 1.1)
+Added via startup migration: `apartment_number` (text), `building_floors` (integer), `housing_aid_eligible` (boolean, default false), `dpe_class` (text), `dpe_annual_cost_min` (integer), `dpe_annual_cost_max` (integer), `attachments` (jsonb array of {name,url}).
+- Amenity labels updated: "Stationnement gratuit" / "Stationnement payant" / "Casier de rangement gratuit" / "Casier de rangement payant" / "Taxe ordures incluse"
+- Detail page shows DPE badge, attachments (N/D if empty), housing aid badge (conditional on housingAidEligible)
+- Form sections: DPE (A-G picker + cost range), Plan du bâtiment (URL+file), Pièces jointes (multi-file), Aides & conditions (checkbox), Photos with file upload
+- File upload via FileReader → base64 data URL stored in DB (MVP)
+
 ### Codegen Note
 - `lib/api-zod/src/index.ts` only exports `./generated/api` (the zod generator does NOT emit `api.schemas.ts`)
 - `lib/api-client-react/src/index.ts` exports both `./generated/api` and `./generated/api.schemas`
-- After any OpenAPI change: run codegen, then restart both workflows
+- After any OpenAPI change: run codegen, then fix `lib/api-zod/src/index.ts` (remove api.schemas export), restart both workflows

@@ -86,6 +86,11 @@ export interface Property {
   rooms?: PropertyRoomsItem[];
 }
 
+export type PropertyDetailAttachmentsItem = {
+  name: string;
+  url: string;
+};
+
 export type PropertyDetail = Property & {
   amenities: string[];
   /** @nullable */
@@ -98,6 +103,18 @@ export type PropertyDetail = Property & {
   /** @nullable */
   ownerPhone?: string | null;
   availableDates: string[];
+  /** @nullable */
+  apartmentNumber?: string | null;
+  /** @nullable */
+  buildingFloors?: number | null;
+  housingAidEligible: boolean;
+  /** @nullable */
+  dpeClass?: string | null;
+  /** @nullable */
+  dpeAnnualCostMin?: number | null;
+  /** @nullable */
+  dpeAnnualCostMax?: number | null;
+  attachments: PropertyDetailAttachmentsItem[];
 };
 
 export interface PropertyListResponse {
@@ -138,6 +155,11 @@ export type CreatePropertyBodyRoomsItem = {
   availableFrom?: string | null;
 };
 
+export type CreatePropertyBodyAttachmentsItem = {
+  name: string;
+  url: string;
+};
+
 export interface CreatePropertyBody {
   title: string;
   description: string;
@@ -162,6 +184,20 @@ export interface CreatePropertyBody {
   nearbyPlaces?: string[];
   rooms?: CreatePropertyBodyRoomsItem[];
   isFeatured?: boolean;
+  /** @nullable */
+  apartmentNumber?: string | null;
+  /** @nullable */
+  buildingFloors?: number | null;
+  housingAidEligible?: boolean;
+  /** @nullable */
+  dpeClass?: string | null;
+  /** @nullable */
+  dpeAnnualCostMin?: number | null;
+  /** @nullable */
+  dpeAnnualCostMax?: number | null;
+  attachments?: CreatePropertyBodyAttachmentsItem[];
+  /** @nullable */
+  floorPlan?: string | null;
 }
 
 export type UpdatePropertyBodyStatus =

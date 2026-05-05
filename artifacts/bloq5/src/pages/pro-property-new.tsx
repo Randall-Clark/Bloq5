@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, CheckCircle2, Megaphone, X, Plus, Trash2, Video, MapPin, Camera, ChevronDown, Check } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Megaphone, X, Plus, Video, MapPin, Camera, Check, Paperclip, FileText, Zap } from "lucide-react";
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -24,12 +24,13 @@ const AMENITY_GROUPS = [
   {
     label: "Services inclus",
     items: [
-      { id: "wifi",        label: "WiFi" },
-      { id: "heating",     label: "Chauffage" },
-      { id: "hot_water",   label: "Eau chaude" },
-      { id: "electricity", label: "Électricité" },
-      { id: "cable_tv",    label: "Câble / TV" },
-      { id: "ac",          label: "Climatisation" },
+      { id: "wifi",              label: "WiFi" },
+      { id: "heating",           label: "Chauffage" },
+      { id: "hot_water",         label: "Eau chaude" },
+      { id: "electricity",       label: "Électricité" },
+      { id: "cable_tv",          label: "Câble / TV" },
+      { id: "ac",                label: "Climatisation" },
+      { id: "garbage_tax",       label: "Taxe ordures incluse" },
     ],
   },
   {
@@ -56,12 +57,14 @@ const AMENITY_GROUPS = [
   {
     label: "Bâtiment",
     items: [
-      { id: "parking",     label: "Stationnement inclus" },
-      { id: "ev_charger",  label: "Borne de recharge VÉ" },
-      { id: "elevator",    label: "Ascenseur" },
-      { id: "gym",         label: "Salle de gym" },
-      { id: "storage",     label: "Casier de rangement" },
-      { id: "common_room", label: "Salle commune" },
+      { id: "parking_free",  label: "Stationnement gratuit" },
+      { id: "parking_paid",  label: "Stationnement payant" },
+      { id: "ev_charger",    label: "Borne de recharge VÉ" },
+      { id: "elevator",      label: "Ascenseur" },
+      { id: "gym",           label: "Salle de gym" },
+      { id: "storage_free",  label: "Casier de rangement gratuit" },
+      { id: "storage_paid",  label: "Casier de rangement payant" },
+      { id: "common_room",   label: "Salle commune" },
     ],
   },
   {
@@ -76,6 +79,11 @@ const AMENITY_GROUPS = [
     ],
   },
 ];
+
+const DPE_CLASSES = ["A", "B", "C", "D", "E", "F", "G"] as const;
+const DPE_COLORS: Record<string, string> = {
+  A: "#009900", B: "#33CC00", C: "#99CC00", D: "#FFCC00", E: "#FF9900", F: "#FF6600", G: "#CC0000",
+};
 
 type AddressSuggestion = {
   street: string;
@@ -148,24 +156,43 @@ function getNearby(city: string): string[] {
 
 /* ─── Types & Schema ─────────────────────────────────────────── */
 const propertySchema = z.object({
-  title:          z.string().min(5, "Le titre doit faire au moins 5 caractères"),
-  description:    z.string().min(20, "La description est trop courte"),
-  type:           z.enum(["house", "apartment", "co-living", "commercial", "office", "industrial"]),
-  address:        z.string().min(5, "L'adresse est requise"),
-  city:           z.string().min(2, "La ville est requise"),
-  country:        z.string().min(2, "Le pays est requis"),
-  price:          z.coerce.number().min(1, "Le prix doit être supérieur à 0"),
-  bedrooms:       z.coerce.number().optional().nullable(),
-  bathrooms:      z.coerce.number().optional().nullable(),
-  area:           z.coerce.number().optional().nullable(),
-  floor:          z.coerce.number().int().optional().nullable(),
-  virtualTourUrl: z.string().optional().nullable(),
+  title:            z.string().min(5, "Le titre doit faire au moins 5 caractères"),
+  description:      z.string().min(20, "La description est trop courte"),
+  type:             z.enum(["house", "apartment", "co-living", "commercial", "office", "industrial"]),
+  address:          z.string().min(5, "L'adresse est requise"),
+  city:             z.string().min(2, "La ville est requise"),
+  country:          z.string().min(2, "Le pays est requis"),
+  price:            z.coerce.number().min(1, "Le prix doit être supérieur à 0"),
+  bedrooms:         z.coerce.number().optional().nullable(),
+  bathrooms:        z.coerce.number().optional().nullable(),
+  area:             z.coerce.number().optional().nullable(),
+  floor:            z.coerce.number().int().optional().nullable(),
+  virtualTourUrl:   z.string().optional().nullable(),
+  apartmentNumber:  z.string().optional().nullable(),
+  buildingFloors:   z.coerce.number().int().optional().nullable(),
+  housingAidEligible: z.boolean().optional().default(false),
+  dpeClass:         z.string().optional().nullable(),
+  dpeAnnualCostMin: z.coerce.number().int().optional().nullable(),
+  dpeAnnualCostMax: z.coerce.number().int().optional().nullable(),
+  floorPlan:        z.string().optional().nullable(),
 });
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
 
+type Attachment = { name: string; url: string };
+
 const RESIDENTIAL = ["house", "apartment", "co-living"] as const;
 const isResidential = (t: string) => RESIDENTIAL.includes(t as any);
+
+/* ─── Helpers ────────────────────────────────────────────────── */
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 /* ─── Section card wrapper ───────────────────────────────────── */
 function Section({ icon: Icon, title, subtitle, children }: {
@@ -301,73 +328,53 @@ function AddressInput({ value, onChange, onSelect }: {
   }, []);
 
   return (
-    <div className="relative" ref={ref}>
-      <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+    <div ref={ref} className="relative">
+      <div className="relative flex items-center">
+        <MapPin className="absolute left-3 w-4 h-4 text-gray-400 pointer-events-none" />
         <input
           type="text"
           value={value}
-          onChange={e => { onChange(e.target.value); setOpen(true); }}
-          onFocus={() => { setFocused(true); setOpen(true); }}
+          onFocus={() => { setFocused(true); if (filtered.length > 0) setOpen(true); }}
           onBlur={() => setFocused(false)}
-          placeholder="Ex: 3500 Boulevard de Maisonneuve O"
-          className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 pl-10 pr-4 text-sm transition-colors"
-          style={{ borderColor: focused ? "#F5A623" : undefined }}
+          onChange={e => { onChange(e.target.value); setOpen(true); }}
+          placeholder="Ex: 3500 Boulevard de Maisonneuve O, Montréal"
+          className="w-full bg-white border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 pl-10 pr-4 text-sm transition-colors"
+          style={{ borderColor: focused ? YELLOW : undefined }}
           autoComplete="off"
         />
       </div>
       {open && filtered.length > 0 && (
-        <div className="absolute z-30 mt-1.5 w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
-          <p className="px-4 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Suggestions</p>
+        <div className="absolute z-20 top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
           {filtered.map((s, i) => (
-            <button
-              key={i}
-              type="button"
-              className="w-full text-left px-4 py-3 hover:bg-amber-50 flex items-start gap-3 transition-colors border-t border-gray-50 first:border-0"
-              onMouseDown={e => { e.preventDefault(); onSelect(s); setOpen(false); }}
-            >
-              <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
-                <MapPin className="w-3.5 h-3.5 text-gray-500" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-900 leading-tight truncate">
-                  {highlightMatch(s.street, value.trim())}
-                </p>
-                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                  <span className="text-xs text-gray-500">{s.city}, {s.province}</span>
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide"
-                    style={{ background: "#FFF8EE", color: "#F5A623" }}>
-                    {s.postalCode}
-                  </span>
-                  <span className="text-xs text-gray-400">{s.country}</span>
-                </div>
+            <button key={i} type="button"
+              className="w-full text-left flex items-start gap-2.5 px-4 py-3 hover:bg-amber-50 transition-colors border-b border-gray-50 last:border-b-0"
+              onMouseDown={e => {
+                e.preventDefault();
+                onSelect(s);
+                setOpen(false);
+              }}>
+              <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-gray-800 font-medium">{highlightMatch(s.street, value)}</p>
+                <p className="text-xs text-gray-400">{s.city}, {s.province} · {s.postalCode}</p>
               </div>
             </button>
           ))}
-          <p className="px-4 py-2 text-[10px] text-gray-400 border-t border-gray-100">
-            Données simulées — intégration Canada Post disponible sur abonnement Pro
-          </p>
         </div>
       )}
     </div>
   );
 }
 
-/* ─── Image row ──────────────────────────────────────────────── */
+/* ─── Image row preview ──────────────────────────────────────── */
 function ImageRow({ url, onRemove }: { url: string; onRemove: () => void }) {
-  const isValid = url.startsWith("http") || url.startsWith("/");
   return (
-    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
-      {isValid ? (
-        <img src={url} alt="" className="w-14 h-10 object-cover rounded-lg bg-gray-200 shrink-0" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-      ) : (
-        <div className="w-14 h-10 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
-          <Camera className="w-4 h-4 text-gray-400" />
-        </div>
-      )}
-      <span className="text-xs text-gray-600 truncate flex-1">{url || "—"}</span>
-      <button type="button" onClick={onRemove} className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
-        <Trash2 className="w-3.5 h-3.5" />
+    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-xl border border-gray-100">
+      <img src={url} alt="" className="w-14 h-10 rounded-lg object-cover shrink-0 border border-gray-200" />
+      <span className="flex-1 text-xs text-gray-500 truncate">{url.startsWith("data:") ? "Photo importée depuis l'appareil" : url}</span>
+      <button type="button" onClick={onRemove}
+        className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
+        <X className="w-3.5 h-3.5" />
       </button>
     </div>
   );
@@ -376,23 +383,23 @@ function ImageRow({ url, onRemove }: { url: string; onRemove: () => void }) {
 /* ─── Nearby place chip ──────────────────────────────────────── */
 function PlaceChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-gray-50 text-gray-700">
       {label}
-      <button type="button" onClick={onRemove} className="w-3.5 h-3.5 rounded-full flex items-center justify-center hover:bg-blue-200 transition-colors">
-        <X className="w-2.5 h-2.5" />
+      <button type="button" onClick={onRemove} className="text-gray-400 hover:text-gray-600">
+        <X className="w-3 h-3" />
       </button>
     </span>
   );
 }
 
-/* ─── Main page ──────────────────────────────────────────────── */
-export default function ProPropertyNewPage() {
-  const { toast }      = useToast();
-  const [, setLocation] = useLocation();
-  const queryClient     = useQueryClient();
-  const createProperty  = useCreateProperty();
-  const [showPricing, setShowPricing]       = useState(false);
-  const [pendingPayload, setPendingPayload]  = useState<Record<string, unknown> | null>(null);
+/* ─── Main component ─────────────────────────────────────────── */
+export default function ProPropertyNew() {
+  const [, setLocation]    = useLocation();
+  const queryClient        = useQueryClient();
+  const { toast }          = useToast();
+  const createProperty     = useCreateProperty();
+  const [showPricing, setShowPricing] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<any>(null);
 
   /* Amenities */
   const [selectedAmenities, setSelectedAmenities] = useState<Set<string>>(new Set());
@@ -401,11 +408,50 @@ export default function ProPropertyNewPage() {
 
   /* Images */
   const [imageUrls, setImageUrls] = useState<string[]>([""]);
+  const imageFileRef = useRef<HTMLInputElement>(null);
   const addImage = () => setImageUrls(p => [...p, ""]);
   const removeImage = (i: number) => setImageUrls(p => p.filter((_, j) => j !== i));
   const updateImage = (i: number, v: string) => setImageUrls(p => p.map((u, j) => j === i ? v : u));
+  const [imageError, setImageError] = useState<string | null>(null);
 
-  /* Co-living rooms — structured per-room state */
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const dataUrls = await Promise.all(files.map(readFileAsDataUrl));
+    setImageUrls(prev => {
+      const withoutEmpty = prev.filter(u => u.trim());
+      return [...withoutEmpty, ...dataUrls];
+    });
+    e.target.value = "";
+  };
+
+  /* Floor plan */
+  const [floorPlanUrl, setFloorPlanUrl] = useState("");
+  const floorPlanFileRef = useRef<HTMLInputElement>(null);
+  const handleFloorPlanFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const dataUrl = await readFileAsDataUrl(file);
+    setFloorPlanUrl(dataUrl);
+    e.target.value = "";
+  };
+
+  /* Attachments */
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const attachmentFileRef = useRef<HTMLInputElement>(null);
+  const handleAttachmentFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const newAttachments = await Promise.all(files.map(async f => ({
+      name: f.name,
+      url:  await readFileAsDataUrl(f),
+    })));
+    setAttachments(prev => [...prev, ...newAttachments]);
+    e.target.value = "";
+  };
+  const removeAttachment = (i: number) => setAttachments(p => p.filter((_, j) => j !== i));
+
+  /* Co-living rooms */
   type CoLivingRoom = { price: string; status: "available" | "rented" | "soon"; availableFrom: string };
   const [coLivingRooms, setCoLivingRooms] = useState<CoLivingRoom[]>([]);
 
@@ -425,12 +471,18 @@ export default function ProPropertyNewPage() {
       price: undefined, bedrooms: undefined,
       bathrooms: undefined, area: undefined,
       floor: undefined, virtualTourUrl: "",
+      apartmentNumber: "", buildingFloors: undefined,
+      housingAidEligible: false,
+      dpeClass: undefined, dpeAnnualCostMin: undefined, dpeAnnualCostMax: undefined,
+      floorPlan: "",
     },
   });
 
   const watchType     = form.watch("type");
   const watchBedrooms = form.watch("bedrooms");
   const watchCity     = form.watch("city");
+  const watchDpeClass = form.watch("dpeClass");
+  const watchHousingAid = form.watch("housingAidEligible");
 
   /* For co-living: enforce min 2 bedrooms */
   useEffect(() => {
@@ -460,6 +512,13 @@ export default function ProPropertyNewPage() {
   }, [watchCity, nearbyAutoFilled]);
 
   const onSubmit = (data: PropertyFormValues) => {
+    const validImages = imageUrls.filter(u => u.trim());
+    if (validImages.length === 0) {
+      setImageError("Au moins une photo est requise.");
+      return;
+    }
+    setImageError(null);
+
     const amenitiesArr = Array.from(selectedAmenities).map(id => {
       for (const group of AMENITY_GROUPS) {
         const item = group.items.find(i => i.id === id);
@@ -478,14 +537,25 @@ export default function ProPropertyNewPage() {
     const fullAddress = postalCode
       ? `${data.address}, ${postalCode}`
       : data.address;
+
+    const effectiveFloorPlan = data.floorPlan?.trim() || floorPlanUrl || null;
+
     const payload = {
       ...data,
       address: fullAddress,
       amenities: amenitiesArr,
       nearbyPlaces,
-      images: imageUrls.filter(u => u.trim()),
+      images: validImages,
       rooms: roomsPayload,
       floor: data.floor ?? null,
+      apartmentNumber: data.apartmentNumber?.trim() || null,
+      buildingFloors: data.buildingFloors ?? null,
+      housingAidEligible: data.housingAidEligible ?? false,
+      dpeClass: data.dpeClass ?? null,
+      dpeAnnualCostMin: data.dpeAnnualCostMin ?? null,
+      dpeAnnualCostMax: data.dpeAnnualCostMax ?? null,
+      floorPlan: effectiveFloorPlan,
+      attachments,
     };
     setPendingPayload(payload);
     setShowPricing(true);
@@ -509,24 +579,15 @@ export default function ProPropertyNewPage() {
     );
   };
 
-  const InfoIcon = () => (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 12h6M9 15h4"/>
-    </svg>
-  );
-  const RulerIcon = () => (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 16L16 2l6 6L8 22 2 16z"/><path d="M8 8l8 8"/><path d="M6 10l2 2"/><path d="M10 6l2 2"/>
-    </svg>
-  );
-  const SparkleIcon = () => (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/>
-    </svg>
-  );
-  const CameraIcon = () => <Camera className="w-4 h-4" />;
-  const VideoIcon2 = () => <Video className="w-4 h-4" />;
-  const MapPinIcon = () => <MapPin className="w-4 h-4" />;
+  const InfoIcon    = () => <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>;
+  const RulerIcon   = () => <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 16L16 2l6 6L8 22 2 16z"/><path d="M8 8l8 8"/><path d="M6 10l2 2"/><path d="M10 6l2 2"/></svg>;
+  const SparkleIcon = () => <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>;
+  const CameraIcon  = () => <Camera className="w-4 h-4" />;
+  const VideoIcon2  = () => <Video className="w-4 h-4" />;
+  const MapPinIcon  = () => <MapPin className="w-4 h-4" />;
+  const ZapIcon     = () => <Zap className="w-4 h-4" />;
+  const FileIcon    = () => <FileText className="w-4 h-4" />;
+  const PaperclipIcon = () => <Paperclip className="w-4 h-4" />;
 
   return (
     <ProLayout>
@@ -674,7 +735,7 @@ export default function ProPropertyNewPage() {
                 )}
               </div>
 
-              {/* Co-living rooms — statut + loyer par chambre */}
+              {/* Co-living rooms */}
               {watchType === "co-living" && coLivingRooms.length > 0 && (
                 <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
                   <p className="text-xs font-bold text-amber-800 uppercase tracking-widest">Détail des chambres</p>
@@ -755,8 +816,8 @@ export default function ProPropertyNewPage() {
             </div>
           </Section>
 
-          {/* ── 4. Médias ── */}
-          <Section icon={CameraIcon} title="Médias"
+          {/* ── 4. Médias (photos) ── */}
+          <Section icon={CameraIcon} title="Photos *"
             subtitle="4 photos par pièce recommandées (salon, chambre, cuisine, salle de bain…)">
             <div className="space-y-3">
               <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex items-start gap-2.5">
@@ -786,11 +847,22 @@ export default function ProPropertyNewPage() {
                     )
                 ))}
               </div>
-              <button type="button" onClick={addImage}
-                className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 hover:border-[#F5A623] hover:text-[#F5A623] w-full justify-center transition-all">
-                <Plus className="w-4 h-4" />
-                Ajouter une photo
-              </button>
+              <div className="flex gap-2">
+                <button type="button" onClick={addImage}
+                  className="flex-1 flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 hover:border-[#F5A623] hover:text-[#F5A623] justify-center transition-all">
+                  <Plus className="w-4 h-4" />
+                  Ajouter un lien URL
+                </button>
+                <button type="button"
+                  onClick={() => imageFileRef.current?.click()}
+                  className="flex-1 flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 hover:border-[#F5A623] hover:text-[#F5A623] justify-center transition-all">
+                  <Camera className="w-4 h-4" />
+                  Importer depuis l'appareil
+                </button>
+                <input ref={imageFileRef} type="file" accept="image/*" multiple className="hidden"
+                  onChange={handleImageFileChange} />
+              </div>
+              {imageError && <p className="text-xs text-red-500 font-medium">{imageError}</p>}
               <p className="text-xs text-gray-400 text-center">{imageUrls.filter(u => u.trim()).length} photo(s) ajoutée(s)</p>
             </div>
           </Section>
@@ -829,7 +901,157 @@ export default function ProPropertyNewPage() {
             </div>
           </Section>
 
-          {/* ── 6. Localisation ── */}
+          {/* ── 6. Plan du bâtiment ── */}
+          <Section icon={FileIcon} title="Plan du bâtiment"
+            subtitle="Ajoutez le plan de l'appartement ou de l'immeuble (optionnel)">
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">URL du plan</label>
+                <FormField control={form.control} name="floorPlan" render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <div className="relative">
+                        <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input {...field} value={field.value ?? ""} placeholder="https://... (lien vers le plan)"
+                          className="rounded-xl h-11 pl-10 focus-visible:ring-[#F5A623]"
+                          onChange={e => { field.onChange(e); if (e.target.value) setFloorPlanUrl(""); }} />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-gray-100" />
+                <span className="text-xs text-gray-400 font-medium">ou</span>
+                <div className="flex-1 h-px bg-gray-100" />
+              </div>
+              <button type="button"
+                onClick={() => floorPlanFileRef.current?.click()}
+                className="w-full flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 hover:border-[#F5A623] hover:text-[#F5A623] justify-center transition-all">
+                <FileText className="w-4 h-4" />
+                Importer un plan depuis l'appareil
+              </button>
+              <input ref={floorPlanFileRef} type="file" accept="image/*,.pdf" className="hidden"
+                onChange={handleFloorPlanFileChange} />
+              {floorPlanUrl && (
+                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-xl border border-gray-100">
+                  {floorPlanUrl.startsWith("data:image") ? (
+                    <img src={floorPlanUrl} alt="Plan" className="w-14 h-10 rounded-lg object-cover border border-gray-200" />
+                  ) : (
+                    <div className="w-14 h-10 rounded-lg bg-gray-200 flex items-center justify-center">
+                      <FileText className="w-5 h-5 text-gray-500" />
+                    </div>
+                  )}
+                  <span className="flex-1 text-xs text-gray-500 truncate">Plan importé depuis l'appareil</span>
+                  <button type="button" onClick={() => setFloorPlanUrl("")}
+                    className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </Section>
+
+          {/* ── 7. Pièces jointes ── */}
+          <Section icon={PaperclipIcon} title="Pièces jointes"
+            subtitle="Documents annexes : règlement intérieur, diagnostics, etc. (optionnel)">
+            <div className="space-y-3">
+              {attachments.length === 0 ? (
+                <p className="text-sm text-gray-400 italic">Aucune pièce jointe — section affichée comme N/D sur l'annonce.</p>
+              ) : (
+                <div className="space-y-2">
+                  {attachments.map((a, i) => (
+                    <div key={i} className="flex items-center gap-2 p-2.5 bg-gray-50 rounded-xl border border-gray-100">
+                      <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                      <span className="flex-1 text-sm text-gray-700 truncate">{a.name}</span>
+                      <button type="button" onClick={() => removeAttachment(i)}
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button type="button"
+                onClick={() => attachmentFileRef.current?.click()}
+                className="w-full flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 hover:border-[#F5A623] hover:text-[#F5A623] justify-center transition-all">
+                <Paperclip className="w-4 h-4" />
+                Ajouter des pièces jointes
+              </button>
+              <input ref={attachmentFileRef} type="file" multiple className="hidden"
+                onChange={handleAttachmentFileChange} />
+            </div>
+          </Section>
+
+          {/* ── 8. DPE — Diagnostic de performance énergétique ── */}
+          <Section icon={ZapIcon} title="Diagnostic de performance énergétique (DPE)"
+            subtitle="Optionnel — renseigne la classe énergétique et le coût estimé">
+            <div className="space-y-4">
+              <FormField control={form.control} name="dpeClass" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold text-gray-700">Classe DPE</FormLabel>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {DPE_CLASSES.map(cls => {
+                      const selected = field.value === cls;
+                      return (
+                        <button key={cls} type="button"
+                          onClick={() => field.onChange(selected ? null : cls)}
+                          className="w-10 h-10 rounded-xl font-extrabold text-sm border-2 transition-all flex items-center justify-center"
+                          style={{
+                            background:  selected ? DPE_COLORS[cls] : "#F9FAFB",
+                            borderColor: selected ? DPE_COLORS[cls] : "#E5E7EB",
+                            color:       selected ? "#fff" : DPE_COLORS[cls],
+                          }}>
+                          {cls}
+                        </button>
+                      );
+                    })}
+                    {field.value && (
+                      <button type="button" onClick={() => field.onChange(null)}
+                        className="px-3 h-10 rounded-xl text-xs text-gray-400 hover:text-gray-600 border border-dashed border-gray-300 transition-colors">
+                        Effacer
+                      </button>
+                    )}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
+              {watchDpeClass && (
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="dpeAnnualCostMin" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-semibold text-gray-700">Coût annuel min (CA$)</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">$</span>
+                          <Input type="number" min={0} {...field} value={field.value ?? ""} placeholder="800"
+                            className="rounded-xl h-11 pl-7 focus-visible:ring-[#F5A623]" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="dpeAnnualCostMax" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-semibold text-gray-700">Coût annuel max (CA$)</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">$</span>
+                          <Input type="number" min={0} {...field} value={field.value ?? ""} placeholder="1 200"
+                            className="rounded-xl h-11 pl-7 focus-visible:ring-[#F5A623]" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+              )}
+            </div>
+          </Section>
+
+          {/* ── 9. Localisation ── */}
           <Section icon={MapPinIcon} title="Localisation"
             subtitle="L'adresse complète permet le remplissage automatique des équipements à proximité">
             <div className="space-y-5">
@@ -856,7 +1078,29 @@ export default function ProPropertyNewPage() {
               )} />
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="col-span-2 sm:col-span-1">
+                <FormField control={form.control} name="apartmentNumber" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold text-gray-700">N° appartement</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value ?? ""} placeholder="3B"
+                        className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="buildingFloors" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold text-gray-700">Nb étages bâtiment</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={1} {...field} value={field.value ?? ""} placeholder="5"
+                        className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Province</label>
                   <input
                     type="text"
@@ -867,7 +1111,7 @@ export default function ProPropertyNewPage() {
                     className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 px-4 text-sm transition-colors font-mono tracking-widest uppercase"
                   />
                 </div>
-                <div className="col-span-2 sm:col-span-1">
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                     Code postal
                     {postalCode && (
@@ -884,17 +1128,19 @@ export default function ProPropertyNewPage() {
                     className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 px-4 text-sm transition-colors font-mono tracking-widest"
                   />
                 </div>
-                <FormField control={form.control} name="city" render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel className="text-sm font-semibold text-gray-700">Ville *</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Montréal"
-                        className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
               </div>
+
+              <FormField control={form.control} name="city" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold text-gray-700">Ville *</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Montréal"
+                      className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
               <FormField control={form.control} name="country" render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-sm font-semibold text-gray-700">Pays *</FormLabel>
@@ -927,6 +1173,30 @@ export default function ProPropertyNewPage() {
                   </div>
                 )}
               </div>
+            </div>
+          </Section>
+
+          {/* ── 10. Aides & conditions ── */}
+          <Section icon={InfoIcon} title="Aides & conditions"
+            subtitle="Informations sur l'éligibilité aux aides au logement">
+            <div className="space-y-4">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <div className="mt-0.5">
+                  <button type="button"
+                    onClick={() => form.setValue("housingAidEligible", !watchHousingAid)}
+                    className="w-5 h-5 rounded flex items-center justify-center border-2 transition-all"
+                    style={{
+                      background:  watchHousingAid ? YELLOW : "white",
+                      borderColor: watchHousingAid ? YELLOW : "#D1D5DB",
+                    }}>
+                    {watchHousingAid && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                  </button>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-800 group-hover:text-gray-900">Éligible aux aides au logement (RGI, PHAP)</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Ce logement est éligible aux aides au logement provinciaux ou fédéraux. Cette information sera affichée sur l'annonce.</p>
+                </div>
+              </label>
             </div>
           </Section>
 

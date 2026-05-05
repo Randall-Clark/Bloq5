@@ -33,30 +33,32 @@ const COLIVING_ROOMS: Record<number, { number: number; price: number; status: st
   ],
 };
 
+async function addColumnIfMissing(client: any, column: string, definition: string) {
+  const res = await client.query(
+    `SELECT 1 FROM information_schema.columns WHERE table_name = 'properties' AND column_name = $1`,
+    [column]
+  );
+  if (res.rowCount === 0) {
+    logger.info(`Adding '${column}' column to properties table…`);
+    await client.query(`ALTER TABLE properties ADD COLUMN ${column} ${definition}`);
+    logger.info(`'${column}' column added.`);
+  }
+}
+
 export async function runMigrations(): Promise<void> {
   const client = await pool.connect();
   try {
-    const colCheck = await client.query(`
-      SELECT 1 FROM information_schema.columns
-      WHERE table_name = 'properties' AND column_name = 'rooms'
-    `);
-
-    if (colCheck.rowCount === 0) {
-      logger.info("Adding 'rooms' column to properties table…");
-      await client.query(`ALTER TABLE properties ADD COLUMN rooms jsonb NOT NULL DEFAULT '[]'::jsonb`);
-      logger.info("'rooms' column added.");
-    }
-
-    const floorColCheck = await client.query(`
-      SELECT 1 FROM information_schema.columns
-      WHERE table_name = 'properties' AND column_name = 'floor'
-    `);
-
-    if (floorColCheck.rowCount === 0) {
-      logger.info("Adding 'floor' column to properties table…");
-      await client.query(`ALTER TABLE properties ADD COLUMN floor integer`);
-      logger.info("'floor' column added.");
-    }
+    await addColumnIfMissing(client, "rooms",               "jsonb NOT NULL DEFAULT '[]'::jsonb");
+    await addColumnIfMissing(client, "floor",               "integer");
+    await addColumnIfMissing(client, "floor_plan",          "text");
+    await addColumnIfMissing(client, "nearby_places",       "jsonb NOT NULL DEFAULT '[]'::jsonb");
+    await addColumnIfMissing(client, "apartment_number",    "text");
+    await addColumnIfMissing(client, "building_floors",     "integer");
+    await addColumnIfMissing(client, "housing_aid_eligible","boolean NOT NULL DEFAULT false");
+    await addColumnIfMissing(client, "dpe_class",           "text");
+    await addColumnIfMissing(client, "dpe_annual_cost_min", "integer");
+    await addColumnIfMissing(client, "dpe_annual_cost_max", "integer");
+    await addColumnIfMissing(client, "attachments",         "jsonb NOT NULL DEFAULT '[]'::jsonb");
 
     const colivingRes = await client.query(
       `SELECT id FROM properties WHERE type = 'co-living' AND (rooms IS NULL OR rooms::text = '[]') AND id = ANY($1)`,

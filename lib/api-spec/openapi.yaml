@@ -725,12 +725,36 @@ components:
               type: array
               items:
                 type: string
+            apartmentNumber:
+              type: ["string", "null"]
+            buildingFloors:
+              type: ["integer", "null"]
+            housingAidEligible:
+              type: boolean
+            dpeClass:
+              type: ["string", "null"]
+            dpeAnnualCostMin:
+              type: ["integer", "null"]
+            dpeAnnualCostMax:
+              type: ["integer", "null"]
+            attachments:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  url:
+                    type: string
+                required: [name, url]
           required:
             - amenities
             - nearbyPlaces
             - ownerName
             - ownerEmail
             - availableDates
+            - housingAidEligible
+            - attachments
 
     PropertyListResponse:
       type: object
@@ -812,6 +836,30 @@ components:
               - status
         isFeatured:
           type: boolean
+        apartmentNumber:
+          type: ["string", "null"]
+        buildingFloors:
+          type: ["integer", "null"]
+        housingAidEligible:
+          type: boolean
+        dpeClass:
+          type: ["string", "null"]
+        dpeAnnualCostMin:
+          type: ["integer", "null"]
+        dpeAnnualCostMax:
+          type: ["integer", "null"]
+        attachments:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              url:
+                type: string
+            required: [name, url]
+        floorPlan:
+          type: ["string", "null"]
       required:
         - title
         - description

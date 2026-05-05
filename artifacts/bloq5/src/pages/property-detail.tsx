@@ -16,7 +16,7 @@ import {
   Flame, Wifi, Droplets, Zap, Trash2, Wind,
   AlertCircle, HeartPulse, Key, Camera, Shirt, Layers, Wand2, Tv, Snowflake, Coffee,
   GraduationCap, BookOpen, Train, ShoppingCart, Dumbbell, Store, TreePine,
-  CheckCircle, Info, ArrowLeft, ArrowRight, type LucideProps
+  CheckCircle, Info, ArrowLeft, ArrowRight, type LucideProps, Paperclip
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -51,11 +51,16 @@ const AMENITY_ICON_MAP: Record<string, IconComp> = {
   "BBQ": Flame,
   /* ── Formulaire : Bâtiment ── */
   "Stationnement inclus": Car,
+  "Stationnement gratuit": Car,
+  "Stationnement payant": Car,
   "Borne de recharge VÉ": Zap,
   "Ascenseur": Layers,
   "Salle de gym": Dumbbell,
   "Casier de rangement": Layers,
+  "Casier de rangement gratuit": Layers,
+  "Casier de rangement payant": Layers,
   "Salle commune": BookOpen,
+  "Taxe ordures incluse": Trash2,
   /* ── Formulaire : Sécurité & Politique ── */
   "Système d'alarme": AlertCircle,
   "Interphone": Wifi,
@@ -88,12 +93,17 @@ const AMENITY_ICON_MAP: Record<string, IconComp> = {
 
 /* Labels des services inclus dans le loyer — intersectés avec les amenities réelles */
 const INCLUDED_SERVICE_MAP: Record<string, IconComp> = {
-  "WiFi":           Wifi,
-  "Chauffage":      Flame,
-  "Eau chaude":     Droplets,
-  "Électricité":    Zap,
-  "Câble / TV":     Tv,
-  "Climatisation":  Wind,
+  "WiFi":                 Wifi,
+  "Chauffage":            Flame,
+  "Eau chaude":           Droplets,
+  "Électricité":          Zap,
+  "Câble / TV":           Tv,
+  "Climatisation":        Wind,
+  "Taxe ordures incluse": Trash2,
+};
+
+const DPE_COLORS: Record<string, string> = {
+  A: "#009900", B: "#33CC00", C: "#99CC00", D: "#FFCC00", E: "#FF9900", F: "#FF6600", G: "#CC0000",
 };
 
 function getEarliestVisitDate(): Date {
@@ -577,20 +587,28 @@ export default function PropertyDetailPage() {
               <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Informations détaillées</h2>
               {(() => {
                 const floorNum = property.floor;
-                const hasParking = amenities.includes("Stationnement inclus");
+                const hasParkingFree = amenities.includes("Stationnement inclus") || amenities.includes("Stationnement gratuit");
+                const hasParkingPaid = amenities.includes("Stationnement payant");
                 const isFurnished = amenities.includes("Meublé");
+                const buildingFloors = (property as any).buildingFloors;
+                const apartmentNumber = (property as any).apartmentNumber;
 
                 const items: { icon: IconComp; label: string; sublabel: string }[] = isCommercialType ? [
                   ...(area ? [{ icon: MapPin as IconComp, label: `${area} m²`, sublabel: "Superficie totale" }] : []),
                   { icon: ChevronRight, label: isOffice ? "Bureaux" : "Local commercial", sublabel: "Type d'espace" },
                   ...(floorNum != null ? [{ icon: Layers as IconComp, label: floorNum === 0 ? "Rez-de-chaussée" : `${floorNum}${floorNum === 1 ? "er" : "e"} étage`, sublabel: "Étage" }] : []),
-                  ...(hasParking ? [{ icon: Car as IconComp, label: "Inclus", sublabel: "Stationnement" }] : []),
+                  ...(buildingFloors ? [{ icon: Layers as IconComp, label: `${buildingFloors} étages`, sublabel: "Bâtiment" }] : []),
+                  ...(hasParkingFree ? [{ icon: Car as IconComp, label: "Gratuit", sublabel: "Stationnement" }] : []),
+                  ...(hasParkingPaid ? [{ icon: Car as IconComp, label: "Payant", sublabel: "Stationnement" }] : []),
                 ] : [
                   ...(area ? [{ icon: MapPin as IconComp, label: `${area} m²`, sublabel: "Superficie" }] : []),
                   ...(beds > 0 ? [{ icon: Bed as IconComp, label: `${beds} chambre${beds > 1 ? "s" : ""}`, sublabel: "Chambres" }] : []),
                   ...(baths > 0 ? [{ icon: Bath as IconComp, label: `${baths} salle${baths > 1 ? "s" : ""}`, sublabel: "Salle de bain" }] : []),
                   ...(floorNum != null ? [{ icon: Layers as IconComp, label: floorNum === 0 ? "Rez-de-chaussée" : `${floorNum}${floorNum === 1 ? "er" : "e"} étage`, sublabel: "Étage" }] : []),
-                  ...(hasParking ? [{ icon: Car as IconComp, label: "Inclus", sublabel: "Stationnement" }] : []),
+                  ...(buildingFloors ? [{ icon: Layers as IconComp, label: `${buildingFloors} étages`, sublabel: "Bâtiment" }] : []),
+                  ...(apartmentNumber ? [{ icon: Key as IconComp, label: `Apt ${apartmentNumber}`, sublabel: "Appartement" }] : []),
+                  ...(hasParkingFree ? [{ icon: Car as IconComp, label: "Gratuit", sublabel: "Stationnement" }] : []),
+                  ...(hasParkingPaid ? [{ icon: Car as IconComp, label: "Payant", sublabel: "Stationnement" }] : []),
                   ...(isFurnished ? [{ icon: Wand2 as IconComp, label: "Meublé", sublabel: "Ameublement" }] : []),
                 ];
 
@@ -675,6 +693,72 @@ export default function PropertyDetailPage() {
                 </div>
               </section>
             )}
+
+            {/* DPE — uniquement si renseigné */}
+            {(property as any).dpeClass && (
+              <section className="mb-8">
+                <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Diagnostic de performance énergétique</h2>
+                <div className="rounded-xl border border-gray-100 bg-gray-50/60 p-5 flex flex-col sm:flex-row items-start gap-6">
+                  <div className="flex items-center gap-3">
+                    {["A","B","C","D","E","F","G"].map(cls => {
+                      const active = (property as any).dpeClass === cls;
+                      return (
+                        <div key={cls}
+                          className="w-10 h-10 rounded-xl font-extrabold text-sm flex items-center justify-center border-2 transition-all"
+                          style={{
+                            background:  active ? DPE_COLORS[cls] : "#F9FAFB",
+                            borderColor: active ? DPE_COLORS[cls] : "#E5E7EB",
+                            color:       active ? "#fff" : DPE_COLORS[cls],
+                            transform:   active ? "scale(1.25)" : "none",
+                          }}>
+                          {cls}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-800 mb-1">Classe {(property as any).dpeClass}</p>
+                    {((property as any).dpeAnnualCostMin || (property as any).dpeAnnualCostMax) ? (
+                      <p className="text-xs text-gray-500">
+                        Coût annuel estimé :{" "}
+                        {(property as any).dpeAnnualCostMin && (property as any).dpeAnnualCostMax
+                          ? `${Number((property as any).dpeAnnualCostMin).toLocaleString("fr-CA")} – ${Number((property as any).dpeAnnualCostMax).toLocaleString("fr-CA")} CA$`
+                          : (property as any).dpeAnnualCostMin
+                            ? `à partir de ${Number((property as any).dpeAnnualCostMin).toLocaleString("fr-CA")} CA$`
+                            : `jusqu'à ${Number((property as any).dpeAnnualCostMax).toLocaleString("fr-CA")} CA$`
+                        }
+                      </p>
+                    ) : (
+                      <p className="text-xs text-gray-400">Coût annuel non renseigné</p>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* Pièces jointes */}
+            {(() => {
+              const attachments = (property as any).attachments as Array<{ name: string; url: string }> | undefined;
+              return (
+                <section className="mb-8">
+                  <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1A1A" }}>Pièces jointes</h2>
+                  {(!attachments || attachments.length === 0) ? (
+                    <p className="text-sm text-gray-400 italic">N/D</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {attachments.map((att, i) => (
+                        <a key={i} href={att.url} download={att.name} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-2.5 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-amber-50 hover:border-amber-200 transition-colors">
+                          <Paperclip className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
+                          <span className="text-sm text-gray-700 font-medium flex-1 truncate">{att.name}</span>
+                          <span className="text-xs text-gray-400">Télécharger</span>
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              );
+            })()}
 
             {/* Visite virtuelle — uniquement si une URL est fournie */}
             {property.virtualTourUrl && (
@@ -837,12 +921,12 @@ export default function PropertyDetailPage() {
                     <Info className="w-3.5 h-3.5" />
                     Bail commercial 3-6-9 — Loyer HT
                   </div>
-                ) : (
+                ) : (property as any).housingAidEligible ? (
                   <div className="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold" style={{ background: "#F0FDF4", color: "#16A34A" }}>
                     <CheckCircle className="w-3.5 h-3.5" />
                     Éligible aux aides au logement (RGI, PHAP)
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
 
@@ -1002,12 +1086,12 @@ export default function PropertyDetailPage() {
                   <Info className="w-3.5 h-3.5" />
                   Bail commercial 3-6-9 — Loyer HT
                 </div>
-              ) : (
+              ) : (property as any).housingAidEligible ? (
                 <div className="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold" style={{ background: "#F0FDF4", color: "#16A34A" }}>
                   <CheckCircle className="w-3.5 h-3.5" />
                   Éligible aux aides au logement (RGI, PHAP)
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
 
