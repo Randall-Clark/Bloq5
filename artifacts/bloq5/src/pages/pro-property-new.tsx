@@ -447,7 +447,13 @@ export default function ProPropertyNewPage() {
   }, [watchCity, nearbyAutoFilled]);
 
   const onSubmit = (data: PropertyFormValues) => {
-    const amenitiesArr = Array.from(selectedAmenities);
+    const amenitiesArr = Array.from(selectedAmenities).map(id => {
+      for (const group of AMENITY_GROUPS) {
+        const item = group.items.find(i => i.id === id);
+        if (item) return item.label;
+      }
+      return id;
+    });
     if (watchType === "co-living" && !sameRoomPrice && roomPriceInputs.length) {
       roomPriceInputs.forEach((p, i) => {
         if (p) amenitiesArr.push(`Chambre ${i + 1} : ${p} $/mois`);

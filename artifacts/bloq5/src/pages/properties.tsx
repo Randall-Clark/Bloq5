@@ -102,10 +102,10 @@ const NEARBY_REGIONS_MAP: Record<string, string[]> = {
 };
 
 /* ── Property card ── */
-function PropCard({ id, idx, city, price, area, rooms, baths, arrond, title, currency, status: propStatus, type }: {
+function PropCard({ id, idx, city, price, area, rooms, baths, arrond, title, currency, status: propStatus, type, image }: {
   id: number; idx: number; city: string; price: number; area: number; rooms: number;
   baths: number; arrond: string; title: string; currency: string;
-  status?: string; type?: string;
+  status?: string; type?: string; image?: string;
 }) {
   /* Map real DB status to card badge status.
      Only fall back to the idx-based rotation when there is no real status (static fallback cards). */
@@ -132,9 +132,10 @@ function PropCard({ id, idx, city, price, area, rooms, baths, arrond, title, cur
         <div className="relative" style={{ height: 170 }}>
           <StatusBadge status={status} idx={idx} />
           <img
-            src={`https://picsum.photos/seed/prop${id}/370/170`}
+            src={image || `https://picsum.photos/seed/prop${id}/370/170`}
             alt={title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={e => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/prop${id}/370/170`; }}
           />
           {/* Type badge */}
           <span className="absolute bottom-2 right-2 text-xs px-2 py-0.5 rounded-full font-medium"
@@ -346,6 +347,7 @@ export default function PropertiesPage() {
         arrond: ap.city       ?? ARRONDISSEMENTS[i % ARRONDISSEMENTS.length],
         type:   ap.type,
         status: ap.status,
+        image:  ap.images?.[0] || undefined,
       }))
     : Array.from({ length: ITEMS_PER_PAGE }, (_, i) => ({
         id:     i + 1,

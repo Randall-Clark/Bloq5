@@ -73,6 +73,41 @@ function CommercialFloorPlanSVG({ area, isOffice }: { area: number; isOffice: bo
 
 type IconComp = React.ComponentType<LucideProps>;
 const AMENITY_ICON_MAP: Record<string, IconComp> = {
+  /* ── Formulaire : Services inclus ── */
+  "WiFi": Wifi,
+  "Chauffage": Flame,
+  "Eau chaude": Droplets,
+  "Électricité": Zap,
+  "Câble / TV": Tv,
+  "Climatisation": Wind,
+  /* ── Formulaire : Électroménagers ── */
+  "Machine à laver": Wand2,
+  "Sèche-linge": Wind,
+  "Lave-vaisselle": Droplets,
+  "Réfrigérateur": Snowflake,
+  "Cuisinière": Flame,
+  "Micro-ondes": Zap,
+  /* ── Formulaire : Espaces extérieurs ── */
+  "Balcon": TreePine,
+  "Terrasse": TreePine,
+  "Cour arrière": TreePine,
+  "Piscine": Droplets,
+  "BBQ": Flame,
+  /* ── Formulaire : Bâtiment ── */
+  "Stationnement inclus": Car,
+  "Borne de recharge VÉ": Zap,
+  "Ascenseur": Layers,
+  "Salle de gym": Dumbbell,
+  "Casier de rangement": Layers,
+  "Salle commune": BookOpen,
+  /* ── Formulaire : Sécurité & Politique ── */
+  "Système d'alarme": AlertCircle,
+  "Interphone": Wifi,
+  "Meublé": Wand2,
+  "Animaux acceptés": CheckCircle,
+  "Fumeurs acceptés": AlertCircle,
+  "Accessible PMR": CheckCircle,
+  /* ── Données statiques (seed) ── */
   "Détecteur de fumée": Flame,
   "Détecteur de CO": AlertCircle,
   "Trousse premiers soins": HeartPulse,
@@ -83,11 +118,7 @@ const AMENITY_ICON_MAP: Record<string, IconComp> = {
   "Oreillers & couvertures": Layers,
   "Fer à repasser": Wand2,
   "Téléviseur câble standard": Tv,
-  "Réfrigérateur": Snowflake,
-  "Micro-ondes": Zap,
-  "Lave-vaisselle": Droplets,
   "Machine à café": Coffee,
-  /* Commercial / bureau */
   "Extincteur": Flame,
   "Contrôle d'accès badge": Key,
   "Salle de réunion partagée": BookOpen,
@@ -715,16 +746,47 @@ export default function PropertyDetailPage() {
             <section className="mb-8">
               <h2 className="text-lg font-bold mb-1" style={{ color: "#1A1A1A" }}>À proximité</h2>
               <p className="text-sm text-gray-400 mb-5">Découvrez les commodités à proximité pour bien évaluer l'emplacement et la qualité de vie offerte.</p>
-              <div className="grid grid-cols-2 gap-0 rounded-xl overflow-hidden border border-gray-100">
-                {NEARBY_ITEMS.map(({ label, val, icon: Icon }, i) => (
-                  <div key={label} className="flex items-center justify-between py-3 px-4 text-sm" style={{ borderBottom: "1px solid #F0F0F0", background: i % 2 === 0 ? "white" : "#FAFAFA" }}>
-                    <span className="flex items-center gap-2 font-semibold text-xs" style={{ color: YELLOW }}>
-                      <Icon className="w-3.5 h-3.5" />{label}
-                    </span>
-                    <span className="text-gray-500 text-xs">{val}</span>
-                  </div>
-                ))}
-              </div>
+              {property.nearbyPlaces && property.nearbyPlaces.length > 0 ? (
+                <div className="grid grid-cols-2 gap-0 rounded-xl overflow-hidden border border-gray-100">
+                  {property.nearbyPlaces.map((place, i) => {
+                    const l = place.toLowerCase();
+                    const Icon: IconComp =
+                      l.includes("métro") || l.includes("train") || l.includes("bus") || l.includes("ttc") || l.includes("transport") ? Train
+                      : l.includes("épicerie") || l.includes("loblaws") || l.includes("iga") || l.includes("maxi") || l.includes("marché") || l.includes("grocery") ? ShoppingCart
+                      : l.includes("parc") || l.includes("park") ? TreePine
+                      : l.includes("pharmacie") || l.includes("shoppers") ? HeartPulse
+                      : l.includes("école") || l.includes("school") ? GraduationCap
+                      : l.includes("université") || l.includes("university") || l.includes("cégep") ? BookOpen
+                      : l.includes("gym") || l.includes("fitness") || l.includes("sport") ? Dumbbell
+                      : l.includes("hôpital") || l.includes("hospital") || l.includes("clinique") ? HeartPulse
+                      : l.includes("restaurant") || l.includes("café") || l.includes("coffee") ? Coffee
+                      : l.includes("magasin") || l.includes("centre commercial") || l.includes("store") ? Store
+                      : MapPin;
+                    const match = place.match(/^(.+?)\s*\(([^)]+)\)$/);
+                    const label = match ? match[1].trim() : place;
+                    const dist = match ? match[2] : "";
+                    return (
+                      <div key={i} className="flex items-center justify-between py-3 px-4 text-sm" style={{ borderBottom: "1px solid #F0F0F0", background: i % 2 === 0 ? "white" : "#FAFAFA" }}>
+                        <span className="flex items-center gap-2 font-semibold text-xs" style={{ color: YELLOW }}>
+                          <Icon className="w-3.5 h-3.5" />{label}
+                        </span>
+                        {dist && <span className="text-gray-500 text-xs">{dist}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-0 rounded-xl overflow-hidden border border-gray-100">
+                  {NEARBY_ITEMS.map(({ label, val, icon: Icon }, i) => (
+                    <div key={label} className="flex items-center justify-between py-3 px-4 text-sm" style={{ borderBottom: "1px solid #F0F0F0", background: i % 2 === 0 ? "white" : "#FAFAFA" }}>
+                      <span className="flex items-center gap-2 font-semibold text-xs" style={{ color: YELLOW }}>
+                        <Icon className="w-3.5 h-3.5" />{label}
+                      </span>
+                      <span className="text-gray-500 text-xs">{val}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* Pièces jointes */}

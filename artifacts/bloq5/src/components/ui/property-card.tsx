@@ -26,7 +26,7 @@ export function PropertyCard({ property }: { property: Property }) {
         <CardContent className="p-0 flex flex-col flex-1">
           <div className="flex justify-between items-start mb-2 gap-4">
             <h3 className="text-xl font-bold text-[#1a237e] dark:text-white group-hover:text-[#f57c00] transition-colors line-clamp-1">{property.title}</h3>
-            <span className="text-lg font-bold text-[#f57c00] whitespace-nowrap">{property.price}€<span className="text-sm text-gray-500 font-normal">/mo</span></span>
+            <span className="text-lg font-bold text-[#f57c00] whitespace-nowrap">{Number(property.price).toLocaleString("fr-CA")} CA$<span className="text-sm text-gray-500 font-normal">/mois</span></span>
           </div>
           <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm mb-4">
             <MapPin className="h-3 w-3 mr-1" />
