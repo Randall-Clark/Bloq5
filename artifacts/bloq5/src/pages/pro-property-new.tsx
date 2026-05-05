@@ -404,9 +404,9 @@ export default function ProPropertyNewPage() {
   const removeImage = (i: number) => setImageUrls(p => p.filter((_, j) => j !== i));
   const updateImage = (i: number, v: string) => setImageUrls(p => p.map((u, j) => j === i ? v : u));
 
-  /* Co-living room prices */
-  const [sameRoomPrice, setSameRoomPrice] = useState(true);
-  const [roomPriceInputs, setRoomPriceInputs] = useState<string[]>([]);
+  /* Co-living rooms — structured per-room state */
+  type CoLivingRoom = { price: string; status: "available" | "rented" | "soon"; availableFrom: string };
+  const [coLivingRooms, setCoLivingRooms] = useState<CoLivingRoom[]>([]);
 
   /* Nearby places */
   const [nearbyPlaces, setNearbyPlaces] = useState<string[]>([]);
@@ -431,11 +431,23 @@ export default function ProPropertyNewPage() {
   const watchBedrooms = form.watch("bedrooms");
   const watchCity     = form.watch("city");
 
-  /* Sync room price inputs when bedroom count changes */
+  /* For co-living: enforce min 2 bedrooms */
   useEffect(() => {
-    const count = Number(watchBedrooms) || 0;
-    setRoomPriceInputs(p => Array.from({ length: count }, (_, i) => p[i] ?? ""));
-  }, [watchBedrooms]);
+    if (watchType === "co-living") {
+      const beds = Number(form.getValues("bedrooms")) || 0;
+      if (beds < 2) form.setValue("bedrooms", 2 as any);
+    }
+  }, [watchType]);
+
+  /* Sync coLivingRooms with bedroom count */
+  useEffect(() => {
+    if (watchType === "co-living") {
+      const count = Math.max(2, Number(watchBedrooms) || 2);
+      setCoLivingRooms(prev =>
+        Array.from({ length: count }, (_, i) => prev[i] ?? { price: "", status: "available" as const, availableFrom: "" })
+      );
+    }
+  }, [watchBedrooms, watchType]);
 
   /* Auto-populate nearby places when city changes */
   useEffect(() => {
@@ -454,11 +466,14 @@ export default function ProPropertyNewPage() {
       }
       return id;
     });
-    if (watchType === "co-living" && !sameRoomPrice && roomPriceInputs.length) {
-      roomPriceInputs.forEach((p, i) => {
-        if (p) amenitiesArr.push(`Chambre ${i + 1} : ${p} $/mois`);
-      });
-    }
+    const roomsPayload = watchType === "co-living"
+      ? coLivingRooms.map((r, i) => ({
+          number: i + 1,
+          price: r.price ? Number(r.price) : null,
+          status: r.status,
+          ...(r.status === "soon" && r.availableFrom ? { availableFrom: r.availableFrom } : {}),
+        }))
+      : [];
     const fullAddress = postalCode
       ? `${data.address}, ${postalCode}`
       : data.address;
@@ -468,6 +483,7 @@ export default function ProPropertyNewPage() {
       amenities: amenitiesArr,
       nearbyPlaces,
       images: imageUrls.filter(u => u.trim()),
+      rooms: roomsPayload,
     };
     setPendingPayload(payload);
     setShowPricing(true);
@@ -623,7 +639,7 @@ export default function ProPropertyNewPage() {
                     <FormItem>
                       <FormLabel className="text-sm font-semibold text-gray-700">Chambres</FormLabel>
                       <FormControl>
-                        <Input type="number" min={0} {...field} value={field.value ?? ""} placeholder="2"
+                        <Input type="number" min={watchType === "co-living" ? 2 : 0} {...field} value={field.value ?? ""} placeholder="2"
                           className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
                       </FormControl>
                       <FormMessage />
@@ -645,42 +661,45 @@ export default function ProPropertyNewPage() {
                 )}
               </div>
 
-              {/* Co-living room prices */}
-              {watchType === "co-living" && Number(watchBedrooms) > 0 && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <span
-                        onClick={() => setSameRoomPrice(v => !v)}
-                        className="w-5 h-5 rounded flex items-center justify-center shrink-0 border-2 transition-all"
-                        style={{
-                          background:   sameRoomPrice ? YELLOW : "white",
-                          borderColor:  sameRoomPrice ? YELLOW : "#D1D5DB",
-                        }}
-                      >
-                        {sameRoomPrice && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-                      </span>
-                      <span className="text-sm font-medium text-gray-700">
-                        Le prix est le même pour toutes les chambres
-                      </span>
-                    </label>
-                  </div>
-                  {!sameRoomPrice && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      {roomPriceInputs.map((rp, i) => (
-                        <div key={i}>
-                          <label className="block text-xs font-semibold text-gray-600 mb-1">Chambre {i + 1} (CA$/mois)</label>
+              {/* Co-living rooms — statut + loyer par chambre */}
+              {watchType === "co-living" && coLivingRooms.length > 0 && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
+                  <p className="text-xs font-bold text-amber-800 uppercase tracking-widest">Détail des chambres</p>
+                  {coLivingRooms.map((room, i) => (
+                    <div key={i} className="bg-white rounded-xl p-4 border border-amber-100 space-y-3">
+                      <p className="text-sm font-bold text-gray-800">Chambre {i + 1}</p>
+                      <div className={`grid gap-3 ${room.status === "soon" ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Loyer (CA$/mois)</label>
                           <div className="relative">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">$</span>
-                            <input type="number" value={rp} min={0}
-                              onChange={e => setRoomPriceInputs(p => p.map((v, j) => j === i ? e.target.value : v))}
-                              placeholder="800"
+                            <input type="number" value={room.price} min={0}
+                              onChange={e => setCoLivingRooms(p => p.map((r, j) => j === i ? { ...r, price: e.target.value } : r))}
+                              placeholder="850"
                               className="w-full bg-white border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-10 pl-7 pr-4 text-sm transition-colors" />
                           </div>
                         </div>
-                      ))}
+                        <div>
+                          <label className="block text-xs font-semibold text-gray-600 mb-1">Statut</label>
+                          <select value={room.status}
+                            onChange={e => setCoLivingRooms(p => p.map((r, j) => j === i ? { ...r, status: e.target.value as CoLivingRoom["status"] } : r))}
+                            className="w-full bg-white border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-10 px-3 text-sm transition-colors">
+                            <option value="available">✅ Disponible</option>
+                            <option value="rented">🔴 Loué</option>
+                            <option value="soon">⏰ Disponible bientôt</option>
+                          </select>
+                        </div>
+                        {room.status === "soon" && (
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1">Disponible à partir du</label>
+                            <input type="date" value={room.availableFrom}
+                              onChange={e => setCoLivingRooms(p => p.map((r, j) => j === i ? { ...r, availableFrom: e.target.value } : r))}
+                              className="w-full bg-white border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-10 px-3 text-sm transition-colors" />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
               )}
             </div>

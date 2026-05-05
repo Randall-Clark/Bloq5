@@ -68,6 +68,16 @@ export const ListPropertiesResponse = zod.object({
       requestsCount: zod.number(),
       ownerId: zod.string(),
       createdAt: zod.coerce.date(),
+      rooms: zod
+        .array(
+          zod.object({
+            number: zod.number(),
+            price: zod.number().nullish(),
+            status: zod.enum(["available", "rented", "soon"]),
+            availableFrom: zod.string().nullish(),
+          }),
+        )
+        .optional(),
     }),
   ),
   total: zod.number(),
@@ -134,6 +144,16 @@ export const GetFeaturedPropertiesResponseItem = zod.object({
   requestsCount: zod.number(),
   ownerId: zod.string(),
   createdAt: zod.coerce.date(),
+  rooms: zod
+    .array(
+      zod.object({
+        number: zod.number(),
+        price: zod.number().nullish(),
+        status: zod.enum(["available", "rented", "soon"]),
+        availableFrom: zod.string().nullish(),
+      }),
+    )
+    .optional(),
 });
 export const GetFeaturedPropertiesResponse = zod.array(
   GetFeaturedPropertiesResponseItem,
@@ -174,6 +194,16 @@ export const GetPropertyResponse = zod
     requestsCount: zod.number(),
     ownerId: zod.string(),
     createdAt: zod.coerce.date(),
+    rooms: zod
+      .array(
+        zod.object({
+          number: zod.number(),
+          price: zod.number().nullish(),
+          status: zod.enum(["available", "rented", "soon"]),
+          availableFrom: zod.string().nullish(),
+        }),
+      )
+      .optional(),
   })
   .and(
     zod.object({
@@ -233,6 +263,16 @@ export const UpdatePropertyResponse = zod.object({
   requestsCount: zod.number(),
   ownerId: zod.string(),
   createdAt: zod.coerce.date(),
+  rooms: zod
+    .array(
+      zod.object({
+        number: zod.number(),
+        price: zod.number().nullish(),
+        status: zod.enum(["available", "rented", "soon"]),
+        availableFrom: zod.string().nullish(),
+      }),
+    )
+    .optional(),
 });
 
 /**
@@ -427,6 +467,16 @@ export const ListFavoritesResponseItem = zod.object({
   requestsCount: zod.number(),
   ownerId: zod.string(),
   createdAt: zod.coerce.date(),
+  rooms: zod
+    .array(
+      zod.object({
+        number: zod.number(),
+        price: zod.number().nullish(),
+        status: zod.enum(["available", "rented", "soon"]),
+        availableFrom: zod.string().nullish(),
+      }),
+    )
+    .optional(),
 });
 export const ListFavoritesResponse = zod.array(ListFavoritesResponseItem);
 
@@ -550,6 +600,16 @@ export const GetDashboardPropertiesResponseItem = zod
     requestsCount: zod.number(),
     ownerId: zod.string(),
     createdAt: zod.coerce.date(),
+    rooms: zod
+      .array(
+        zod.object({
+          number: zod.number(),
+          price: zod.number().nullish(),
+          status: zod.enum(["available", "rented", "soon"]),
+          availableFrom: zod.string().nullish(),
+        }),
+      )
+      .optional(),
   })
   .and(
     zod.object({

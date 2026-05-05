@@ -46,6 +46,12 @@ export const propertiesTable = pgTable("properties", {
   views: integer("views").notNull().default(0),
   amenities: json("amenities").$type<string[]>().notNull().default([]),
   availableDates: json("available_dates").$type<string[]>().notNull().default([]),
+  rooms: json("rooms").$type<Array<{
+    number: number;
+    price: number | null;
+    status: "available" | "rented" | "soon";
+    availableFrom?: string;
+  }>>().notNull().default([]),
   floorPlan: text("floor_plan"),
   nearbyPlaces: json("nearby_places").$type<string[]>().notNull().default([]),
   ownerId: text("owner_id").notNull(),

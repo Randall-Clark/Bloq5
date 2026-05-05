@@ -41,6 +41,24 @@ export const PropertyStatus = {
   unavailable: "unavailable",
 } as const;
 
+export type PropertyRoomsItemStatus =
+  (typeof PropertyRoomsItemStatus)[keyof typeof PropertyRoomsItemStatus];
+
+export const PropertyRoomsItemStatus = {
+  available: "available",
+  rented: "rented",
+  soon: "soon",
+} as const;
+
+export type PropertyRoomsItem = {
+  number: number;
+  /** @nullable */
+  price?: number | null;
+  status: PropertyRoomsItemStatus;
+  /** @nullable */
+  availableFrom?: string | null;
+};
+
 export interface Property {
   id: number;
   title: string;
@@ -65,6 +83,7 @@ export interface Property {
   requestsCount: number;
   ownerId: string;
   createdAt: string;
+  rooms?: PropertyRoomsItem[];
 }
 
 export type PropertyDetail = Property & {

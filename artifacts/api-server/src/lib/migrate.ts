@@ -1,0 +1,73 @@
+import { pool } from "@workspace/db";
+import { logger } from "./logger";
+
+const COLIVING_ROOMS: Record<number, { number: number; price: number; status: string; availableFrom: string | null }[]> = {
+  25: [
+    { number: 1, price: 850, status: "rented", availableFrom: null },
+    { number: 2, price: 875, status: "available", availableFrom: "2026-06-01" },
+    { number: 3, price: 875, status: "available", availableFrom: "2026-05-15" },
+    { number: 4, price: 900, status: "soon", availableFrom: "2026-07-15" },
+  ],
+  26: [
+    { number: 1, price: 780, status: "rented", availableFrom: null },
+    { number: 2, price: 800, status: "available", availableFrom: "2026-06-01" },
+    { number: 3, price: 820, status: "available", availableFrom: "2026-06-01" },
+  ],
+  27: [
+    { number: 1, price: 650, status: "rented", availableFrom: null },
+    { number: 2, price: 650, status: "rented", availableFrom: null },
+    { number: 3, price: 675, status: "available", availableFrom: "2026-05-15" },
+    { number: 4, price: 675, status: "available", availableFrom: "2026-06-01" },
+    { number: 5, price: 700, status: "soon", availableFrom: "2026-08-01" },
+  ],
+  28: [
+    { number: 1, price: 1100, status: "rented", availableFrom: null },
+    { number: 2, price: 1100, status: "available", availableFrom: "2026-06-01" },
+    { number: 3, price: 1150, status: "available", availableFrom: "2026-06-15" },
+    { number: 4, price: 1200, status: "soon", availableFrom: "2026-07-01" },
+  ],
+  29: [
+    { number: 1, price: 750, status: "rented", availableFrom: null },
+    { number: 2, price: 770, status: "available", availableFrom: "2026-06-01" },
+    { number: 3, price: 790, status: "available", availableFrom: "2026-05-20" },
+  ],
+};
+
+export async function runMigrations(): Promise<void> {
+  const client = await pool.connect();
+  try {
+    const colCheck = await client.query(`
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'properties' AND column_name = 'rooms'
+    `);
+
+    if (colCheck.rowCount === 0) {
+      logger.info("Adding 'rooms' column to properties table…");
+      await client.query(`ALTER TABLE properties ADD COLUMN rooms jsonb NOT NULL DEFAULT '[]'::jsonb`);
+      logger.info("'rooms' column added.");
+    }
+
+    const colivingRes = await client.query(
+      `SELECT id FROM properties WHERE type = 'co-living' AND (rooms IS NULL OR rooms::text = '[]') AND id = ANY($1)`,
+      [Object.keys(COLIVING_ROOMS).map(Number)]
+    );
+
+    if (colivingRes.rowCount && colivingRes.rowCount > 0) {
+      logger.info({ count: colivingRes.rowCount }, "Seeding rooms for co-living properties…");
+      for (const row of colivingRes.rows) {
+        const id = row.id as number;
+        const rooms = COLIVING_ROOMS[id];
+        if (!rooms) continue;
+        await client.query(
+          `UPDATE properties SET rooms = $1::jsonb, bedrooms = $2 WHERE id = $3`,
+          [JSON.stringify(rooms), rooms.length, id]
+        );
+      }
+      logger.info("Co-living rooms seeded.");
+    }
+  } catch (err) {
+    logger.error({ err }, "Migration error");
+  } finally {
+    client.release();
+  }
+}

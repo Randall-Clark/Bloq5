@@ -36,6 +36,7 @@ French-language real estate rental management platform.
 - **Auth**: better-auth (email/password + OAuth: Google & GitHub via env vars)
 - **DB**: PostgreSQL + Drizzle ORM (`@workspace/db`)
 - **API codegen**: Orval from `lib/api-spec/openapi.yaml` → `lib/api-client-react`
+- **Two databases**: `SUPABASE_DATABASE_URL` (app data, used by Drizzle) and local `DATABASE_URL` (executeSql tool only)
 
 ### Critical Routing Note
 The API server's `app.ts` uses `app.use(router)` (NOT `app.use("/api", router)`).
@@ -47,6 +48,21 @@ Changing to `app.use("/api", router)` would cause all routes to 404.
 - `GET /api/properties/featured` → `Property[]`
 - Other list endpoints: check generated client types for exact shape
 
+### Startup Migration
+`artifacts/api-server/src/lib/migrate.ts` runs on server startup to apply schema changes and seed data that can't go through `db push` (e.g. adding `rooms` column, seeding co-living room data).
+
+### Co-living Feature
+- `propertiesTable` has `rooms: json[]` column (number, price, status, availableFrom)
+- Min 2 bedrooms enforced in pro property form for co-living type
+- Property detail page shows per-room status/price grid + sidebar room selection
+- Application page has co-living-specific step for room selection (single room or whole apartment)
+- Co-living properties in Supabase: IDs 25–29 (Mile End, Plateau, CDN, Toronto, Québec)
+
 ### Seed Data
-6 demo properties inserted (Paris, Bordeaux, Lyon, Nice, La Défense).
-Owner IDs are `demo_owner_1` and `demo_owner_2` (not real Clerk users).
+43 demo properties (Montréal, Toronto, Québec, Vancouver, etc.) — owner ID `seed_owner_bloq5`.
+Old demo seed: owner IDs `demo_owner_1`/`demo_owner_2` (6 Paris/France properties, may still exist).
+
+### Codegen Note
+- `lib/api-zod/src/index.ts` only exports `./generated/api` (the zod generator does NOT emit `api.schemas.ts`)
+- `lib/api-client-react/src/index.ts` exports both `./generated/api` and `./generated/api.schemas`
+- After any OpenAPI change: run codegen, then restart both workflows

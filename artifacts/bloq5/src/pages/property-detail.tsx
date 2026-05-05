@@ -321,8 +321,9 @@ export default function PropertyDetailPage() {
   const isSignedIn = !!authSession;
   const [, navigate] = useLocation();
 
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxIdx, setLightboxIdx] = useState(0);
+  const [lightboxOpen, setLightboxOpen]             = useState(false);
+  const [lightboxIdx, setLightboxIdx]               = useState(0);
+  const [selectedRoomOption, setSelectedRoomOption] = useState<"all" | number | null>(null);
   const [floorOpen, setFloorOpen] = useState(true);
   const [honorairesOpen, setHonorairesOpen] = useState(false);
   const [visitOpen, setVisitOpen] = useState(false);
@@ -390,6 +391,7 @@ export default function PropertyDetailPage() {
   const propType = property.type ?? "apartment";
   const isResidential = !["office", "commercial"].includes(propType);
   const isCommercialType = propType === "office" || propType === "commercial";
+  const isCoLivingType = propType === "co-living";
   const isOffice = propType === "office";
   const typeLabel = isOffice ? "Bureau" : propType === "commercial" ? "Local commercial"
     : propType === "house" ? "Maison" : propType === "co-living" ? "Colocation" : "Appartement";
@@ -592,6 +594,68 @@ export default function PropertyDetailPage() {
                 <span className="text-xs text-gray-400">Annonce publiée et vérifiée par BLOQ5</span>
               </div>
             </section>
+
+            {/* ─── Chambres (colocation uniquement) ─── */}
+            {isCoLivingType && (property.rooms?.length ?? 0) > 0 && (
+              <section className="mb-8">
+                <h2 className="text-lg font-bold mb-1" style={{ color: "#1A1A1A" }}>Chambres disponibles</h2>
+                <p className="text-sm text-gray-400 mb-4">Cliquez sur une chambre pour la sélectionner, ou postulez pour l'ensemble du logement.</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Tout le logement */}
+                  <div
+                    onClick={() => setSelectedRoomOption("all")}
+                    className="rounded-xl border p-4 cursor-pointer transition-all"
+                    style={{ borderColor: selectedRoomOption === "all" ? YELLOW : "#E5E7EB", background: selectedRoomOption === "all" ? "#FFF8EE" : "white" }}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-bold text-sm" style={{ color: "#1A1A1A" }}>🏠 Tout le logement</p>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#EEF2FF", color: "#3730A3" }}>Complet</span>
+                    </div>
+                    <p className="text-xl font-extrabold" style={{ color: YELLOW }}>
+                      {Number(property.price).toLocaleString("fr-CA")} CA$
+                      <span className="text-xs font-normal text-gray-400">/mois</span>
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">Postuler pour l'ensemble des chambres</p>
+                  </div>
+                  {/* Chambres individuelles */}
+                  {(property.rooms as Array<{ number: number; price: number | null; status: string; availableFrom?: string }>).map(room => {
+                    const isRented  = room.status === "rented";
+                    const isSoon    = room.status === "soon";
+                    const isSelected = selectedRoomOption === room.number;
+                    return (
+                      <div key={room.number}
+                        onClick={() => !isRented && setSelectedRoomOption(room.number)}
+                        className="rounded-xl border p-4 transition-all"
+                        style={{
+                          borderColor: isSelected ? YELLOW : isRented ? "#F5F5F5" : "#E5E7EB",
+                          background:  isSelected ? "#FFF8EE" : isRented ? "#FAFAFA" : "white",
+                          cursor: isRented ? "default" : "pointer",
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="font-bold text-sm" style={{ color: "#1A1A1A" }}>Chambre {room.number}</p>
+                          {room.status === "available" && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#E8F5E9", color: "#2E7D32" }}>● Disponible</span>}
+                          {isSoon && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#FFF3E0", color: "#E65100" }}>⏰ Bientôt dispo</span>}
+                          {isRented && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#FFEBEE", color: "#C62828" }}>● Loué</span>}
+                        </div>
+                        {room.price != null && (
+                          <p className="text-xl font-extrabold" style={{ color: isRented ? "#9CA3AF" : YELLOW }}>
+                            {Number(room.price).toLocaleString("fr-CA")} CA$
+                            <span className="text-xs font-normal text-gray-400">/mois</span>
+                          </p>
+                        )}
+                        {isSoon && room.availableFrom && (
+                          <p className="text-xs text-orange-500 mt-1">
+                            Disponible le {new Date(room.availableFrom + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}
+                          </p>
+                        )}
+                        {isRented && <p className="text-xs text-gray-400 mt-1">Cette chambre est occupée</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
 
             {/* Informations détaillées */}
             <section className="mb-8">
@@ -913,25 +977,91 @@ export default function PropertyDetailPage() {
             <div className="rounded-2xl border border-gray-200 shadow-lg bg-white p-6">
               {/* Price */}
               <div className="mb-1">
-                <span className="text-3xl font-extrabold" style={{ color: "#1A1A1A" }}>{price} CA$</span>
-                <span className="text-gray-400 text-sm">/mois</span>
+                {isCoLivingType && typeof selectedRoomOption === "number" ? (
+                  <>
+                    <span className="text-3xl font-extrabold" style={{ color: "#1A1A1A" }}>
+                      {Number(
+                        (property.rooms as Array<{ number: number; price: number | null; status: string }>)
+                          ?.find(r => r.number === selectedRoomOption)?.price ?? price
+                      ).toLocaleString("fr-CA")} CA$
+                    </span>
+                    <span className="text-gray-400 text-sm">/mois · Chambre {selectedRoomOption}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-3xl font-extrabold" style={{ color: "#1A1A1A" }}>{Number(price).toLocaleString("fr-CA")} CA$</span>
+                    <span className="text-gray-400 text-sm">/mois</span>
+                  </>
+                )}
               </div>
 
               {/* Status */}
-              <div className="flex items-center gap-1.5 mb-5">
+              <div className="flex items-center gap-1.5 mb-4">
                 <span className={`text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1 ${isAvailable ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
                   <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: isAvailable ? "#22C55E" : "#EF4444" }} />
                   {isAvailable ? "Disponible" : "Loué"}
                 </span>
               </div>
 
+              {/* Co-living: room selection in sidebar */}
+              {isCoLivingType && (property.rooms?.length ?? 0) > 0 && (
+                <div className="mb-4 space-y-1.5">
+                  <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">Sélectionner</p>
+                  <button onClick={() => setSelectedRoomOption("all")}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all"
+                    style={{ background: selectedRoomOption === "all" ? "#FFF8EE" : "#F9FAFB", border: selectedRoomOption === "all" ? `1.5px solid ${YELLOW}` : "1.5px solid #E5E7EB" }}>
+                    <div className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                      style={{ border: selectedRoomOption === "all" ? `2px solid ${YELLOW}` : "2px solid #CCC", background: selectedRoomOption === "all" ? YELLOW : "transparent", boxShadow: selectedRoomOption === "all" ? "inset 0 0 0 2px white" : "none" }} />
+                    <span className="text-sm font-semibold text-gray-800">🏠 Tout le logement</span>
+                  </button>
+                  {(property.rooms as Array<{ number: number; price: number | null; status: string; availableFrom?: string }>).map(room => {
+                    const isRented = room.status === "rented";
+                    const isSoon = room.status === "soon";
+                    const isSelected = selectedRoomOption === room.number;
+                    return (
+                      <button key={room.number} onClick={() => !isRented && setSelectedRoomOption(room.number)} disabled={isRented}
+                        className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all"
+                        style={{ background: isSelected ? "#FFF8EE" : "#F9FAFB", border: isSelected ? `1.5px solid ${YELLOW}` : "1.5px solid #E5E7EB", opacity: isRented ? 0.5 : 1, cursor: isRented ? "not-allowed" : "pointer" }}>
+                        <div className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                          style={{ border: isSelected ? `2px solid ${YELLOW}` : "2px solid #CCC", background: isSelected ? YELLOW : "transparent", boxShadow: isSelected ? "inset 0 0 0 2px white" : "none" }} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-semibold text-gray-800">Chambre {room.number}</span>
+                            {room.status === "available" && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#E8F5E9", color: "#2E7D32" }}>Dispo</span>}
+                            {isSoon && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#FFF3E0", color: "#E65100" }}>Bientôt</span>}
+                            {isRented && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "#FFEBEE", color: "#C62828" }}>Loué</span>}
+                          </div>
+                          {room.price != null && <p className="text-[11px] text-gray-500">{Number(room.price).toLocaleString("fr-CA")} CA$/mois</p>}
+                          {isSoon && room.availableFrom && <p className="text-[10px] text-orange-500">Dispo le {new Date(room.availableFrom + "T00:00:00").toLocaleDateString("fr-CA")}</p>}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {/* CTA — adapté au type de bien */}
               {isAvailable ? (
-                <Link href={`/properties/${id}/application`}>
-                  <button className="w-full py-4 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
-                    Je dépose ma candidature
-                  </button>
-                </Link>
+                isCoLivingType ? (
+                  <Link href={selectedRoomOption !== null ? `/properties/${id}/application?room=${selectedRoomOption}` : `/properties/${id}/application`}>
+                    <button
+                      className="w-full py-4 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85"
+                      style={{ background: selectedRoomOption !== null ? YELLOW : "#E5E7EB", color: selectedRoomOption !== null ? "#1A1A1A" : "#9CA3AF" }}
+                    >
+                      {selectedRoomOption === null
+                        ? "↑ Sélectionnez une option"
+                        : selectedRoomOption === "all"
+                          ? "Postuler — Tout le logement"
+                          : `Postuler — Chambre ${selectedRoomOption}`}
+                    </button>
+                  </Link>
+                ) : (
+                  <Link href={`/properties/${id}/application`}>
+                    <button className="w-full py-4 rounded-xl font-semibold text-sm mb-3 transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                      Je dépose ma candidature
+                    </button>
+                  </Link>
+                )
               ) : (
                 <button disabled className="w-full py-4 rounded-xl font-semibold text-sm mb-3 opacity-50 cursor-not-allowed bg-gray-200 text-gray-500">
                   Bien indisponible

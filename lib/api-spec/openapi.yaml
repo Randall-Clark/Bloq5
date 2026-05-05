@@ -664,6 +664,23 @@ components:
         createdAt:
           type: string
           format: date-time
+        rooms:
+          type: array
+          items:
+            type: object
+            properties:
+              number:
+                type: integer
+              price:
+                type: ["number", "null"]
+              status:
+                type: string
+                enum: [available, rented, soon]
+              availableFrom:
+                type: ["string", "null"]
+            required:
+              - number
+              - status
       required:
         - id
         - title

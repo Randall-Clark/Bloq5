@@ -1,4 +1,4 @@
-import { useRoute, useLocation } from "wouter";
+import { useRoute, useLocation, useSearch } from "wouter";
 import { useGetProperty } from "@workspace/api-client-react";
 import { useState, useEffect, useRef } from "react";
 import { CheckCircle, ChevronDown, ArrowLeft } from "lucide-react";
@@ -7,10 +7,12 @@ const YELLOW = "#F5A623";
 const LAVENDER_BG = "linear-gradient(180deg, #EAE8F5 0%, #F5F5FA 50%, #FFFFFF 100%)";
 const ACCENT = "#E05A2B";
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 /* ─── FormData ─────────────────────────────────────────────── */
 interface FormData {
+  /* Co-living */
+  selectedRoom: "all" | number | null;
   /* Residential */
   occupantType: string;
   firstName: string;
@@ -41,6 +43,7 @@ interface FormData {
 }
 
 const EMPTY_FORM: FormData = {
+  selectedRoom: null,
   occupantType: "", firstName: "", lastName: "", email: "", phone: "",
   source: "", startDate: "", duration: "", birthDate: "", citizenship: "",
   birthPlace: "", personalStatus: "", monthlyIncome: "", description: "",
@@ -524,9 +527,71 @@ function ComScreen5({ form, onChange, onNext }: {
   );
 }
 
+/* ─── Co-living Room Selection Screen ───────────────────────── */
+type CoLivingRoomEntry = { number: number; price: number | null; status: string; availableFrom?: string | null };
+
+function CoLivingRoomScreen({ rooms, selectedRoom, onSelect, onNext, addr }: {
+  rooms: CoLivingRoomEntry[];
+  selectedRoom: "all" | number | null;
+  onSelect: (r: "all" | number) => void;
+  onNext: () => void;
+  addr: string;
+}) {
+  return (
+    <div className="min-h-screen flex flex-col items-center pt-20 pb-32 px-4" style={{ background: LAVENDER_BG }}>
+      <StepTitle>Que souhaitez-vous louer ?</StepTitle>
+      {addr && (
+        <p className="text-sm text-center text-gray-500 mb-8 max-w-sm">
+          Sélectionnez une option pour le{" "}
+          <span className="font-semibold" style={{ color: YELLOW }}>{addr}</span>
+        </p>
+      )}
+      <div className="w-full max-w-[520px] space-y-3">
+        {/* Tout le logement */}
+        <button onClick={() => onSelect("all")}
+          className="w-full flex items-center gap-4 p-5 rounded-[14px] bg-white text-left transition-all"
+          style={{ border: selectedRoom === "all" ? `2px solid ${YELLOW}` : "1.5px solid #E8E8E8", boxShadow: selectedRoom === "all" ? `0 0 0 3px rgba(245,166,35,0.15)` : "none" }}>
+          <div className="w-5 h-5 rounded-full flex-shrink-0"
+            style={{ border: selectedRoom === "all" ? `2px solid ${YELLOW}` : "2px solid #CCC", background: selectedRoom === "all" ? YELLOW : "transparent", boxShadow: selectedRoom === "all" ? `inset 0 0 0 3px white` : "none" }} />
+          <div className="flex-1">
+            <p className="text-[15px] font-semibold text-[#1A1A1A]">🏠 Tout le logement</p>
+            <p className="text-xs text-gray-500 mt-0.5">Postuler pour l'ensemble du bien</p>
+          </div>
+        </button>
+        {/* Chambres individuelles */}
+        {rooms.map(room => {
+          const isRented = room.status === "rented";
+          const isSoon = room.status === "soon";
+          const isSelected = selectedRoom === room.number;
+          return (
+            <button key={room.number}
+              onClick={() => !isRented && onSelect(room.number)}
+              disabled={isRented}
+              className="w-full flex items-center gap-4 p-5 rounded-[14px] bg-white text-left transition-all"
+              style={{ border: isSelected ? `2px solid ${YELLOW}` : "1.5px solid #E8E8E8", boxShadow: isSelected ? `0 0 0 3px rgba(245,166,35,0.15)` : "none", opacity: isRented ? 0.5 : 1, cursor: isRented ? "not-allowed" : "pointer" }}>
+              <div className="w-5 h-5 rounded-full flex-shrink-0"
+                style={{ border: isSelected ? `2px solid ${YELLOW}` : "2px solid #CCC", background: isSelected ? YELLOW : "transparent", boxShadow: isSelected ? `inset 0 0 0 3px white` : "none" }} />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-[15px] font-semibold text-[#1A1A1A]">🚪 Chambre {room.number}</p>
+                  {room.status === "available" && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#E8F5E9", color: "#2E7D32" }}>Disponible</span>}
+                  {isSoon && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#FFF3E0", color: "#E65100" }}>⏰ Bientôt dispo{room.availableFrom ? ` · ${new Date(room.availableFrom + "T00:00:00").toLocaleDateString("fr-CA")}` : ""}</span>}
+                  {isRented && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "#FFEBEE", color: "#C62828" }}>Loué</span>}
+                </div>
+                {room.price != null && <p className="text-xs text-gray-500 mt-0.5">{Number(room.price).toLocaleString("fr-CA")} CA$/mois</p>}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      <NextButton onClick={onNext} disabled={selectedRoom === null} />
+    </div>
+  );
+}
+
 /* ─── Screen 6 — Confirmation ───────────────────────────────── */
-function Screen6({ form, propertyAddr, propertyId, isCommercial }: {
-  form: FormData; propertyAddr: string; propertyId: number; isCommercial: boolean;
+function Screen6({ form, propertyAddr, propertyId, isCommercial, selectedRoom }: {
+  form: FormData; propertyAddr: string; propertyId: number; isCommercial: boolean; selectedRoom?: "all" | number | null;
 }) {
   const [checked, setChecked] = useState(false);
   const [, navigate] = useLocation();
@@ -594,6 +659,7 @@ export default function PropertyApplicationPage() {
   const [, params] = useRoute("/properties/:id/application");
   const id = params?.id ? parseInt(params.id) : 0;
   const [, navigate] = useLocation();
+  const search = useSearch();
 
   const [step, setStep] = useState<Step>(0);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
@@ -605,7 +671,18 @@ export default function PropertyApplicationPage() {
 
   const propType = property?.type ?? "";
   const isCommercial = propType === "office" || propType === "commercial" || propType === "industrial";
+  const isCoLiving = propType === "co-living";
   const addr = property ? (property.address || property.title) : "";
+  const rooms = (property?.rooms ?? []) as CoLivingRoomEntry[];
+
+  /* Pre-fill room from URL query param ?room=all|N */
+  useEffect(() => {
+    const roomParam = new URLSearchParams(search).get("room");
+    if (roomParam) {
+      const val = roomParam === "all" ? "all" : parseInt(roomParam);
+      setForm(prev => ({ ...prev, selectedRoom: isNaN(val as number) ? "all" : val }));
+    }
+  }, [search]);
 
   function setField(k: keyof FormData, v: string) {
     setForm(prev => ({ ...prev, [k]: v }));
@@ -624,6 +701,8 @@ export default function PropertyApplicationPage() {
     }
   }
 
+  const confirmStep: Step = isCoLiving ? 7 : 6;
+
   function handleBack() {
     if (step === 0) navigate(`/properties/${id}`);
     else goTo((step - 1) as Step);
@@ -634,7 +713,7 @@ export default function PropertyApplicationPage() {
       <ProgressBar step={step} />
 
       {/* Back arrow — all steps except confirmation */}
-      {step !== 6 && (
+      {step !== confirmStep && (
         <button onClick={handleBack} aria-label="Retour"
           className="fixed top-4 left-4 z-[200] w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center transition-all hover:shadow-lg hover:scale-105 active:scale-95"
           style={{ border: "1px solid #E8E8E8" }}>
@@ -649,9 +728,26 @@ export default function PropertyApplicationPage() {
         </div>
       )}
 
-      {/* Screens 1–6 with fade */}
+      {/* Screens 1–N with fade */}
       <div ref={containerRef} style={{ transition: "opacity 0.2s ease", opacity: step === 0 ? 0 : 1 }}>
-        {isCommercial ? (
+        {isCoLiving ? (
+          <>
+            {step === 1 && (
+              <CoLivingRoomScreen
+                rooms={rooms}
+                selectedRoom={form.selectedRoom}
+                onSelect={r => setForm(prev => ({ ...prev, selectedRoom: r }))}
+                onNext={() => goTo(2)}
+                addr={addr}
+              />
+            )}
+            {step === 2 && <ResScreen1 value={form.occupantType} onChange={v => setField("occupantType", v)} onNext={() => goTo(3)} addr={addr} />}
+            {step === 3 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(4)} />}
+            {step === 4 && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(5)} />}
+            {step === 5 && <ResScreen4 form={form} onChange={setField} onNext={() => goTo(6)} />}
+            {step === 6 && <ResScreen5 form={form} onChange={setField} onNext={() => goTo(7)} />}
+          </>
+        ) : isCommercial ? (
           <>
             {step === 1 && <ComScreen1 value={form.companyType} onChange={v => setField("companyType", v)} onNext={() => goTo(2)} addr={addr} />}
             {step === 2 && <ComScreen2 form={form} onChange={setField} onNext={() => goTo(3)} />}
@@ -668,7 +764,7 @@ export default function PropertyApplicationPage() {
             {step === 5 && <ResScreen5 form={form} onChange={setField} onNext={() => goTo(6)} />}
           </>
         )}
-        {step === 6 && <Screen6 form={form} propertyAddr={addr} propertyId={id} isCommercial={isCommercial} />}
+        {step === confirmStep && <Screen6 form={form} propertyAddr={addr} propertyId={id} isCommercial={isCommercial} selectedRoom={form.selectedRoom} />}
       </div>
     </>
   );
