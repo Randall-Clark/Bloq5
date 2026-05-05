@@ -433,7 +433,9 @@ export const ListFavoritesResponse = zod.array(ListFavoritesResponseItem);
 /**
  * @summary Add property to favorites
  */
-export const AddFavoriteBody = zod.unknown();
+export const AddFavoriteBody = zod.object({
+  propertyId: zod.number(),
+});
 
 /**
  * @summary Remove property from favorites
@@ -639,6 +641,14 @@ export const GetProfileResponse = zod.object({
   phone: zod.string().nullish(),
   role: zod.enum(["tenant", "owner", "manager"]),
   avatarUrl: zod.string().nullish(),
+  companyName: zod.string().nullish(),
+  companyType: zod.string().nullish(),
+  companyNumber: zod.string().nullish(),
+  companyAddress: zod.string().nullish(),
+  companyWebsite: zod.string().nullish(),
+  companyDescription: zod.string().nullish(),
+  companySize: zod.string().nullish(),
+  totalProperties: zod.number().optional(),
   createdAt: zod.coerce.date(),
 });
 
@@ -648,8 +658,16 @@ export const GetProfileResponse = zod.object({
 export const UpdateProfileBody = zod.object({
   firstName: zod.string().optional(),
   lastName: zod.string().optional(),
+  email: zod.string().optional(),
   phone: zod.string().nullish(),
   role: zod.enum(["tenant", "owner", "manager"]).optional(),
+  companyName: zod.string().nullish(),
+  companyType: zod.string().nullish(),
+  companyNumber: zod.string().nullish(),
+  companyAddress: zod.string().nullish(),
+  companyWebsite: zod.string().nullish(),
+  companyDescription: zod.string().nullish(),
+  companySize: zod.string().nullish(),
 });
 
 export const UpdateProfileResponse = zod.object({
@@ -661,5 +679,13 @@ export const UpdateProfileResponse = zod.object({
   phone: zod.string().nullish(),
   role: zod.enum(["tenant", "owner", "manager"]),
   avatarUrl: zod.string().nullish(),
+  companyName: zod.string().nullish(),
+  companyType: zod.string().nullish(),
+  companyNumber: zod.string().nullish(),
+  companyAddress: zod.string().nullish(),
+  companyWebsite: zod.string().nullish(),
+  companyDescription: zod.string().nullish(),
+  companySize: zod.string().nullish(),
+  totalProperties: zod.number().optional(),
   createdAt: zod.coerce.date(),
 });

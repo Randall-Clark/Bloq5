@@ -23,6 +23,13 @@ export const profilesTable = pgTable("profiles", {
   phone: text("phone"),
   role: userRoleEnum("role").notNull().default("tenant"),
   avatarUrl: text("avatar_url"),
+  companyName: text("company_name"),
+  companyType: text("company_type"),
+  companyNumber: text("company_number"),
+  companyAddress: text("company_address"),
+  companyWebsite: text("company_website"),
+  companyDescription: text("company_description"),
+  companySize: text("company_size"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

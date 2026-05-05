@@ -604,6 +604,13 @@ components:
           type: string
       required: [error]
 
+    AddFavoriteBody:
+      type: object
+      properties:
+        propertyId:
+          type: integer
+      required: [propertyId]
+
     SuccessResponse:
       type: object
       properties:
@@ -1150,6 +1157,22 @@ components:
           enum: [tenant, owner, manager]
         avatarUrl:
           type: ["string", "null"]
+        companyName:
+          type: ["string", "null"]
+        companyType:
+          type: ["string", "null"]
+        companyNumber:
+          type: ["string", "null"]
+        companyAddress:
+          type: ["string", "null"]
+        companyWebsite:
+          type: ["string", "null"]
+        companyDescription:
+          type: ["string", "null"]
+        companySize:
+          type: ["string", "null"]
+        totalProperties:
+          type: integer
         createdAt:
           type: string
           format: date-time
@@ -1169,8 +1192,24 @@ components:
           type: string
         lastName:
           type: string
+        email:
+          type: string
         phone:
           type: ["string", "null"]
         role:
           type: string
           enum: [tenant, owner, manager]
+        companyName:
+          type: ["string", "null"]
+        companyType:
+          type: ["string", "null"]
+        companyNumber:
+          type: ["string", "null"]
+        companyAddress:
+          type: ["string", "null"]
+        companyWebsite:
+          type: ["string", "null"]
+        companyDescription:
+          type: ["string", "null"]
+        companySize:
+          type: ["string", "null"]

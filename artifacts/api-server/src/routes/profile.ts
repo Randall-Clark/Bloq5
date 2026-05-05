@@ -2,7 +2,8 @@ import { Router } from "express";
 import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
 import { profilesTable } from "@workspace/db/schema";
-import { eq } from "drizzle-orm";
+import { propertiesTable } from "@workspace/db/schema";
+import { eq, count } from "drizzle-orm";
 import type { Request, Response } from "express";
 
 const router = Router();
@@ -22,7 +23,12 @@ router.get("/api/profile", requireAuth(), async (req: Request, res: Response): P
       }).returning();
     }
 
-    res.json(profile);
+    const [{ value: totalProperties }] = await db
+      .select({ value: count() })
+      .from(propertiesTable)
+      .where(eq(propertiesTable.ownerId, userId));
+
+    res.json({ ...profile, totalProperties });
   } catch (error) {
     req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
@@ -33,7 +39,11 @@ router.put("/api/profile", requireAuth(), async (req: Request, res: Response): P
   try {
     const { id: userId, email: authEmail } = getAuthUser(req);
 
-    const allowed = ["firstName", "lastName", "phone", "role", "avatarUrl", "email"];
+    const allowed = [
+      "firstName", "lastName", "phone", "role", "avatarUrl", "email",
+      "companyName", "companyType", "companyNumber", "companyAddress",
+      "companyWebsite", "companyDescription", "companySize",
+    ];
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     for (const key of allowed) {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
@@ -54,7 +64,12 @@ router.put("/api/profile", requireAuth(), async (req: Request, res: Response): P
       [profile] = await db.update(profilesTable).set(updates).where(eq(profilesTable.userId, userId)).returning();
     }
 
-    res.json(profile);
+    const [{ value: totalProperties }] = await db
+      .select({ value: count() })
+      .from(propertiesTable)
+      .where(eq(propertiesTable.ownerId, userId));
+
+    res.json({ ...profile, totalProperties });
   } catch (error) {
     req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });

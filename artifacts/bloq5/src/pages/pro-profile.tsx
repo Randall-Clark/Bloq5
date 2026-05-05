@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Mail, Phone, Shield, Building2, Pencil,
   CheckCircle2, X, AlertCircle, Loader2,
+  Briefcase, Globe, MapPin, Users, Hash, FileText, Plus,
 } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
 
@@ -16,13 +17,7 @@ const YELLOW = "#F5A623";
 const DARK   = "#1A1A1A";
 
 /* ─── 6-digit code input ─── */
-function CodeInput({
-  digits,
-  setDigits,
-}: {
-  digits: string[];
-  setDigits: (d: string[]) => void;
-}) {
+function CodeInput({ digits, setDigits }: { digits: string[]; setDigits: (d: string[]) => void }) {
   const refs = useRef<(HTMLInputElement | null)[]>([]);
   function handleChange(i: number, val: string) {
     const d = val.replace(/\D/g, "").slice(-1);
@@ -37,13 +32,8 @@ function CodeInput({
   return (
     <div className="flex gap-2 justify-center my-3">
       {digits.map((d, i) => (
-        <input
-          key={i}
-          ref={el => { refs.current[i] = el; }}
-          type="text"
-          inputMode="numeric"
-          maxLength={1}
-          value={d}
+        <input key={i} ref={el => { refs.current[i] = el; }} type="text" inputMode="numeric"
+          maxLength={1} value={d}
           onChange={e => handleChange(i, e.target.value)}
           onKeyDown={e => handleKeyDown(i, e)}
           className="w-11 text-center text-xl font-bold border-2 rounded-xl outline-none transition-colors focus:border-[#F5A623]"
@@ -54,270 +44,7 @@ function CodeInput({
   );
 }
 
-
-/* ═══════════════════════════════════════════════
-   Email edit modal
-   Flow: verify old email → enter new email → save
-═══════════════════════════════════════════════ */
-function EmailEditModal({
-  currentEmail,
-  onClose,
-  onSaved,
-}: {
-  currentEmail: string;
-  onClose: () => void;
-  onSaved: (newEmail: string) => void;
-}) {
-  const [step,    setStep]   = useState<"verify_old" | "new_email">("verify_old");
-  const [sending, setSending] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
-  const [digits,  setDigits] = useState(Array(6).fill(""));
-  const [newEmail,  setNewEmail]  = useState("");
-  const [error,   setError]  = useState("");
-  const updateProfile = useUpdateProfile();
-
-  function sendOldCode() {
-    setSending(true);
-    /* Simulated — replace with real email provider in production */
-    setTimeout(() => { setSending(false); setCodeSent(true); }, 800);
-  }
-
-  function verifyOld() {
-    if (digits.join("").length < 6) { setError("Entrez les 6 chiffres reçus."); return; }
-    setError("");
-    setStep("new_email");
-    setDigits(Array(6).fill(""));
-  }
-
-  function save() {
-    if (!newEmail.trim() || !newEmail.includes("@")) { setError("Adresse e-mail invalide."); return; }
-    setError("");
-    updateProfile.mutate(
-      { data: { email: newEmail.trim() } },
-      { onSuccess: () => onSaved(newEmail.trim()), onError: () => setError("Erreur lors de la mise à jour.") }
-    );
-  }
-
-  return (
-    <Overlay onClose={onClose}>
-      <ModalHeader icon={Mail} title="Modifier l'adresse e-mail" onClose={onClose} />
-      <div className="px-6 pb-6 space-y-4">
-        {step === "verify_old" ? (
-          <>
-            <p className="text-sm text-gray-500">
-              Pour confirmer votre identité, envoyez un code de vérification à votre adresse actuelle&nbsp;:
-              <strong className="text-gray-800 ml-1">{currentEmail}</strong>
-            </p>
-            {!codeSent ? (
-              <button
-                onClick={sendOldCode}
-                disabled={sending}
-                className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-60"
-                style={{ background: YELLOW, color: DARK }}
-              >
-                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                {sending ? "Envoi…" : "Envoyer le code de vérification"}
-              </button>
-            ) : (
-              <>
-                <p className="text-xs text-gray-400 text-center">Code envoyé à <strong className="text-gray-700">{currentEmail}</strong></p>
-                <CodeInput digits={digits} setDigits={setDigits} />
-                {error && <p className="text-xs text-red-500 text-center font-medium">{error}</p>}
-                <button
-                  onClick={verifyOld}
-                  className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
-                  style={{ background: DARK, color: "#fff" }}
-                >
-                  <CheckCircle2 className="w-4 h-4" /> Confirmer
-                </button>
-              </>
-            )}
-          </>
-        ) : (
-          <>
-            <p className="text-sm text-gray-500">Identité vérifiée. Saisissez votre nouvelle adresse e-mail.</p>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Nouvelle adresse e-mail</label>
-              <input
-                type="email"
-                value={newEmail}
-                onChange={e => { setNewEmail(e.target.value); setError(""); }}
-                placeholder="nouvelle@adresse.com"
-                className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-12 px-4 text-sm transition-colors"
-              />
-            </div>
-            {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
-            <button
-              onClick={save}
-              disabled={updateProfile.isPending}
-              className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-60"
-              style={{ background: YELLOW, color: DARK }}
-            >
-              {updateProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              {updateProfile.isPending ? "Enregistrement…" : "Enregistrer le nouvel e-mail"}
-            </button>
-          </>
-        )}
-      </div>
-    </Overlay>
-  );
-}
-
-/* ═══════════════════════════════════════════════
-   Phone edit modal
-   Flow (existing phone): verify old phone → enter new phone → verify new → save
-   Flow (no phone): directly enter new phone → verify → save
-═══════════════════════════════════════════════ */
-function PhoneEditModal({
-  currentPhone,
-  onClose,
-  onSaved,
-}: {
-  currentPhone: string | null;
-  onClose: () => void;
-  onSaved: (newPhone: string) => void;
-}) {
-  type Step = "verify_old" | "new_phone" | "verify_new";
-  const [step,      setStep]     = useState<Step>(currentPhone ? "verify_old" : "new_phone");
-  const [sending,   setSending]  = useState(false);
-  const [codeSent,  setCodeSent] = useState(false);
-  const [digits,    setDigits]   = useState(Array(6).fill(""));
-  const [newPhone,  setNewPhone] = useState("");
-  const [newDial,   setNewDial]  = useState("+1");
-  const [newDigits, setNewDigits] = useState(Array(6).fill(""));
-  const [error,     setError]    = useState("");
-  const updateProfile = useUpdateProfile();
-
-  function sendOldCode() {
-    setSending(true);
-    /* Simulated — replace with real SMS provider in production */
-    setTimeout(() => { setSending(false); setCodeSent(true); }, 800);
-  }
-
-  function verifyOld() {
-    if (digits.join("").length < 6) { setError("Entrez les 6 chiffres reçus."); return; }
-    setError("");
-    setStep("new_phone");
-    setDigits(Array(6).fill(""));
-  }
-
-  function sendNewCode() {
-    const nums = newPhone.replace(/\D/g, "");
-    if (nums.length < 4) { setError("Numéro trop court — vérifiez le numéro saisi."); return; }
-    setError("");
-    setSending(true);
-    /* Simulated — replace with real SMS provider in production */
-    setTimeout(() => { setSending(false); setStep("verify_new"); }, 800);
-  }
-
-  function verifyNew() {
-    if (newDigits.join("").length < 6) { setError("Entrez les 6 chiffres reçus."); return; }
-    setError("");
-    const fmt = `${newDial} ${newPhone}`;
-    updateProfile.mutate(
-      { data: { phone: fmt } },
-      { onSuccess: () => onSaved(fmt), onError: () => setError("Erreur lors de la mise à jour.") }
-    );
-  }
-
-  return (
-    <Overlay onClose={onClose}>
-      <ModalHeader icon={Phone} title="Modifier le numéro de téléphone" onClose={onClose} />
-      <div className="px-6 pb-6 space-y-4">
-
-        {/* Step: verify old phone */}
-        {step === "verify_old" && (
-          <>
-            <p className="text-sm text-gray-500">
-              Pour confirmer votre identité, envoyez un code au numéro actuel&nbsp;:
-              <strong className="text-gray-800 ml-1">{currentPhone}</strong>
-            </p>
-            {!codeSent ? (
-              <button
-                onClick={sendOldCode}
-                disabled={sending}
-                className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-60"
-                style={{ background: YELLOW, color: DARK }}
-              >
-                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Phone className="w-4 h-4" />}
-                {sending ? "Envoi…" : "Envoyer le code par SMS"}
-              </button>
-            ) : (
-              <>
-                <p className="text-xs text-gray-400 text-center">Code envoyé au <strong className="text-gray-700">{currentPhone}</strong></p>
-                <CodeInput digits={digits} setDigits={setDigits} />
-                {error && <p className="text-xs text-red-500 text-center font-medium">{error}</p>}
-                <button
-                  onClick={verifyOld}
-                  className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
-                  style={{ background: DARK, color: "#fff" }}
-                >
-                  <CheckCircle2 className="w-4 h-4" /> Confirmer
-                </button>
-              </>
-            )}
-          </>
-        )}
-
-        {/* Step: enter new phone */}
-        {step === "new_phone" && (
-          <>
-            <p className="text-sm text-gray-500">
-              {currentPhone ? "Identité vérifiée. " : ""}Saisissez le nouveau numéro de téléphone.
-            </p>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Nouveau numéro</label>
-              <PhoneInput
-                value={newPhone}
-                dialCode={newDial}
-                onChange={(v, d) => { setNewPhone(v); setNewDial(d); setError(""); }}
-                placeholder="000 000 0000"
-              />
-            </div>
-            {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
-            <button
-              onClick={sendNewCode}
-              disabled={sending}
-              className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-60"
-              style={{ background: YELLOW, color: DARK }}
-            >
-              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Phone className="w-4 h-4" />}
-              {sending ? "Envoi…" : "Recevoir le code de vérification"}
-            </button>
-          </>
-        )}
-
-        {/* Step: verify new phone */}
-        {step === "verify_new" && (
-          <>
-            <p className="text-xs text-gray-400 text-center">
-              Code envoyé au <strong className="text-gray-700">{newDial} {newPhone}</strong>
-            </p>
-            <CodeInput digits={newDigits} setDigits={setNewDigits} />
-            {error && <p className="text-xs text-red-500 text-center font-medium">{error}</p>}
-            <button
-              onClick={verifyNew}
-              disabled={updateProfile.isPending}
-              className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-opacity hover:opacity-90 disabled:opacity-60"
-              style={{ background: YELLOW, color: DARK }}
-            >
-              {updateProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              {updateProfile.isPending ? "Enregistrement…" : "Vérifier et enregistrer"}
-            </button>
-            <button
-              onClick={() => { setStep("new_phone"); setNewDigits(Array(6).fill("")); setError(""); }}
-              className="w-full text-xs text-gray-400 hover:text-gray-600 transition-colors text-center"
-            >
-              Changer de numéro
-            </button>
-          </>
-        )}
-      </div>
-    </Overlay>
-  );
-}
-
-/* ─── Shared overlay wrapper ─── */
+/* ─── Shared overlay ─── */
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -327,16 +54,7 @@ function Overlay({ children, onClose }: { children: React.ReactNode; onClose: ()
     </div>
   );
 }
-
-function ModalHeader({
-  icon: Icon,
-  title,
-  onClose,
-}: {
-  icon: React.ElementType;
-  title: string;
-  onClose: () => void;
-}) {
+function ModalHeader({ icon: Icon, title, onClose }: { icon: React.ElementType; title: string; onClose: () => void }) {
   return (
     <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
       <div className="flex items-center gap-3">
@@ -352,21 +70,311 @@ function ModalHeader({
   );
 }
 
-/* ─── Editable info row ─── */
-function EditableRow({
-  icon: Icon,
-  label,
-  value,
-  required,
-  missing,
-  onEdit,
+/* ═══════════════════════════════════════════════
+   Email edit modal — verify old → enter new → save
+═══════════════════════════════════════════════ */
+function EmailEditModal({ currentEmail, onClose, onSaved }: { currentEmail: string; onClose: () => void; onSaved: (e: string) => void }) {
+  const [step, setStep]        = useState<"verify_old" | "new_email">("verify_old");
+  const [sending, setSending]  = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [digits, setDigits]    = useState(Array(6).fill(""));
+  const [newEmail, setNewEmail] = useState("");
+  const [error, setError]      = useState("");
+  const updateProfile = useUpdateProfile();
+
+  function sendOldCode() {
+    setSending(true);
+    setTimeout(() => { setSending(false); setCodeSent(true); }, 800);
+  }
+  function verifyOld() {
+    if (digits.join("").length < 6) { setError("Entrez les 6 chiffres reçus."); return; }
+    setError(""); setStep("new_email"); setDigits(Array(6).fill(""));
+  }
+  function save() {
+    if (!newEmail.trim() || !newEmail.includes("@")) { setError("Adresse e-mail invalide."); return; }
+    setError("");
+    updateProfile.mutate({ data: { email: newEmail.trim() } }, { onSuccess: () => onSaved(newEmail.trim()), onError: () => setError("Erreur lors de la mise à jour.") });
+  }
+  return (
+    <Overlay onClose={onClose}>
+      <ModalHeader icon={Mail} title="Modifier l'adresse e-mail" onClose={onClose} />
+      <div className="px-6 pb-6 space-y-4">
+        {step === "verify_old" ? (
+          <>
+            <p className="text-sm text-gray-500">Pour confirmer votre identité, envoyez un code de vérification à <strong className="text-gray-800">{currentEmail}</strong></p>
+            {!codeSent ? (
+              <button onClick={sendOldCode} disabled={sending} className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60" style={{ background: YELLOW, color: DARK }}>
+                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                {sending ? "Envoi…" : "Envoyer le code de vérification"}
+              </button>
+            ) : (
+              <>
+                <p className="text-xs text-gray-400 text-center">Code envoyé à <strong className="text-gray-700">{currentEmail}</strong></p>
+                <CodeInput digits={digits} setDigits={setDigits} />
+                {error && <p className="text-xs text-red-500 text-center font-medium">{error}</p>}
+                <button onClick={verifyOld} className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90" style={{ background: DARK, color: "#fff" }}>
+                  <CheckCircle2 className="w-4 h-4" /> Confirmer
+                </button>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-gray-500">Identité vérifiée. Saisissez votre nouvelle adresse e-mail.</p>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Nouvelle adresse e-mail</label>
+              <input type="email" value={newEmail} onChange={e => { setNewEmail(e.target.value); setError(""); }} placeholder="nouvelle@adresse.com"
+                className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-12 px-4 text-sm transition-colors" />
+            </div>
+            {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+            <button onClick={save} disabled={updateProfile.isPending} className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60" style={{ background: YELLOW, color: DARK }}>
+              {updateProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              {updateProfile.isPending ? "Enregistrement…" : "Enregistrer le nouvel e-mail"}
+            </button>
+          </>
+        )}
+      </div>
+    </Overlay>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   Phone edit modal — verify old → new phone → verify new → save
+═══════════════════════════════════════════════ */
+function PhoneEditModal({ currentPhone, onClose, onSaved }: { currentPhone: string | null; onClose: () => void; onSaved: (p: string) => void }) {
+  type Step = "verify_old" | "new_phone" | "verify_new";
+  const [step, setStep]        = useState<Step>(currentPhone ? "verify_old" : "new_phone");
+  const [sending, setSending]  = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [digits, setDigits]    = useState(Array(6).fill(""));
+  const [newPhone, setNewPhone] = useState("");
+  const [newDial, setNewDial]  = useState("+1");
+  const [newDigits, setNewDigits] = useState(Array(6).fill(""));
+  const [error, setError]      = useState("");
+  const updateProfile = useUpdateProfile();
+
+  function sendOldCode() { setSending(true); setTimeout(() => { setSending(false); setCodeSent(true); }, 800); }
+  function verifyOld() {
+    if (digits.join("").length < 6) { setError("Entrez les 6 chiffres reçus."); return; }
+    setError(""); setStep("new_phone"); setDigits(Array(6).fill(""));
+  }
+  function sendNewCode() {
+    if (newPhone.replace(/\D/g, "").length < 4) { setError("Numéro trop court."); return; }
+    setError(""); setSending(true); setTimeout(() => { setSending(false); setStep("verify_new"); }, 800);
+  }
+  function verifyNew() {
+    if (newDigits.join("").length < 6) { setError("Entrez les 6 chiffres reçus."); return; }
+    const fmt = `${newDial} ${newPhone}`;
+    updateProfile.mutate({ data: { phone: fmt } }, { onSuccess: () => onSaved(fmt), onError: () => setError("Erreur lors de la mise à jour.") });
+  }
+
+  return (
+    <Overlay onClose={onClose}>
+      <ModalHeader icon={Phone} title="Modifier le numéro de téléphone" onClose={onClose} />
+      <div className="px-6 pb-6 space-y-4">
+        {step === "verify_old" && (
+          <>
+            <p className="text-sm text-gray-500">Pour confirmer votre identité, envoyez un code au <strong className="text-gray-800">{currentPhone}</strong></p>
+            {!codeSent ? (
+              <button onClick={sendOldCode} disabled={sending} className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60" style={{ background: YELLOW, color: DARK }}>
+                {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Phone className="w-4 h-4" />}
+                {sending ? "Envoi…" : "Envoyer le code par SMS"}
+              </button>
+            ) : (
+              <>
+                <p className="text-xs text-gray-400 text-center">Code envoyé au <strong>{currentPhone}</strong></p>
+                <CodeInput digits={digits} setDigits={setDigits} />
+                {error && <p className="text-xs text-red-500 text-center font-medium">{error}</p>}
+                <button onClick={verifyOld} className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90" style={{ background: DARK, color: "#fff" }}>
+                  <CheckCircle2 className="w-4 h-4" /> Confirmer
+                </button>
+              </>
+            )}
+          </>
+        )}
+        {step === "new_phone" && (
+          <>
+            <p className="text-sm text-gray-500">{currentPhone ? "Identité vérifiée. " : ""}Saisissez le nouveau numéro.</p>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Nouveau numéro</label>
+              <PhoneInput value={newPhone} dialCode={newDial} onChange={(v, d) => { setNewPhone(v); setNewDial(d); setError(""); }} />
+            </div>
+            {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+            <button onClick={sendNewCode} disabled={sending} className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60" style={{ background: YELLOW, color: DARK }}>
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Phone className="w-4 h-4" />}
+              {sending ? "Envoi…" : "Recevoir le code de vérification"}
+            </button>
+          </>
+        )}
+        {step === "verify_new" && (
+          <>
+            <p className="text-xs text-gray-400 text-center">Code envoyé au <strong className="text-gray-700">{newDial} {newPhone}</strong></p>
+            <CodeInput digits={newDigits} setDigits={setNewDigits} />
+            {error && <p className="text-xs text-red-500 text-center font-medium">{error}</p>}
+            <button onClick={verifyNew} disabled={updateProfile.isPending} className="w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60" style={{ background: YELLOW, color: DARK }}>
+              {updateProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+              {updateProfile.isPending ? "Enregistrement…" : "Vérifier et enregistrer"}
+            </button>
+            <button onClick={() => { setStep("new_phone"); setNewDigits(Array(6).fill("")); setError(""); }} className="w-full text-xs text-gray-400 hover:text-gray-600 text-center">
+              Changer de numéro
+            </button>
+          </>
+        )}
+      </div>
+    </Overlay>
+  );
+}
+
+/* ═══════════════════════════════════════════════
+   Company modal — create or edit company info
+═══════════════════════════════════════════════ */
+const COMPANY_TYPES = ["Inc.", "S.A.R.L.", "S.A.S.", "S.A.", "EURL", "E.I.", "Enr.", "Soc. en nom coll.", "Autre"];
+const COMPANY_SIZES = [
+  { value: "1",     label: "Juste moi" },
+  { value: "2-5",   label: "2 – 5 employés" },
+  { value: "6-20",  label: "6 – 20 employés" },
+  { value: "21-50", label: "21 – 50 employés" },
+  { value: "51+",   label: "51 employés et plus" },
+];
+
+interface CompanyForm {
+  companyName: string;
+  companyType: string;
+  companyNumber: string;
+  companyAddress: string;
+  companyWebsite: string;
+  companyDescription: string;
+  companySize: string;
+}
+
+function CompanyModal({
+  initial,
+  onClose,
+  onSaved,
 }: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  required?: boolean;
-  missing?: boolean;
-  onEdit: () => void;
+  initial: Partial<CompanyForm>;
+  onClose: () => void;
+  onSaved: (data: CompanyForm) => void;
+}) {
+  const [form, setForm] = useState<CompanyForm>({
+    companyName:        initial.companyName        ?? "",
+    companyType:        initial.companyType        ?? "",
+    companyNumber:      initial.companyNumber      ?? "",
+    companyAddress:     initial.companyAddress     ?? "",
+    companyWebsite:     initial.companyWebsite     ?? "",
+    companyDescription: initial.companyDescription ?? "",
+    companySize:        initial.companySize        ?? "",
+  });
+  const [error, setError]   = useState("");
+  const updateProfile = useUpdateProfile();
+
+  function set(key: keyof CompanyForm, val: string) {
+    setForm(f => ({ ...f, [key]: val }));
+    setError("");
+  }
+
+  function save() {
+    if (!form.companyName.trim()) { setError("Le nom de l'entreprise est obligatoire."); return; }
+    updateProfile.mutate(
+      { data: form },
+      { onSuccess: () => onSaved(form), onError: () => setError("Erreur lors de l'enregistrement.") }
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg my-4 overflow-hidden">
+        <ModalHeader icon={Briefcase} title={initial.companyName ? "Modifier l'entreprise" : "Configurer mon entreprise"} onClose={onClose} />
+
+        <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
+          {/* Company name */}
+          <Field label="Nom de l'entreprise *" icon={Briefcase}>
+            <input value={form.companyName} onChange={e => set("companyName", e.target.value)}
+              placeholder="Immobilier Dupont"
+              className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 px-4 text-sm transition-colors" />
+          </Field>
+
+          {/* Type + size on same row */}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Type juridique" icon={Hash}>
+              <select value={form.companyType} onChange={e => set("companyType", e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 px-3 text-sm transition-colors appearance-none">
+                <option value="">— Choisir —</option>
+                {COMPANY_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </Field>
+            <Field label="Taille" icon={Users}>
+              <select value={form.companySize} onChange={e => set("companySize", e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 px-3 text-sm transition-colors appearance-none">
+                <option value="">— Choisir —</option>
+                {COMPANY_SIZES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </Field>
+          </div>
+
+          {/* Business number */}
+          <Field label="Numéro d'entreprise / NEQ" icon={Hash}>
+            <input value={form.companyNumber} onChange={e => set("companyNumber", e.target.value)}
+              placeholder="1234567890"
+              className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 px-4 text-sm transition-colors" />
+          </Field>
+
+          {/* Address */}
+          <Field label="Adresse" icon={MapPin}>
+            <input value={form.companyAddress} onChange={e => set("companyAddress", e.target.value)}
+              placeholder="123 rue Principale, Montréal, QC H2X 0A1"
+              className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 px-4 text-sm transition-colors" />
+          </Field>
+
+          {/* Website */}
+          <Field label="Site web" icon={Globe}>
+            <input value={form.companyWebsite} onChange={e => set("companyWebsite", e.target.value)}
+              placeholder="https://monentreprise.ca"
+              className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 px-4 text-sm transition-colors" />
+          </Field>
+
+          {/* Description */}
+          <Field label="Description" icon={FileText}>
+            <textarea value={form.companyDescription} onChange={e => set("companyDescription", e.target.value)}
+              placeholder="Décrivez brièvement votre activité immobilière…"
+              rows={3}
+              className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl px-4 py-3 text-sm transition-colors resize-none" />
+          </Field>
+
+          {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+          <button onClick={onClose} className="flex-1 h-11 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+            Annuler
+          </button>
+          <button onClick={save} disabled={updateProfile.isPending}
+            className="flex-1 h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-60"
+            style={{ background: YELLOW, color: DARK }}>
+            {updateProfile.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            {updateProfile.isPending ? "Enregistrement…" : "Enregistrer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, icon: Icon, children }: { label: string; icon: React.ElementType; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 mb-1.5">
+        <Icon className="w-3.5 h-3.5 text-gray-400" />
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+/* ─── Editable info row ─── */
+function EditableRow({ icon: Icon, label, value, required, missing, onEdit }: {
+  icon: React.ElementType; label: string; value: string; required?: boolean; missing?: boolean; onEdit: () => void;
 }) {
   return (
     <div className="flex items-center gap-3 group">
@@ -380,15 +388,27 @@ function EditableRow({
         </p>
         <p className={`text-sm font-semibold mt-0.5 ${missing ? "text-red-400 italic" : "text-gray-900"}`}>{value}</p>
       </div>
-      <button
-        onClick={onEdit}
+      <button onClick={onEdit}
         className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold opacity-0 group-hover:opacity-100 transition-all hover:bg-gray-100"
-        style={{ color: DARK }}
-        title={`Modifier ${label.toLowerCase()}`}
-      >
-        <Pencil className="w-3.5 h-3.5" />
-        Modifier
+        style={{ color: DARK }}>
+        <Pencil className="w-3.5 h-3.5" /> Modifier
       </button>
+    </div>
+  );
+}
+
+/* ─── Company info row (read-only) ─── */
+function CompanyInfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value?: string | null }) {
+  if (!value) return null;
+  return (
+    <div className="flex items-start gap-3">
+      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100 mt-0.5">
+        <Icon className="h-3.5 w-3.5 text-gray-500" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-gray-400 font-medium">{label}</p>
+        <p className="text-sm font-semibold text-gray-800 mt-0.5 break-words">{value}</p>
+      </div>
     </div>
   );
 }
@@ -396,58 +416,59 @@ function EditableRow({
 /* ═══════════════════════════════════════════════
    Main page
 ═══════════════════════════════════════════════ */
-type Modal = "email" | "phone" | null;
+type Modal = "email" | "phone" | "company" | null;
 
 export default function ProProfilePage() {
   const qc = useQueryClient();
-  const { data: session, refetch: refetchSession } = authClient.useSession();
+  const { data: session } = authClient.useSession();
   const { data: profile, isLoading } = useGetProfile();
 
   const [modal, setModal] = useState<Modal>(null);
-
-  /* Current values (may be updated after save) */
   const [displayEmail, setDisplayEmail] = useState<string | null>(null);
   const [displayPhone, setDisplayPhone] = useState<string | null>(null);
+  const [companyData, setCompanyData]   = useState<Partial<CompanyForm> | null>(null);
 
+  useEffect(() => { if (session?.user?.email) setDisplayEmail(session.user.email); }, [session?.user?.email]);
+  useEffect(() => { if (profile?.phone)       setDisplayPhone(profile.phone); }, [profile?.phone]);
   useEffect(() => {
-    if (session?.user?.email) setDisplayEmail(session.user.email);
-  }, [session?.user?.email]);
+    if (profile) {
+      setCompanyData({
+        companyName:        profile.companyName        ?? undefined,
+        companyType:        profile.companyType        ?? undefined,
+        companyNumber:      profile.companyNumber      ?? undefined,
+        companyAddress:     profile.companyAddress     ?? undefined,
+        companyWebsite:     profile.companyWebsite     ?? undefined,
+        companyDescription: profile.companyDescription ?? undefined,
+        companySize:        profile.companySize        ?? undefined,
+      });
+    }
+  }, [profile]);
 
-  useEffect(() => {
-    if (profile?.phone) setDisplayPhone(profile.phone);
-  }, [profile?.phone]);
+  const user     = session?.user;
+  const email    = displayEmail ?? user?.email ?? "";
+  const phone    = displayPhone ?? profile?.phone ?? null;
+  const hasPhone = !!phone;
 
-  const user       = session?.user;
-  const email      = displayEmail ?? user?.email ?? "";
-  const phone      = displayPhone ?? profile?.phone ?? null;
-  const hasPhone   = !!phone;
+  /* Determine company size label */
+  const sizeLabelMap: Record<string, string> = Object.fromEntries(
+    [{ value: "1", label: "Juste moi" }, { value: "2-5", label: "2 – 5 employés" }, { value: "6-20", label: "6 – 20 employés" }, { value: "21-50", label: "21 – 50 employés" }, { value: "51+", label: "51 employés et plus" }].map(s => [s.value, s.label])
+  );
 
-  function onEmailSaved(newEmail: string) {
-    setDisplayEmail(newEmail);
-    setModal(null);
-    qc.invalidateQueries({ queryKey: getGetProfileQueryKey() });
-  }
+  const hasCompany = !!companyData?.companyName;
 
-  function onPhoneSaved(newPhone: string) {
-    setDisplayPhone(newPhone);
-    setModal(null);
-    qc.invalidateQueries({ queryKey: getGetProfileQueryKey() });
-  }
+  function onEmailSaved(newEmail: string) { setDisplayEmail(newEmail); setModal(null); qc.invalidateQueries({ queryKey: getGetProfileQueryKey() }); }
+  function onPhoneSaved(newPhone: string) { setDisplayPhone(newPhone); setModal(null); qc.invalidateQueries({ queryKey: getGetProfileQueryKey() }); }
+  function onCompanySaved(data: CompanyForm) { setCompanyData(data); setModal(null); qc.invalidateQueries({ queryKey: getGetProfileQueryKey() }); }
 
   return (
     <ProLayout>
-      {modal === "email" && (
-        <EmailEditModal
-          currentEmail={email}
+      {modal === "email"   && <EmailEditModal currentEmail={email} onClose={() => setModal(null)} onSaved={onEmailSaved} />}
+      {modal === "phone"   && <PhoneEditModal currentPhone={phone} onClose={() => setModal(null)} onSaved={onPhoneSaved} />}
+      {modal === "company" && (
+        <CompanyModal
+          initial={companyData ?? {}}
           onClose={() => setModal(null)}
-          onSaved={onEmailSaved}
-        />
-      )}
-      {modal === "phone" && (
-        <PhoneEditModal
-          currentPhone={phone}
-          onClose={() => setModal(null)}
-          onSaved={onPhoneSaved}
+          onSaved={onCompanySaved}
         />
       )}
 
@@ -460,22 +481,18 @@ export default function ProProfilePage() {
 
         {/* Phone missing banner */}
         {!isLoading && !hasPhone && (
-          <div
-            className="flex items-start gap-3 p-4 rounded-xl border cursor-pointer"
+          <div className="flex items-start gap-3 p-4 rounded-xl border cursor-pointer"
             style={{ background: "#FFF5F5", borderColor: "#FECACA" }}
-            onClick={() => setModal("phone")}
-          >
+            onClick={() => setModal("phone")}>
             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-red-700">Numéro de téléphone manquant</p>
-              <p className="text-xs text-red-500 mt-0.5">
-                Un numéro de téléphone est obligatoire pour votre compte Pro. Cliquez ici pour en ajouter un.
-              </p>
+              <p className="text-xs text-red-500 mt-0.5">Un numéro est obligatoire pour votre compte Pro. Cliquez ici pour en ajouter un.</p>
             </div>
           </div>
         )}
 
-        {/* Identity */}
+        {/* ── Identity ── */}
         <Card className="rounded-xl border-gray-200 shadow-sm">
           <CardHeader className="border-b border-gray-100 pb-4">
             <CardTitle className="text-base font-bold" style={{ color: DARK }}>Identité</CardTitle>
@@ -489,12 +506,8 @@ export default function ProProfilePage() {
               </div>
             ) : (
               <>
-                {/* Avatar + name (read-only) */}
                 <div className="flex items-center gap-4 pb-5 border-b border-gray-100">
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black flex-shrink-0"
-                    style={{ background: YELLOW, color: DARK }}
-                  >
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-black flex-shrink-0" style={{ background: YELLOW, color: DARK }}>
                     {user.name?.charAt(0)?.toUpperCase() ?? "?"}
                   </div>
                   <div>
@@ -502,30 +515,10 @@ export default function ProProfilePage() {
                     <p className="text-xs text-gray-400 mt-0.5">Compte Pro · bloq5</p>
                   </div>
                 </div>
-
-                {/* Editable: email */}
-                <EditableRow
-                  icon={Mail}
-                  label="Adresse e-mail"
-                  value={email}
-                  onEdit={() => setModal("email")}
-                />
-
+                <EditableRow icon={Mail}     label="Adresse e-mail" value={email}                              onEdit={() => setModal("email")} />
                 <div className="h-px bg-gray-100" />
-
-                {/* Editable: phone */}
-                <EditableRow
-                  icon={Phone}
-                  label="Téléphone"
-                  value={phone ?? "Aucun numéro enregistré"}
-                  required
-                  missing={!hasPhone}
-                  onEdit={() => setModal("phone")}
-                />
-
+                <EditableRow icon={Phone}    label="Téléphone"      value={phone ?? "Aucun numéro enregistré"} required missing={!hasPhone} onEdit={() => setModal("phone")} />
                 <div className="h-px bg-gray-100" />
-
-                {/* Read-only: properties count */}
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100">
                     <Building2 className="h-4 w-4 text-gray-500" />
@@ -540,7 +533,68 @@ export default function ProProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Pro status */}
+        {/* ── Company ── */}
+        <Card className="rounded-xl border-gray-200 shadow-sm">
+          <CardHeader className="border-b border-gray-100 pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-bold" style={{ color: DARK }}>
+                Mon Entreprise
+              </CardTitle>
+              {hasCompany && (
+                <button onClick={() => setModal("company")}
+                  className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold hover:bg-gray-100 transition-colors"
+                  style={{ color: DARK }}>
+                  <Pencil className="w-3.5 h-3.5" /> Modifier
+                </button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            {isLoading ? (
+              <Skeleton className="h-20 w-full rounded-lg" />
+            ) : hasCompany ? (
+              <div className="space-y-4">
+                {/* Company header */}
+                <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-lg font-black flex-shrink-0" style={{ background: "#FFF8EE", color: YELLOW }}>
+                    {companyData?.companyName?.charAt(0)?.toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900">{companyData?.companyName}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      {companyData?.companyType && <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: "#FFF8EE", color: YELLOW }}>{companyData.companyType}</span>}
+                      {companyData?.companySize && <span className="text-xs text-gray-500">{sizeLabelMap[companyData.companySize] ?? companyData.companySize}</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  <CompanyInfoRow icon={Hash}     label="Numéro d'entreprise"  value={companyData?.companyNumber} />
+                  <CompanyInfoRow icon={MapPin}   label="Adresse"               value={companyData?.companyAddress} />
+                  <CompanyInfoRow icon={Globe}    label="Site web"              value={companyData?.companyWebsite} />
+                  <CompanyInfoRow icon={FileText} label="Description"           value={companyData?.companyDescription} />
+                </div>
+              </div>
+            ) : (
+              /* Empty state */
+              <div className="flex flex-col items-center py-6 text-center">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: "#FFF8EE" }}>
+                  <Briefcase className="w-7 h-7" style={{ color: YELLOW }} />
+                </div>
+                <p className="font-bold text-gray-900 mb-1">Vous avez une entreprise ?</p>
+                <p className="text-sm text-gray-500 max-w-xs mb-5">
+                  Configurez votre profil d'entreprise pour afficher vos informations professionnelles et gérer votre équipe.
+                </p>
+                <button onClick={() => setModal("company")}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+                  style={{ background: YELLOW, color: DARK }}>
+                  <Plus className="w-4 h-4" /> Configurer mon entreprise
+                </button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ── Pro status ── */}
         <Card className="rounded-xl border-gray-200 shadow-sm">
           <CardHeader className="border-b border-gray-100 pb-4">
             <CardTitle className="text-base font-bold" style={{ color: DARK }}>Statut du compte Pro</CardTitle>
@@ -552,9 +606,7 @@ export default function ProProfilePage() {
               </div>
               <div>
                 <p className="font-semibold text-gray-900 text-sm">Compte Pro actif</p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Vous avez accès à toutes les fonctionnalités propriétaire de bloq5.
-                </p>
+                <p className="text-xs text-gray-500 mt-0.5">Vous avez accès à toutes les fonctionnalités propriétaire de bloq5.</p>
               </div>
             </div>
           </CardContent>

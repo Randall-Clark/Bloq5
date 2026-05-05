@@ -13,12 +13,12 @@ export interface ErrorResponse {
   error: string;
 }
 
-export interface SuccessResponse {
-  success: boolean;
-}
-
 export interface AddFavoriteBody {
   propertyId: number;
+}
+
+export interface SuccessResponse {
+  success: boolean;
 }
 
 export type PropertyType = (typeof PropertyType)[keyof typeof PropertyType];
@@ -372,6 +372,21 @@ export interface Profile {
   role: ProfileRole;
   /** @nullable */
   avatarUrl?: string | null;
+  /** @nullable */
+  companyName?: string | null;
+  /** @nullable */
+  companyType?: string | null;
+  /** @nullable */
+  companyNumber?: string | null;
+  /** @nullable */
+  companyAddress?: string | null;
+  /** @nullable */
+  companyWebsite?: string | null;
+  /** @nullable */
+  companyDescription?: string | null;
+  /** @nullable */
+  companySize?: string | null;
+  totalProperties?: number;
   createdAt: string;
 }
 
@@ -387,9 +402,24 @@ export const UpdateProfileBodyRole = {
 export interface UpdateProfileBody {
   firstName?: string;
   lastName?: string;
+  email?: string;
   /** @nullable */
   phone?: string | null;
   role?: UpdateProfileBodyRole;
+  /** @nullable */
+  companyName?: string | null;
+  /** @nullable */
+  companyType?: string | null;
+  /** @nullable */
+  companyNumber?: string | null;
+  /** @nullable */
+  companyAddress?: string | null;
+  /** @nullable */
+  companyWebsite?: string | null;
+  /** @nullable */
+  companyDescription?: string | null;
+  /** @nullable */
+  companySize?: string | null;
 }
 
 export type ListPropertiesParams = {
