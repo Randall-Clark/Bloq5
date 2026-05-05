@@ -4,7 +4,6 @@ import {
   getGetPropertyAvailableDatesQueryKey
 } from "@workspace/api-client-react";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { authClient } from "@/lib/auth-client";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
@@ -17,7 +16,7 @@ import {
   Flame, Wifi, Droplets, Zap, Trash2, Wind,
   AlertCircle, HeartPulse, Key, Camera, Shirt, Layers, Wand2, Tv, Snowflake, Coffee,
   GraduationCap, BookOpen, Train, ShoppingCart, Dumbbell, Store, TreePine,
-  CheckCircle, Info, ArrowLeft, ArrowRight, type LucideProps, Paperclip, Settings
+  CheckCircle, Info, ArrowLeft, ArrowRight, type LucideProps, Paperclip
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -282,18 +281,6 @@ export default function PropertyDetailPage() {
   const { data: availableDates } = useGetPropertyAvailableDates(id, {
     query: { enabled: !!id, queryKey: getGetPropertyAvailableDatesQueryKey(id) }
   });
-  const { data: accessData } = useQuery<{ canManage: boolean; role: "owner" | "manager" | null }>({
-    queryKey: ["propertyAccess", id],
-    queryFn: async () => {
-      const res = await fetch(`/api/properties/${id}/access`, { credentials: "include" });
-      if (!res.ok) return { canManage: false, role: null };
-      return res.json();
-    },
-    enabled: !!id && isSignedIn,
-  });
-  const canManage = accessData?.canManage ?? false;
-  const manageRole = accessData?.role ?? null;
-
   if (isLoading) {
     return (
       <>
@@ -457,22 +444,7 @@ export default function PropertyDetailPage() {
       </div>
 
       {/* Mobile sticky bottom CTA */}
-      {canManage ? (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-gray-200 px-4 py-3 flex items-center gap-3 shadow-lg" style={{ background: "#1A1A1A" }}>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-white leading-tight">Gérer cette annonce</p>
-            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.45)" }}>
-              {manageRole === "owner" ? "Propriétaire" : "Gestionnaire"}
-            </p>
-          </div>
-          <Link href={`/pro/properties/${id}`} className="flex-shrink-0">
-            <button className="py-3 px-5 rounded-xl font-bold text-sm transition-opacity hover:opacity-85 flex items-center gap-2" style={{ background: YELLOW, color: "#1A1A1A" }}>
-              <Settings className="w-4 h-4" />
-              Interface Pro
-            </button>
-          </Link>
-        </div>
-      ) : isAvailable ? (
+      {isAvailable && (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-4 py-3 flex items-center gap-3 shadow-lg">
           <div className="flex-1">
             <span className="text-xl font-extrabold" style={{ color: "#1A1A1A" }}>{price} CA$</span>
@@ -484,7 +456,7 @@ export default function PropertyDetailPage() {
             </button>
           </Link>
         </div>
-      ) : null}
+      )}
 
       {/* Two-column layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-24 lg:pb-20">
@@ -951,22 +923,6 @@ export default function PropertyDetailPage() {
 
           {/* ═══ RIGHT COL sticky — hidden on mobile (bottom bar shows instead) ═══ */}
           <div className="hidden lg:block w-80 shrink-0 sticky top-20">
-            {/* Manage button — owner or manager only */}
-            {canManage && (
-              <Link href={`/pro/properties/${id}`}>
-                <div className="mb-3 flex items-center gap-2.5 px-4 py-3 rounded-2xl border-2 cursor-pointer transition-all hover:opacity-90"
-                  style={{ background: "#1A1A1A", borderColor: "#1A1A1A" }}>
-                  <Settings className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-white leading-tight">Gérer cette annonce</p>
-                    <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>
-                      {manageRole === "owner" ? "Vous êtes propriétaire" : "Vous êtes gestionnaire"}
-                    </p>
-                  </div>
-                  <ChevronRight className="w-4 h-4 flex-shrink-0" style={{ color: "rgba(255,255,255,0.4)" }} />
-                </div>
-              </Link>
-            )}
             <div className="rounded-2xl border border-gray-200 shadow-lg bg-white p-6">
               {/* Price */}
               <div className="mb-1">

@@ -127,35 +127,6 @@ router.put("/api/properties/:id", requireAuth(), async (req: Request, res: Respo
   }
 });
 
-router.get("/api/properties/:id/access", requireAuth(), async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { id: userId, email } = getAuthUser(req);
-    const id = parseInt(String(req.params.id));
-    if (isNaN(id)) { res.status(400).json({ error: "ID invalide" }); return; }
-
-    const [property] = await db.select({ ownerId: propertiesTable.ownerId })
-      .from(propertiesTable).where(eq(propertiesTable.id, id));
-    if (!property) { res.status(404).json({ error: "Propriété non trouvée" }); return; }
-
-    if (property.ownerId === userId) {
-      res.json({ canManage: true, role: "owner" });
-      return;
-    }
-
-    const managers = await db.select().from(managersTable)
-      .where(and(eq(managersTable.managerEmail, email), eq(managersTable.status, "verified")));
-
-    const isManager = managers.some(m =>
-      Array.isArray(m.assignedProperties) && m.assignedProperties.includes(id)
-    );
-
-    res.json({ canManage: isManager, role: isManager ? "manager" : null });
-  } catch (error) {
-    req.log.error(error);
-    res.status(500).json({ error: "Erreur serveur" });
-  }
-});
-
 router.delete("/api/properties/:id", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { id: userId } = getAuthUser(req);

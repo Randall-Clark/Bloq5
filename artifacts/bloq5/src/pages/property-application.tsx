@@ -189,8 +189,9 @@ function Screen0Modal({ onStart, addr, isCommercial }: {
 
 /* ─── RESIDENTIAL SCREENS ───────────────────────────────────── */
 
-function ResScreen1({ value, onChange, onNext, addr }: {
+function ResScreen1({ value, onChange, onNext, addr, singleRoomOnly = false }: {
   value: string; onChange: (v: string) => void; onNext: () => void; addr: string;
+  singleRoomOnly?: boolean;
 }) {
   return (
     <div className="min-h-screen flex flex-col items-center pt-20 pb-32 px-4" style={{ background: LAVENDER_BG }}>
@@ -201,13 +202,26 @@ function ResScreen1({ value, onChange, onNext, addr }: {
           <span className="font-semibold" style={{ color: YELLOW }}>{addr}</span>
         </p>
       )}
+      {singleRoomOnly && (
+        <p className="text-xs text-center mb-6 px-4 py-2.5 rounded-xl max-w-sm" style={{ background: "#FFF8EE", color: "#92400E", border: "1px solid #FDE68A" }}>
+          Location d'une chambre individuelle — une seule personne autorisée
+        </p>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-[520px]">
         {OCCUPANT_OPTIONS.map((opt) => {
           const sel = value === opt.value;
+          const blocked = singleRoomOnly && opt.value !== "seul";
           return (
-            <button key={opt.value} onClick={() => onChange(opt.value)}
+            <button key={opt.value}
+              onClick={() => !blocked && onChange(opt.value)}
+              disabled={blocked}
               className="flex items-center gap-4 p-5 rounded-[14px] bg-white text-left transition-all"
-              style={{ border: sel ? `2px solid ${YELLOW}` : "1.5px solid #E8E8E8", boxShadow: sel ? `0 0 0 3px rgba(245,166,35,0.15)` : "none" }}>
+              style={{
+                border: sel ? `2px solid ${YELLOW}` : "1.5px solid #E8E8E8",
+                boxShadow: sel ? `0 0 0 3px rgba(245,166,35,0.15)` : "none",
+                opacity: blocked ? 0.35 : 1,
+                cursor: blocked ? "not-allowed" : "pointer",
+              }}>
               <div className="w-5 h-5 rounded-full flex-shrink-0"
                 style={{ border: sel ? `2px solid ${YELLOW}` : "2px solid #CCC", background: sel ? YELLOW : "transparent", boxShadow: sel ? `inset 0 0 0 3px white` : "none" }} />
               <span className="text-2xl">{opt.icon}</span>
@@ -537,6 +551,9 @@ function CoLivingRoomScreen({ rooms, selectedRoom, onSelect, onNext, addr }: {
   onNext: () => void;
   addr: string;
 }) {
+  const anyRented = rooms.some(r => r.status === "rented");
+  const isAllSelected = selectedRoom === "all";
+
   return (
     <div className="min-h-screen flex flex-col items-center pt-20 pb-32 px-4" style={{ background: LAVENDER_BG }}>
       <StepTitle>Que souhaitez-vous louer ?</StepTitle>
@@ -547,15 +564,24 @@ function CoLivingRoomScreen({ rooms, selectedRoom, onSelect, onNext, addr }: {
         </p>
       )}
       <div className="w-full max-w-[520px] space-y-3">
-        {/* Tout le logement */}
-        <button onClick={() => onSelect("all")}
+        {/* Tout le logement — bloqué si au moins une chambre est déjà louée */}
+        <button
+          onClick={() => !anyRented && onSelect("all")}
+          disabled={anyRented}
           className="w-full flex items-center gap-4 p-5 rounded-[14px] bg-white text-left transition-all"
-          style={{ border: selectedRoom === "all" ? `2px solid ${YELLOW}` : "1.5px solid #E8E8E8", boxShadow: selectedRoom === "all" ? `0 0 0 3px rgba(245,166,35,0.15)` : "none" }}>
+          style={{
+            border: isAllSelected ? `2px solid ${YELLOW}` : "1.5px solid #E8E8E8",
+            boxShadow: isAllSelected ? `0 0 0 3px rgba(245,166,35,0.15)` : "none",
+            opacity: anyRented ? 0.45 : 1,
+            cursor: anyRented ? "not-allowed" : "pointer",
+          }}>
           <div className="w-5 h-5 rounded-full flex-shrink-0"
-            style={{ border: selectedRoom === "all" ? `2px solid ${YELLOW}` : "2px solid #CCC", background: selectedRoom === "all" ? YELLOW : "transparent", boxShadow: selectedRoom === "all" ? `inset 0 0 0 3px white` : "none" }} />
+            style={{ border: isAllSelected ? `2px solid ${YELLOW}` : "2px solid #CCC", background: isAllSelected ? YELLOW : "transparent", boxShadow: isAllSelected ? `inset 0 0 0 3px white` : "none" }} />
           <div className="flex-1">
             <p className="text-[15px] font-semibold text-[#1A1A1A]">🏠 Tout le logement</p>
-            <p className="text-xs text-gray-500 mt-0.5">Postuler pour l'ensemble du bien</p>
+            <p className="text-xs mt-0.5" style={{ color: anyRented ? "#C62828" : "#6B7280" }}>
+              {anyRented ? "Non disponible — une ou plusieurs chambres sont déjà louées" : "Postuler pour l'ensemble du bien"}
+            </p>
           </div>
         </button>
         {/* Chambres individuelles */}
@@ -741,7 +767,7 @@ export default function PropertyApplicationPage() {
                 addr={addr}
               />
             )}
-            {step === 2 && <ResScreen1 value={form.occupantType} onChange={v => setField("occupantType", v)} onNext={() => goTo(3)} addr={addr} />}
+            {step === 2 && <ResScreen1 value={form.occupantType} onChange={v => setField("occupantType", v)} onNext={() => goTo(3)} addr={addr} singleRoomOnly={typeof form.selectedRoom === "number"} />}
             {step === 3 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(4)} />}
             {step === 4 && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(5)} />}
             {step === 5 && <ResScreen4 form={form} onChange={setField} onNext={() => goTo(6)} />}
