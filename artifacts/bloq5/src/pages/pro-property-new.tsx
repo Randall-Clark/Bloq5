@@ -78,22 +78,47 @@ const AMENITY_GROUPS = [
   },
 ];
 
-const ADDRESS_SUGGESTIONS = [
-  { address: "1000 Rue de la Gauchetière O",   city: "Montréal", country: "Canada" },
-  { address: "3500 Boulevard de Maisonneuve O",city: "Montréal", country: "Canada" },
-  { address: "740 Avenue Atwater",             city: "Montréal", country: "Canada" },
-  { address: "1200 Avenue des Canadiens-de-Montréal", city: "Montréal", country: "Canada" },
-  { address: "455 Rue Saint-Antoine O",        city: "Montréal", country: "Canada" },
-  { address: "2100 Rue Drummond",              city: "Montréal", country: "Canada" },
-  { address: "4800 Boulevard Côte-des-Neiges", city: "Montréal", country: "Canada" },
-  { address: "6200 Rue Sherbrooke E",          city: "Montréal", country: "Canada" },
-  { address: "888 Boul. De Maisonneuve E",     city: "Montréal", country: "Canada" },
-  { address: "3700 Rue Saint-Denis",           city: "Montréal", country: "Canada" },
-  { address: "1 Yonge Street",                 city: "Toronto",  country: "Canada" },
-  { address: "100 King Street W",              city: "Toronto",  country: "Canada" },
-  { address: "789 Rue des Érables",            city: "Québec",   country: "Canada" },
-  { address: "2000 Boulevard Saint-Joseph",    city: "Laval",    country: "Canada" },
-  { address: "500 Rue Principale",             city: "Longueuil",country: "Canada" },
+type AddressSuggestion = {
+  street: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  country: string;
+};
+
+const ADDRESS_SUGGESTIONS: AddressSuggestion[] = [
+  { street: "1000 Rue de la Gauchetière O",          city: "Montréal",   province: "QC", postalCode: "H3B 4W5", country: "Canada" },
+  { street: "1001 Rue de la Gauchetière O",          city: "Montréal",   province: "QC", postalCode: "H3B 4W5", country: "Canada" },
+  { street: "3500 Boulevard de Maisonneuve O",       city: "Montréal",   province: "QC", postalCode: "H3Z 1L9", country: "Canada" },
+  { street: "3480 Boulevard de Maisonneuve O",       city: "Montréal",   province: "QC", postalCode: "H3Z 1L8", country: "Canada" },
+  { street: "740 Avenue Atwater",                    city: "Montréal",   province: "QC", postalCode: "H4C 2G9", country: "Canada" },
+  { street: "755 Avenue Atwater",                    city: "Montréal",   province: "QC", postalCode: "H4C 2G8", country: "Canada" },
+  { street: "455 Rue Saint-Antoine O",               city: "Montréal",   province: "QC", postalCode: "H2Z 1J1", country: "Canada" },
+  { street: "2100 Rue Drummond",                     city: "Montréal",   province: "QC", postalCode: "H3G 1W9", country: "Canada" },
+  { street: "4800 Boulevard Côte-des-Neiges",        city: "Montréal",   province: "QC", postalCode: "H3V 1G4", country: "Canada" },
+  { street: "4850 Boulevard Côte-des-Neiges",        city: "Montréal",   province: "QC", postalCode: "H3V 1G5", country: "Canada" },
+  { street: "6200 Rue Sherbrooke E",                 city: "Montréal",   province: "QC", postalCode: "H1N 1C2", country: "Canada" },
+  { street: "888 Boulevard De Maisonneuve E",        city: "Montréal",   province: "QC", postalCode: "H2L 1Y8", country: "Canada" },
+  { street: "3700 Rue Saint-Denis",                  city: "Montréal",   province: "QC", postalCode: "H2X 3L7", country: "Canada" },
+  { street: "3750 Rue Saint-Denis",                  city: "Montréal",   province: "QC", postalCode: "H2X 3L8", country: "Canada" },
+  { street: "1420 Boulevard René-Lévesque O",        city: "Montréal",   province: "QC", postalCode: "H3G 1T7", country: "Canada" },
+  { street: "1000 Rue Sainte-Catherine O",           city: "Montréal",   province: "QC", postalCode: "H3B 4V5", country: "Canada" },
+  { street: "1200 Rue Sainte-Catherine O",           city: "Montréal",   province: "QC", postalCode: "H3G 2C7", country: "Canada" },
+  { street: "5600 Rue Sherbrooke O",                 city: "Montréal",   province: "QC", postalCode: "H4A 1W4", country: "Canada" },
+  { street: "320 Rue Saint-Viateur E",               city: "Montréal",   province: "QC", postalCode: "H2T 1A8", country: "Canada" },
+  { street: "4025 Rue Saint-Ambroise",               city: "Montréal",   province: "QC", postalCode: "H4C 2C9", country: "Canada" },
+  { street: "2000 Boulevard Saint-Joseph E",         city: "Montréal",   province: "QC", postalCode: "H2H 1E4", country: "Canada" },
+  { street: "4141 Rue Sherbrooke E",                 city: "Montréal",   province: "QC", postalCode: "H1X 1E4", country: "Canada" },
+  { street: "2600 Boulevard Laurier",                city: "Québec",     province: "QC", postalCode: "G1V 4T3", country: "Canada" },
+  { street: "789 Avenue des Érables",                city: "Québec",     province: "QC", postalCode: "G1R 2L4", country: "Canada" },
+  { street: "3000 Boulevard de la Concorde E",       city: "Laval",      province: "QC", postalCode: "H7E 2B5", country: "Canada" },
+  { street: "2000 Boulevard Saint-Martin E",         city: "Laval",      province: "QC", postalCode: "H7E 4Z5", country: "Canada" },
+  { street: "500 Chemin de Chambly",                 city: "Longueuil",  province: "QC", postalCode: "J4H 3L8", country: "Canada" },
+  { street: "1 Yonge Street",                        city: "Toronto",    province: "ON", postalCode: "M5E 1W7", country: "Canada" },
+  { street: "100 King Street W",                     city: "Toronto",    province: "ON", postalCode: "M5X 1A9", country: "Canada" },
+  { street: "250 Front Street W",                    city: "Toronto",    province: "ON", postalCode: "M5V 3G5", country: "Canada" },
+  { street: "789 Main Street",                       city: "Vancouver",  province: "BC", postalCode: "V6A 2V7", country: "Canada" },
+  { street: "1055 Dunsmuir Street",                  city: "Vancouver",  province: "BC", postalCode: "V7X 1L4", country: "Canada" },
 ];
 
 const NEARBY_BY_CITY: Record<string, string[]> = {
@@ -235,18 +260,36 @@ function PricingModal({ onConfirm, onCancel, isPending }: {
 }
 
 /* ─── Address autocomplete ───────────────────────────────────── */
+function highlightMatch(text: string, query: string) {
+  if (!query.trim()) return <span>{text}</span>;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return <span>{text}</span>;
+  return (
+    <span>
+      {text.slice(0, idx)}
+      <mark className="bg-amber-100 text-amber-900 rounded-sm font-semibold not-italic">{text.slice(idx, idx + query.length)}</mark>
+      {text.slice(idx + query.length)}
+    </span>
+  );
+}
+
 function AddressInput({ value, onChange, onSelect }: {
   value: string;
   onChange: (v: string) => void;
-  onSelect: (s: typeof ADDRESS_SUGGESTIONS[0]) => void;
+  onSelect: (s: AddressSuggestion) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [focused, setFocused] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const filtered = value.length >= 2
+
+  const q = value.trim().toLowerCase();
+  const filtered = q.length >= 1
     ? ADDRESS_SUGGESTIONS.filter(s =>
-        s.address.toLowerCase().includes(value.toLowerCase()) ||
-        s.city.toLowerCase().includes(value.toLowerCase())
-      ).slice(0, 5)
+        s.street.toLowerCase().includes(q) ||
+        s.postalCode.toLowerCase().replace(/\s/g, "").includes(q.replace(/\s/g, "")) ||
+        s.city.toLowerCase().includes(q) ||
+        s.province.toLowerCase().includes(q)
+      ).slice(0, 6)
     : [];
 
   useEffect(() => {
@@ -260,26 +303,50 @@ function AddressInput({ value, onChange, onSelect }: {
   return (
     <div className="relative" ref={ref}>
       <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         <input
           type="text"
           value={value}
           onChange={e => { onChange(e.target.value); setOpen(true); }}
-          onFocus={() => setOpen(true)}
+          onFocus={() => { setFocused(true); setOpen(true); }}
+          onBlur={() => setFocused(false)}
           placeholder="Ex: 3500 Boulevard de Maisonneuve O"
           className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 pl-10 pr-4 text-sm transition-colors"
+          style={{ borderColor: focused ? "#F5A623" : undefined }}
+          autoComplete="off"
         />
       </div>
       {open && filtered.length > 0 && (
-        <div className="absolute z-30 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+        <div className="absolute z-30 mt-1.5 w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden">
+          <p className="px-4 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">Suggestions</p>
           {filtered.map((s, i) => (
-            <button key={i} type="button"
-              className="w-full text-left px-4 py-3 text-sm hover:bg-gray-50 flex items-center gap-2 transition-colors"
-              onMouseDown={() => { onSelect(s); setOpen(false); }}>
-              <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-              <span><span className="font-medium">{s.address}</span>, {s.city}, {s.country}</span>
+            <button
+              key={i}
+              type="button"
+              className="w-full text-left px-4 py-3 hover:bg-amber-50 flex items-start gap-3 transition-colors border-t border-gray-50 first:border-0"
+              onMouseDown={e => { e.preventDefault(); onSelect(s); setOpen(false); }}
+            >
+              <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 mt-0.5">
+                <MapPin className="w-3.5 h-3.5 text-gray-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-900 leading-tight truncate">
+                  {highlightMatch(s.street, value.trim())}
+                </p>
+                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                  <span className="text-xs text-gray-500">{s.city}, {s.province}</span>
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide"
+                    style={{ background: "#FFF8EE", color: "#F5A623" }}>
+                    {s.postalCode}
+                  </span>
+                  <span className="text-xs text-gray-400">{s.country}</span>
+                </div>
+              </div>
             </button>
           ))}
+          <p className="px-4 py-2 text-[10px] text-gray-400 border-t border-gray-100">
+            Données simulées — intégration Canada Post disponible sur abonnement Pro
+          </p>
         </div>
       )}
     </div>
@@ -346,6 +413,10 @@ export default function ProPropertyNewPage() {
   const [nearbyPlaces, setNearbyPlaces] = useState<string[]>([]);
   const [nearbyAutoFilled, setNearbyAutoFilled] = useState(false);
 
+  /* Address extras */
+  const [postalCode, setPostalCode] = useState("");
+  const [province, setProvince]     = useState("");
+
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertySchema),
     defaultValues: {
@@ -383,8 +454,12 @@ export default function ProPropertyNewPage() {
         if (p) amenitiesArr.push(`Chambre ${i + 1} : ${p} $/mois`);
       });
     }
+    const fullAddress = postalCode
+      ? `${data.address}, ${postalCode}`
+      : data.address;
     const payload = {
       ...data,
+      address: fullAddress,
       amenities: amenitiesArr,
       nearbyPlaces,
       images: imageUrls.filter(u => u.trim()),
@@ -719,9 +794,11 @@ export default function ProPropertyNewPage() {
                       value={field.value}
                       onChange={field.onChange}
                       onSelect={s => {
-                        field.onChange(s.address);
+                        field.onChange(s.street);
                         form.setValue("city", s.city);
                         form.setValue("country", s.country);
+                        setPostalCode(s.postalCode);
+                        setProvince(s.province);
                         setNearbyPlaces(getNearby(s.city));
                         setNearbyAutoFilled(true);
                       }}
@@ -731,9 +808,37 @@ export default function ProPropertyNewPage() {
                 </FormItem>
               )} />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Province</label>
+                  <input
+                    type="text"
+                    value={province}
+                    onChange={e => setProvince(e.target.value)}
+                    placeholder="QC"
+                    maxLength={3}
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 px-4 text-sm transition-colors font-mono tracking-widest uppercase"
+                  />
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Code postal
+                    {postalCode && (
+                      <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold"
+                        style={{ background: "#FFF8EE", color: "#F5A623" }}>auto</span>
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    value={postalCode}
+                    onChange={e => setPostalCode(e.target.value.toUpperCase())}
+                    placeholder="H3Z 1L9"
+                    maxLength={7}
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 px-4 text-sm transition-colors font-mono tracking-widest"
+                  />
+                </div>
                 <FormField control={form.control} name="city" render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="col-span-2">
                     <FormLabel className="text-sm font-semibold text-gray-700">Ville *</FormLabel>
                     <FormControl>
                       <Input {...field} placeholder="Montréal"
@@ -742,17 +847,17 @@ export default function ProPropertyNewPage() {
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="country" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-semibold text-gray-700">Pays *</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Canada"
-                        className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
               </div>
+              <FormField control={form.control} name="country" render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold text-gray-700">Pays *</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Canada"
+                      className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
 
               {/* Nearby places */}
               <div>
