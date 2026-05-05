@@ -12,10 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, CheckCircle2, Megaphone, X, Plus, Trash2, Video, MapPin, Camera, ChevronDown } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Megaphone, X, Plus, Trash2, Video, MapPin, Camera, ChevronDown, Check } from "lucide-react";
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Checkbox } from "@/components/ui/checkbox";
 
 const YELLOW = "#F5A623";
 const NAVY   = "#1A237E";
@@ -645,11 +644,16 @@ export default function ProPropertyNewPage() {
                 <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-4">
                   <div className="flex items-center gap-3">
                     <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <Checkbox
-                        checked={sameRoomPrice}
-                        onCheckedChange={v => setSameRoomPrice(!!v)}
-                        className="data-[state=checked]:bg-[#F5A623] data-[state=checked]:border-[#F5A623]"
-                      />
+                      <span
+                        onClick={() => setSameRoomPrice(v => !v)}
+                        className="w-5 h-5 rounded flex items-center justify-center shrink-0 border-2 transition-all"
+                        style={{
+                          background:   sameRoomPrice ? YELLOW : "white",
+                          borderColor:  sameRoomPrice ? YELLOW : "#D1D5DB",
+                        }}
+                      >
+                        {sameRoomPrice && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                      </span>
                       <span className="text-sm font-medium text-gray-700">
                         Le prix est le même pour toutes les chambres
                       </span>
@@ -693,11 +697,15 @@ export default function ProPropertyNewPage() {
                             borderColor: checked ? YELLOW : "#E5E7EB",
                             background:  checked ? "#FFF8EE" : "#FAFAFA",
                           }}>
-                          <Checkbox
-                            checked={checked}
-                            onCheckedChange={() => toggleAmenity(item.id)}
-                            className="data-[state=checked]:bg-[#F5A623] data-[state=checked]:border-[#F5A623] shrink-0"
-                          />
+                          <span
+                            className="w-4 h-4 rounded flex items-center justify-center shrink-0 border-2 transition-all"
+                            style={{
+                              background:  checked ? YELLOW : "white",
+                              borderColor: checked ? YELLOW : "#D1D5DB",
+                            }}
+                          >
+                            {checked && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
+                          </span>
                           <span className="text-sm text-gray-700">{item.label}</span>
                         </label>
                       );
