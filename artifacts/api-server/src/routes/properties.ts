@@ -90,8 +90,16 @@ router.post("/api/properties", requireAuth(), async (req: Request, res: Response
   try {
     const { id: userId } = getAuthUser(req);
 
-    const parsed = insertPropertySchema.safeParse({ ...req.body, ownerId: userId });
-    if (!parsed.success) { res.status(400).json({ error: parsed.error.issues }); return; }
+    // drizzle-zod 0.8 generates z.string() for numeric columns — coerce numbers to strings
+    const body = {
+      ...req.body,
+      ownerId: userId,
+      price: req.body.price != null ? String(req.body.price) : req.body.price,
+      area:  req.body.area  != null ? String(req.body.area)  : req.body.area,
+    };
+
+    const parsed = insertPropertySchema.safeParse(body);
+    if (!parsed.success) { req.log.warn({ issues: parsed.error.issues }, "Property validation failed"); res.status(400).json({ error: parsed.error.issues }); return; }
 
     const [property] = await db.insert(propertiesTable).values(parsed.data).returning();
     res.status(201).json(property);
