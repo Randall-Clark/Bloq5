@@ -89,6 +89,8 @@ export interface Property {
 export type PropertyDetail = Property & {
   amenities: string[];
   /** @nullable */
+  floor?: number | null;
+  /** @nullable */
   floorPlan?: string | null;
   nearbyPlaces: string[];
   ownerName: string;
@@ -118,6 +120,24 @@ export const CreatePropertyBodyType = {
   industrial: "industrial",
 } as const;
 
+export type CreatePropertyBodyRoomsItemStatus =
+  (typeof CreatePropertyBodyRoomsItemStatus)[keyof typeof CreatePropertyBodyRoomsItemStatus];
+
+export const CreatePropertyBodyRoomsItemStatus = {
+  available: "available",
+  rented: "rented",
+  soon: "soon",
+} as const;
+
+export type CreatePropertyBodyRoomsItem = {
+  number: number;
+  /** @nullable */
+  price?: number | null;
+  status: CreatePropertyBodyRoomsItemStatus;
+  /** @nullable */
+  availableFrom?: string | null;
+};
+
 export interface CreatePropertyBody {
   title: string;
   description: string;
@@ -137,6 +157,10 @@ export interface CreatePropertyBody {
   virtualTourUrl?: string | null;
   amenities?: string[];
   availableDates?: string[];
+  /** @nullable */
+  floor?: number | null;
+  nearbyPlaces?: string[];
+  rooms?: CreatePropertyBodyRoomsItem[];
   isFeatured?: boolean;
 }
 

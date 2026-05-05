@@ -111,6 +111,18 @@ export const CreatePropertyBody = zod.object({
   virtualTourUrl: zod.string().nullish(),
   amenities: zod.array(zod.string()).optional(),
   availableDates: zod.array(zod.string()).optional(),
+  floor: zod.number().nullish(),
+  nearbyPlaces: zod.array(zod.string()).optional(),
+  rooms: zod
+    .array(
+      zod.object({
+        number: zod.number(),
+        price: zod.number().nullish(),
+        status: zod.enum(["available", "rented", "soon"]),
+        availableFrom: zod.string().nullish(),
+      }),
+    )
+    .optional(),
   isFeatured: zod.boolean().optional(),
 });
 
@@ -208,6 +220,7 @@ export const GetPropertyResponse = zod
   .and(
     zod.object({
       amenities: zod.array(zod.string()),
+      floor: zod.number().nullish(),
       floorPlan: zod.string().nullish(),
       nearbyPlaces: zod.array(zod.string()),
       ownerName: zod.string(),

@@ -707,6 +707,8 @@ components:
               type: array
               items:
                 type: string
+            floor:
+              type: ["integer", "null"]
             floorPlan:
               type: ["string", "null"]
             nearbyPlaces:
@@ -785,6 +787,29 @@ components:
           type: array
           items:
             type: string
+        floor:
+          type: ["integer", "null"]
+        nearbyPlaces:
+          type: array
+          items:
+            type: string
+        rooms:
+          type: array
+          items:
+            type: object
+            properties:
+              number:
+                type: integer
+              price:
+                type: ["number", "null"]
+              status:
+                type: string
+                enum: [available, rented, soon]
+              availableFrom:
+                type: ["string", "null"]
+            required:
+              - number
+              - status
         isFeatured:
           type: boolean
       required:

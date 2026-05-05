@@ -47,6 +47,17 @@ export async function runMigrations(): Promise<void> {
       logger.info("'rooms' column added.");
     }
 
+    const floorColCheck = await client.query(`
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'properties' AND column_name = 'floor'
+    `);
+
+    if (floorColCheck.rowCount === 0) {
+      logger.info("Adding 'floor' column to properties table…");
+      await client.query(`ALTER TABLE properties ADD COLUMN floor integer`);
+      logger.info("'floor' column added.");
+    }
+
     const colivingRes = await client.query(
       `SELECT id FROM properties WHERE type = 'co-living' AND (rooms IS NULL OR rooms::text = '[]') AND id = ANY($1)`,
       [Object.keys(COLIVING_ROOMS).map(Number)]

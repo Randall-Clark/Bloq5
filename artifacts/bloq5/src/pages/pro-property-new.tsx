@@ -158,6 +158,7 @@ const propertySchema = z.object({
   bedrooms:       z.coerce.number().optional().nullable(),
   bathrooms:      z.coerce.number().optional().nullable(),
   area:           z.coerce.number().optional().nullable(),
+  floor:          z.coerce.number().int().optional().nullable(),
   virtualTourUrl: z.string().optional().nullable(),
 });
 
@@ -423,7 +424,7 @@ export default function ProPropertyNewPage() {
       address: "", city: "", country: "Canada",
       price: undefined, bedrooms: undefined,
       bathrooms: undefined, area: undefined,
-      virtualTourUrl: "",
+      floor: undefined, virtualTourUrl: "",
     },
   });
 
@@ -484,6 +485,7 @@ export default function ProPropertyNewPage() {
       nearbyPlaces,
       images: imageUrls.filter(u => u.trim()),
       rooms: roomsPayload,
+      floor: data.floor ?? null,
     };
     setPendingPayload(payload);
     setShowPricing(true);
@@ -622,12 +624,23 @@ export default function ProPropertyNewPage() {
           <Section icon={RulerIcon} title="Caractéristiques"
             subtitle={watchType === "co-living" ? "Précisez les chambres et les loyers individuels si applicable" : undefined}>
             <div className="space-y-5">
-              <div className={`grid gap-4 ${isResidential(watchType) ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-1 sm:grid-cols-2"}`}>
+              <div className={`grid gap-4 ${isResidential(watchType) ? "grid-cols-1 sm:grid-cols-4" : "grid-cols-1 sm:grid-cols-3"}`}>
                 <FormField control={form.control} name="area" render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-sm font-semibold text-gray-700">Surface (pi²)</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} value={field.value ?? ""} placeholder="750"
+                        className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="floor" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold text-gray-700">Étage</FormLabel>
+                    <FormControl>
+                      <Input type="number" min={0} {...field} value={field.value ?? ""} placeholder="1"
                         className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
                     </FormControl>
                     <FormMessage />

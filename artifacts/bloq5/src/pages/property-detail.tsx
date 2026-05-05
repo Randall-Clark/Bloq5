@@ -12,7 +12,7 @@ import { PublicNavbar } from "@/components/public-navbar";
 import {
   MapPin, Bed, Bath, Heart, Printer, Share2,
   ChevronDown, ChevronRight, ChevronLeft, X, Send,
-  FileText, Download, Car,
+  FileText, Car,
   Flame, Wifi, Droplets, Zap, Trash2, Wind,
   AlertCircle, HeartPulse, Key, Camera, Shirt, Layers, Wand2, Tv, Snowflake, Coffee,
   GraduationCap, BookOpen, Train, ShoppingCart, Dumbbell, Store, TreePine,
@@ -26,50 +26,6 @@ import { Textarea } from "@/components/ui/textarea";
 const YELLOW = "#F5A623";
 
 
-function FloorPlanSVG() {
-  return (
-    <svg viewBox="0 0 400 280" className="w-full" style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 8 }}>
-      <rect x="20" y="20" width="360" height="240" fill="none" stroke="#1A1A1A" strokeWidth="3"/>
-      <rect x="20" y="120" width="55" height="60" fill="#F8F8F8" stroke="#1A1A1A" strokeWidth="1.5"/>
-      <text x="47" y="154" textAnchor="middle" fontSize="9" fill="#555">Entrée</text>
-      <rect x="75" y="20" width="150" height="120" fill="#F8F8F8" stroke="#1A1A1A" strokeWidth="1.5"/>
-      <text x="150" y="84" textAnchor="middle" fontSize="10" fill="#555">Salon / Séjour</text>
-      <rect x="225" y="20" width="155" height="80" fill="#F8F8F8" stroke="#1A1A1A" strokeWidth="1.5"/>
-      <text x="302" y="64" textAnchor="middle" fontSize="10" fill="#555">Cuisine</text>
-      <rect x="75" y="140" width="110" height="120" fill="#F8F8F8" stroke="#1A1A1A" strokeWidth="1.5"/>
-      <text x="130" y="204" textAnchor="middle" fontSize="10" fill="#555">Chambre 1</text>
-      <rect x="185" y="140" width="105" height="120" fill="#F8F8F8" stroke="#1A1A1A" strokeWidth="1.5"/>
-      <text x="237" y="204" textAnchor="middle" fontSize="10" fill="#555">Chambre 2</text>
-      <rect x="290" y="100" width="90" height="80" fill="#E8F4FD" stroke="#1A1A1A" strokeWidth="1.5"/>
-      <text x="335" y="144" textAnchor="middle" fontSize="9" fill="#555">Salle de bain</text>
-      <text x="200" y="270" textAnchor="middle" fontSize="8" fill="#9CA3AF">← 12,5 m →</text>
-      <text x="8" y="140" textAnchor="middle" fontSize="8" fill="#9CA3AF" transform="rotate(-90,8,140)">← 8,2 m →</text>
-    </svg>
-  );
-}
-
-function CommercialFloorPlanSVG({ area, isOffice }: { area: number; isOffice: boolean }) {
-  return (
-    <svg viewBox="0 0 400 260" className="w-full" style={{ background: "white", border: "1px solid #E5E7EB", borderRadius: 8 }}>
-      {/* Exterior wall */}
-      <rect x="20" y="20" width="360" height="220" fill="none" stroke="#1A1A1A" strokeWidth="3"/>
-      {/* Main open area */}
-      <rect x="20" y="20" width="240" height="220" fill="#F8F8F8" stroke="#1A1A1A" strokeWidth="1.5"/>
-      <text x="140" y="130" textAnchor="middle" fontSize="11" fill="#555">{isOffice ? "Espace bureaux ouvert" : "Surface commerciale"}</text>
-      <text x="140" y="148" textAnchor="middle" fontSize="9" fill="#9CA3AF">{Math.round(area * 0.65)} m²</text>
-      {/* Side rooms */}
-      <rect x="260" y="20" width="120" height="80" fill="#F0F0F0" stroke="#1A1A1A" strokeWidth="1.5"/>
-      <text x="320" y="64" textAnchor="middle" fontSize="9" fill="#555">{isOffice ? "Salle réunion" : "Réserve"}</text>
-      <rect x="260" y="100" width="120" height="80" fill="#F0F0F0" stroke="#1A1A1A" strokeWidth="1.5"/>
-      <text x="320" y="144" textAnchor="middle" fontSize="9" fill="#555">{isOffice ? "Bureau privé" : "Bureau"}</text>
-      <rect x="260" y="180" width="120" height="60" fill="#E8F4FD" stroke="#1A1A1A" strokeWidth="1.5"/>
-      <text x="320" y="214" textAnchor="middle" fontSize="9" fill="#555">Sanitaires</text>
-      {/* Dimensions */}
-      <text x="200" y="255" textAnchor="middle" fontSize="8" fill="#9CA3AF">← {Math.round(Math.sqrt(area * 1.5))} m →</text>
-      <text x="8" y="130" textAnchor="middle" fontSize="8" fill="#9CA3AF" transform="rotate(-90,8,130)">← {Math.round(Math.sqrt(area * 0.7))} m →</text>
-    </svg>
-  );
-}
 
 type IconComp = React.ComponentType<LucideProps>;
 const AMENITY_ICON_MAP: Record<string, IconComp> = {
@@ -130,42 +86,15 @@ const AMENITY_ICON_MAP: Record<string, IconComp> = {
   "Vestiaires": Shirt,
 };
 
-const NEARBY_ITEMS = [
-  { label: "École", val: "0,5 km", icon: GraduationCap },
-  { label: "Hôpital", val: "1,2 km", icon: HeartPulse },
-  { label: "Université", val: "0,8 km", icon: BookOpen },
-  { label: "Station de métro", val: "0,3 km", icon: Train },
-  { label: "Épicerie", val: "0,2 km", icon: ShoppingCart },
-  { label: "Gym / Bien-être", val: "0,9 km", icon: Dumbbell },
-  { label: "Marché", val: "0,7 km", icon: Store },
-  { label: "Parc", val: "0,4 km", icon: TreePine },
-];
-
-const CHARGES_ITEMS = [
-  { icon: Flame, label: "Chauffage" },
-  { icon: Zap, label: "Électricité" },
-  { icon: Trash2, label: "Taxes ordures" },
-  { icon: Droplets, label: "Eau chaude" },
-  { icon: Droplets, label: "Eau courante" },
-  { icon: Wifi, label: "Internet Fibre" },
-];
-
-const STATIC_AMENITIES = [
-  "Détecteur de fumée", "Détecteur de CO", "Trousse premiers soins",
-  "Entrée autonome / boîte à clés", "Caméras sécurité extérieures", "Cintres",
-  "Literie fournie", "Oreillers & couvertures", "Fer à repasser",
-  "Téléviseur câble standard", "Réfrigérateur", "Micro-ondes",
-  "Lave-vaisselle", "Machine à café",
-];
-
-/* Commodités par défaut pour les espaces professionnels (bureau / commercial) */
-const STATIC_COMMERCIAL_AMENITIES = [
-  "Détecteur de fumée", "Détecteur de CO", "Extincteur",
-  "Caméras sécurité extérieures", "Contrôle d'accès badge",
-  "Salle de réunion partagée", "Cuisine / kitchenette",
-  "Imprimante réseau", "Climatisation réversible",
-  "Accès PMR", "Casiers sécurisés", "Vestiaires",
-];
+/* Labels des services inclus dans le loyer — intersectés avec les amenities réelles */
+const INCLUDED_SERVICE_MAP: Record<string, IconComp> = {
+  "WiFi":           Wifi,
+  "Chauffage":      Flame,
+  "Eau chaude":     Droplets,
+  "Électricité":    Zap,
+  "Câble / TV":     Tv,
+  "Climatisation":  Wind,
+};
 
 function getEarliestVisitDate(): Date {
   const now = new Date();
@@ -396,14 +325,11 @@ export default function PropertyDetailPage() {
   const typeLabel = isOffice ? "Bureau" : propType === "commercial" ? "Local commercial"
     : propType === "house" ? "Maison" : propType === "co-living" ? "Colocation" : "Appartement";
 
-  const imgs = Array.from({ length: 5 }, (_, i) =>
-    property.images?.[i] || `https://picsum.photos/seed/prop${property.id}${i + 1}/800/500`
-  );
+  const imgs: string[] = property.images ?? [];
   const allImgs = imgs;
+  const hasImages = imgs.length > 0;
 
-  const amenities: string[] = property.amenities?.length
-    ? property.amenities
-    : isCommercialType ? STATIC_COMMERCIAL_AMENITIES : STATIC_AMENITIES;
+  const amenities: string[] = property.amenities ?? [];
 
   const selectedCity = country.cities?.[0]?.name || city;
 
@@ -457,43 +383,55 @@ export default function PropertyDetailPage() {
 
       {/* Gallery — single photo on mobile, asymmetric mosaic on md+ */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-6 md:mb-10">
-        {/* Mobile: single photo */}
-        <div className="md:hidden relative rounded-xl overflow-hidden cursor-pointer" style={{ height: 240 }}
-          onClick={() => { setLightboxIdx(0); setLightboxOpen(true); }}>
-          <img src={imgs[0]} alt="Photo principale" className="w-full h-full object-cover" />
-          <button
-            className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-white/85 backdrop-blur-sm text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow"
-            onClick={e => { e.stopPropagation(); setLightboxIdx(0); setLightboxOpen(true); }}
-          >
-            📷 {allImgs.length} photos
-          </button>
-        </div>
-        {/* Desktop: asymmetric mosaic */}
-        <div className="hidden md:flex relative gap-2 rounded-xl overflow-hidden" style={{ height: 480 }}>
-          <div className="relative flex-[1.6] rounded-xl overflow-hidden cursor-pointer" onClick={() => { setLightboxIdx(0); setLightboxOpen(true); }}>
-            <img src={imgs[0]} alt="Photo principale" className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500" />
-            <button
-              className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-white/85 backdrop-blur-sm text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow hover:bg-white transition-colors"
-              onClick={e => { e.stopPropagation(); setLightboxIdx(0); setLightboxOpen(true); }}
-            >
-              📷 {allImgs.length} photos
-            </button>
+        {!hasImages ? (
+          <div className="rounded-xl overflow-hidden flex items-center justify-center bg-gray-100 text-gray-400 text-sm gap-2" style={{ height: 240 }}>
+            <Camera className="w-5 h-5" /> Aucune photo disponible
           </div>
-          <div className="flex flex-col gap-2 flex-1">
-            {[imgs[1], imgs[2]].map((src, i) => (
-              <div key={i} className="rounded-xl overflow-hidden flex-1 cursor-pointer" onClick={() => { setLightboxIdx(i + 1); setLightboxOpen(true); }}>
-                <img src={src} alt={`Photo ${i + 2}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
+        ) : (
+          <>
+            {/* Mobile: single photo */}
+            <div className="md:hidden relative rounded-xl overflow-hidden cursor-pointer" style={{ height: 240 }}
+              onClick={() => { setLightboxIdx(0); setLightboxOpen(true); }}>
+              <img src={imgs[0]} alt="Photo principale" className="w-full h-full object-cover" />
+              <button
+                className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-white/85 backdrop-blur-sm text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow"
+                onClick={e => { e.stopPropagation(); setLightboxIdx(0); setLightboxOpen(true); }}
+              >
+                📷 {allImgs.length} photo{allImgs.length > 1 ? "s" : ""}
+              </button>
+            </div>
+            {/* Desktop: asymmetric mosaic */}
+            <div className="hidden md:flex relative gap-2 rounded-xl overflow-hidden" style={{ height: 480 }}>
+              <div className="relative flex-[1.6] rounded-xl overflow-hidden cursor-pointer" onClick={() => { setLightboxIdx(0); setLightboxOpen(true); }}>
+                <img src={imgs[0]} alt="Photo principale" className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-500" />
+                <button
+                  className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-white/85 backdrop-blur-sm text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow hover:bg-white transition-colors"
+                  onClick={e => { e.stopPropagation(); setLightboxIdx(0); setLightboxOpen(true); }}
+                >
+                  📷 {allImgs.length} photo{allImgs.length > 1 ? "s" : ""}
+                </button>
               </div>
-            ))}
-          </div>
-          <div className="flex flex-col gap-2 flex-1">
-            {[imgs[3], imgs[4]].map((src, i) => (
-              <div key={i} className="rounded-xl overflow-hidden flex-1 cursor-pointer" onClick={() => { setLightboxIdx(i + 3); setLightboxOpen(true); }}>
-                <img src={src} alt={`Photo ${i + 4}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
-              </div>
-            ))}
-          </div>
-        </div>
+              {imgs.length > 1 && (
+                <div className="flex flex-col gap-2 flex-1">
+                  {[imgs[1], imgs[2]].filter(Boolean).map((src, i) => (
+                    <div key={i} className="rounded-xl overflow-hidden flex-1 cursor-pointer bg-gray-100" onClick={() => { setLightboxIdx(i + 1); setLightboxOpen(true); }}>
+                      {src && <img src={src} alt={`Photo ${i + 2}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {imgs.length > 3 && (
+                <div className="flex flex-col gap-2 flex-1">
+                  {[imgs[3], imgs[4]].filter(Boolean).map((src, i) => (
+                    <div key={i} className="rounded-xl overflow-hidden flex-1 cursor-pointer bg-gray-100" onClick={() => { setLightboxIdx(i + 3); setLightboxOpen(true); }}>
+                      {src && <img src={src} alt={`Photo ${i + 4}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Mobile sticky bottom CTA */}
@@ -560,33 +498,10 @@ export default function PropertyDetailPage() {
             <section className="mb-8">
               <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1A1A" }}>Description</h2>
               <div className="text-sm text-gray-600 leading-relaxed space-y-3">
-                {property.description ? (
-                  <p>{property.description}</p>
-                ) : isCommercialType ? (
-                  <>
-                    <p>
-                      BLOQ5 vous présente cet {typeLabel.toLowerCase()} de {area} m² idéalement situé à {city}. Cet espace professionnel offre un environnement de travail moderne, lumineux et fonctionnel, adapté aux entreprises en croissance.
-                    </p>
-                    <p>
-                      Les locaux bénéficient d'une connexion Internet fibre dédiée, d'une climatisation réversible, de systèmes de sécurité et d'un accès PMR. {propType === "office" ? "Les bureaux sont cloisonnables selon vos besoins organisationnels." : "L'espace commercial jouit d'une devanture visible et d'un fort passage piétonnier."}
-                    </p>
-                    <p>
-                      Situé dans un secteur dynamique de {city}, ce bien profite d'une desserte excellente (transports en commun, stationnements à proximité) et d'un tissu commercial et professionnel dense.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p>
-                      BLOQ5 vous présente ce {typeLabel.toLowerCase()} de {area} m² idéalement situé au cœur de {city}. {beds > 0 ? `Ce bien dispose de ${beds} chambre${beds > 1 ? "s" : ""} lumineuse${beds > 1 ? "s" : ""}, d'un salon spacieux et d'une cuisine entièrement équipée.` : "Ce logement spacieux offre un espace de vie ouvert et lumineux."}
-                    </p>
-                    <p>
-                      L'unité est accessible depuis l'entrée principale sécurisée. Une buanderie commune est disponible. Stationnement inclus.
-                    </p>
-                    <p>
-                      Idéalement situé à {city}, ce logement bénéficie d'une localisation exceptionnelle à proximité des transports, commerces, épiceries et restaurants.
-                    </p>
-                  </>
-                )}
+                {property.description
+                  ? <p>{property.description}</p>
+                  : <p className="italic text-gray-400">Aucune description renseignée.</p>
+                }
               </div>
               {/* Publié par BLOQ5 badge */}
               <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 w-fit mt-5">
@@ -660,24 +575,26 @@ export default function PropertyDetailPage() {
             {/* Informations détaillées */}
             <section className="mb-8">
               <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Informations détaillées</h2>
-              {/* Info items grid — adapté au type */}
               {(() => {
-                /* Commercial grid = structural/contractual info only (no utilities — they appear below in "services inclus") */
+                const floorNum = property.floor;
+                const hasParking = amenities.includes("Stationnement inclus");
+                const isFurnished = amenities.includes("Meublé");
+
                 const items: { icon: IconComp; label: string; sublabel: string }[] = isCommercialType ? [
-                  { icon: MapPin, label: `${area} m²`, sublabel: "Superficie totale" },
+                  ...(area ? [{ icon: MapPin as IconComp, label: `${area} m²`, sublabel: "Superficie totale" }] : []),
                   { icon: ChevronRight, label: isOffice ? "Bureaux" : "Local commercial", sublabel: "Type d'espace" },
-                  { icon: Key, label: "Sécurisé / badge", sublabel: "Accès" },
-                  { icon: FileText, label: "Bail 3-6-9 ans", sublabel: "Type de bail" },
-                  { icon: Layers, label: `${Math.max(1, Math.floor(area / 8))} postes`, sublabel: "Capacité" },
-                  { icon: Car, label: `Inclus`, sublabel: "Stationnement" },
+                  ...(floorNum != null ? [{ icon: Layers as IconComp, label: floorNum === 0 ? "Rez-de-chaussée" : `${floorNum}${floorNum === 1 ? "er" : "e"} étage`, sublabel: "Étage" }] : []),
+                  ...(hasParking ? [{ icon: Car as IconComp, label: "Inclus", sublabel: "Stationnement" }] : []),
                 ] : [
-                  { icon: MapPin, label: `${area} m²`, sublabel: "Superficie" },
+                  ...(area ? [{ icon: MapPin as IconComp, label: `${area} m²`, sublabel: "Superficie" }] : []),
                   ...(beds > 0 ? [{ icon: Bed as IconComp, label: `${beds} chambre${beds > 1 ? "s" : ""}`, sublabel: "Chambres" }] : []),
                   ...(baths > 0 ? [{ icon: Bath as IconComp, label: `${baths} salle${baths > 1 ? "s" : ""}`, sublabel: "Salle de bain" }] : []),
-                  { icon: ChevronRight as IconComp, label: "1er étage", sublabel: "Étage" },
-                  { icon: Car as IconComp, label: "1 inclus", sublabel: "Stationnement" },
-                  { icon: Wand2 as IconComp, label: id % 2 === 1 ? "Meublé" : "Non meublé", sublabel: "Ameublement" },
+                  ...(floorNum != null ? [{ icon: Layers as IconComp, label: floorNum === 0 ? "Rez-de-chaussée" : `${floorNum}${floorNum === 1 ? "er" : "e"} étage`, sublabel: "Étage" }] : []),
+                  ...(hasParking ? [{ icon: Car as IconComp, label: "Inclus", sublabel: "Stationnement" }] : []),
+                  ...(isFurnished ? [{ icon: Wand2 as IconComp, label: "Meublé", sublabel: "Ameublement" }] : []),
                 ];
+
+                if (items.length === 0) return null;
                 return (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
                     {items.map(({ icon: Icon, label, sublabel }) => (
@@ -692,105 +609,97 @@ export default function PropertyDetailPage() {
                   </div>
                 );
               })()}
-              {/* Ce qui est inclus */}
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-3">
-                {isCommercialType ? "Services inclus dans le loyer" : "Ce qui est inclus"}
-              </p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {(isCommercialType ? [
-                  { icon: Wifi, label: "Internet fibre" },
-                  { icon: Trash2, label: "Collecte des déchets" },
-                  { icon: Wind, label: "Climatisation" },
-                  { icon: Zap, label: "Électricité commune" },
-                  { icon: Droplets, label: "Eau" },
-                  { icon: Car, label: "Stationnement" },
-                ] : CHARGES_ITEMS).map(({ icon: Icon, label }) => (
-                  <div key={label} className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3">
-                    <Icon className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
-                    <span className="text-xs font-medium text-gray-700">{label}</span>
-                  </div>
-                ))}
-              </div>
+              {/* Services inclus dans le loyer — dérivés des amenities réelles */}
+              {(() => {
+                const includedServices = amenities
+                  .filter(a => Object.prototype.hasOwnProperty.call(INCLUDED_SERVICE_MAP, a))
+                  .map(a => ({ label: a, icon: INCLUDED_SERVICE_MAP[a] }));
+                if (includedServices.length === 0) return null;
+                return (
+                  <>
+                    <p className="text-xs text-gray-400 font-medium uppercase tracking-wide mb-3">
+                      {isCommercialType ? "Services inclus dans le loyer" : "Ce qui est inclus"}
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {includedServices.map(({ icon: Icon, label }) => (
+                        <div key={label} className="flex items-center gap-2.5 bg-gray-50 rounded-xl px-4 py-3">
+                          <Icon className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
+                          <span className="text-xs font-medium text-gray-700">{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()}
             </section>
 
             {/* Équipements */}
-            <section className="mb-8">
-              <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>
-                {isCommercialType ? "Équipements professionnels" : "Équipements et commodités"}
-              </h2>
-              <div className="grid grid-cols-2 gap-2.5">
-                {amenities.map((a: string) => {
-                  const Icon = AMENITY_ICON_MAP[a] ?? CheckCircle;
-                  return (
-                    <div key={a} className="flex items-center gap-2.5 text-sm text-gray-600">
-                      <Icon className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
-                      {a}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            {/* Plans d'étage / Plans de masse */}
-            <section className="mb-8">
-              <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>
-                {isCommercialType ? "Plan de l'espace" : "Plans d'étage"}
-              </h2>
-              <div className="rounded-xl border border-gray-100 overflow-hidden">
-                <button
-                  onClick={() => setFloorOpen(!floorOpen)}
-                  className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold"
-                  style={{ background: "#F5F5F5", color: "#1A1A1A" }}
-                >
-                  <span>{floorOpen ? "∧" : "∨"} {isCommercialType ? `Espace principal — ${area} m²` : "Premier étage"}</span>
-                  {!isCommercialType && (
-                    <span className="flex items-center gap-3 text-xs font-medium text-gray-500">
-                      {beds > 0 && <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" />{beds} Chambre{beds > 1 ? "s" : ""}</span>}
-                      {baths > 0 && <span>🚿 {baths} Salle de bain</span>}
-                    </span>
-                  )}
-                </button>
-                {floorOpen && (
-                  <div className="p-5">
-                    {isCommercialType ? <CommercialFloorPlanSVG area={area} isOffice={isOffice} /> : <FloorPlanSVG />}
-                  </div>
-                )}
-              </div>
-            </section>
-
-            {/* DPE */}
-            <section className="mb-8">
-              <h2 className="text-lg font-bold mb-3" style={{ color: "#1A1A1A" }}>Diagnostic de performance énergétique</h2>
-              <p className="text-sm text-gray-500 mb-5">
-                Montant estimé des dépenses annuelles : entre 400 CA$ et 700 CA$ par an (estimation basée sur les données 2022–2023).
-              </p>
-              <div className="relative h-3 rounded-full overflow-hidden mb-2" style={{ background: "linear-gradient(to right, #4CAF50, #8BC34A, #CDDC39, #FFC107, #FF5722, #F44336)" }}>
-                <div className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 border-white shadow-md" style={{ left: "28%", background: YELLOW }} />
-              </div>
-              <div className="flex justify-between text-xs text-gray-400 mb-4">
-                <span>Très économe (A)</span>
-                <span>Très énergivore (G)</span>
-              </div>
-              <button className="text-xs font-semibold flex items-center gap-1" style={{ color: YELLOW }}>
-                Voir le détail de performance énergétique <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </section>
-
-            {/* Visite virtuelle */}
-            <section className="mb-8">
-              <h2 className="text-lg font-bold mb-2" style={{ color: "#1A1A1A" }}>Visite virtuelle</h2>
-              <p className="text-sm text-gray-500 mb-4">Visualisez le bien en 3D et projetez-vous comme si vous y étiez !</p>
-              <div className="relative rounded-xl overflow-hidden flex items-center justify-center" style={{ background: "#1A1A1A", aspectRatio: "16/9" }}>
-                <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `url(${imgs[1]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
-                <div className="relative z-10">
-                  <button className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}>
-                    <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7 ml-1"><polygon points="5,3 19,12 5,21" /></svg>
-                  </button>
+            {amenities.length > 0 && (
+              <section className="mb-8">
+                <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>
+                  {isCommercialType ? "Équipements professionnels" : "Équipements et commodités"}
+                </h2>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {amenities.map((a: string) => {
+                    const Icon = AMENITY_ICON_MAP[a] ?? CheckCircle;
+                    return (
+                      <div key={a} className="flex items-center gap-2.5 text-sm text-gray-600">
+                        <Icon className="w-4 h-4 flex-shrink-0" style={{ color: YELLOW }} />
+                        {a}
+                      </div>
+                    );
+                  })}
                 </div>
-                <div className="absolute bottom-3 left-4 text-xs text-white/70">{addr} – {isCommercialType ? `${area} m² – ${typeLabel}` : `${beds} Ch. – ${typeLabel}`}</div>
-                <div className="absolute bottom-3 right-4 bg-white text-gray-600 text-xs font-bold px-2.5 py-1 rounded-md">Matterport</div>
-              </div>
-            </section>
+              </section>
+            )}
+
+            {/* Plans d'étage — uniquement si une URL est fournie */}
+            {property.floorPlan && (
+              <section className="mb-8">
+                <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>
+                  {isCommercialType ? "Plan de l'espace" : "Plans d'étage"}
+                </h2>
+                <div className="rounded-xl border border-gray-100 overflow-hidden">
+                  <button
+                    onClick={() => setFloorOpen(!floorOpen)}
+                    className="w-full flex items-center justify-between px-5 py-4 text-sm font-semibold"
+                    style={{ background: "#F5F5F5", color: "#1A1A1A" }}
+                  >
+                    <span>{floorOpen ? "∧" : "∨"} Plan du bien</span>
+                  </button>
+                  {floorOpen && (
+                    <div className="p-5">
+                      <img src={property.floorPlan} alt="Plan d'étage" className="w-full rounded-lg" />
+                    </div>
+                  )}
+                </div>
+              </section>
+            )}
+
+            {/* Visite virtuelle — uniquement si une URL est fournie */}
+            {property.virtualTourUrl && (
+              <section className="mb-8">
+                <h2 className="text-lg font-bold mb-2" style={{ color: "#1A1A1A" }}>Visite virtuelle</h2>
+                <p className="text-sm text-gray-500 mb-4">Visualisez le bien en 3D et projetez-vous comme si vous y étiez !</p>
+                <a
+                  href={property.virtualTourUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative rounded-xl overflow-hidden flex items-center justify-center block"
+                  style={{ background: "#1A1A1A", aspectRatio: "16/9" }}
+                >
+                  {hasImages && (
+                    <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `url(${imgs[0]})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+                  )}
+                  <div className="relative z-10">
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.2)", backdropFilter: "blur(4px)" }}>
+                      <svg viewBox="0 0 24 24" fill="white" className="w-7 h-7 ml-1"><polygon points="5,3 19,12 5,21" /></svg>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-3 right-4 bg-white text-gray-600 text-xs font-bold px-2.5 py-1 rounded-md">Visite 3D</div>
+                </a>
+              </section>
+            )}
 
             {/* Carte */}
             <section className="mb-8">
@@ -806,11 +715,11 @@ export default function PropertyDetailPage() {
               />
             </section>
 
-            {/* À proximité */}
-            <section className="mb-8">
-              <h2 className="text-lg font-bold mb-1" style={{ color: "#1A1A1A" }}>À proximité</h2>
-              <p className="text-sm text-gray-400 mb-5">Découvrez les commodités à proximité pour bien évaluer l'emplacement et la qualité de vie offerte.</p>
-              {property.nearbyPlaces && property.nearbyPlaces.length > 0 ? (
+            {/* À proximité — uniquement si des lieux sont renseignés */}
+            {property.nearbyPlaces && property.nearbyPlaces.length > 0 && (
+              <section className="mb-8">
+                <h2 className="text-lg font-bold mb-1" style={{ color: "#1A1A1A" }}>À proximité</h2>
+                <p className="text-sm text-gray-400 mb-5">Découvrez les commodités à proximité pour bien évaluer l'emplacement et la qualité de vie offerte.</p>
                 <div className="grid grid-cols-2 gap-0 rounded-xl overflow-hidden border border-gray-100">
                   {property.nearbyPlaces.map((place, i) => {
                     const l = place.toLowerCase();
@@ -839,43 +748,8 @@ export default function PropertyDetailPage() {
                     );
                   })}
                 </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-0 rounded-xl overflow-hidden border border-gray-100">
-                  {NEARBY_ITEMS.map(({ label, val, icon: Icon }, i) => (
-                    <div key={label} className="flex items-center justify-between py-3 px-4 text-sm" style={{ borderBottom: "1px solid #F0F0F0", background: i % 2 === 0 ? "white" : "#FAFAFA" }}>
-                      <span className="flex items-center gap-2 font-semibold text-xs" style={{ color: YELLOW }}>
-                        <Icon className="w-3.5 h-3.5" />{label}
-                      </span>
-                      <span className="text-gray-500 text-xs">{val}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {/* Pièces jointes */}
-            <section className="mb-8">
-              <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Pièces jointes</h2>
-              <div className="grid grid-cols-2 gap-4">
-                {(isCommercialType ? [
-                  { name: "Bail-Commercial.pdf", iconBg: "#EBF5FB", iconColor: "#1565C0", label: "PDF" },
-                  { name: "État-Lieux-Commercial.pdf", iconBg: "#E0F7FA", iconColor: "#00838F", label: "PDF" },
-                ] : [
-                  { name: "Bail-Logement.pdf", iconBg: "#EBF5FB", iconColor: "#1565C0", label: "PDF" },
-                  { name: "Règlement-Immeuble.pdf", iconBg: "#E0F7FA", iconColor: "#00838F", label: "DOC" },
-                ]).map(f => (
-                  <div key={f.name} className="flex items-center justify-between px-4 py-3.5 rounded-xl" style={{ background: "#F5F5F5" }}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-black" style={{ background: f.iconBg, color: f.iconColor }}>{f.label}</div>
-                      <span className="text-xs font-medium text-gray-700">{f.name}</span>
-                    </div>
-                    <button className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:border-gray-400 transition-colors">
-                      <Download className="w-3.5 h-3.5 text-gray-500" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </section>
+              </section>
+            )}
 
           </div>
 
