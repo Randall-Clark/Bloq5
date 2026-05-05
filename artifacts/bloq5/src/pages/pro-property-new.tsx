@@ -717,6 +717,7 @@ export default function ProPropertyNewPage() {
                       const checked = selectedAmenities.has(item.id);
                       return (
                         <label key={item.id}
+                          onClick={() => toggleAmenity(item.id)}
                           className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl border cursor-pointer select-none transition-all"
                           style={{
                             borderColor: checked ? YELLOW : "#E5E7EB",
