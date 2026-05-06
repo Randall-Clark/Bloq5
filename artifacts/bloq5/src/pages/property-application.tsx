@@ -1,6 +1,7 @@
 import { useRoute, useLocation, useSearch } from "wouter";
-import { useGetProperty } from "@workspace/api-client-react";
+import { useGetProperty, useCreateRentalRequest } from "@workspace/api-client-react";
 import { useState, useEffect, useRef } from "react";
+import { useSession } from "@/lib/auth-client";
 import { CheckCircle, ChevronDown, ArrowLeft } from "lucide-react";
 
 const YELLOW = "#F5A623";
@@ -235,17 +236,23 @@ function ResScreen1({ value, onChange, onNext, addr, singleRoomOnly = false }: {
   );
 }
 
-function ResScreen2({ form, onChange, onNext }: {
+function ResScreen2({ form, onChange, onNext, isLoggedIn }: {
   form: FormData; onChange: (k: keyof FormData, v: string) => void; onNext: () => void;
+  isLoggedIn?: boolean;
 }) {
   const ok = form.firstName && form.lastName && form.email && form.phone;
   return (
     <div className="min-h-screen flex flex-col items-center pt-20 pb-32 px-4" style={{ background: LAVENDER_BG }}>
       <StepTitle>Informations candidat·e</StepTitle>
-      <p className="text-sm text-gray-500 mb-8">
-        Vous avez déjà un compte ?{" "}
-        <a href="/sign-in" className="font-semibold" style={{ color: YELLOW }}>Connectez-vous</a>
-      </p>
+      {!isLoggedIn && (
+        <p className="text-sm text-gray-500 mb-8">
+          Vous avez déjà un compte ?{" "}
+          <a href="/sign-in" className="font-semibold" style={{ color: YELLOW }}>Connectez-vous</a>
+        </p>
+      )}
+      {isLoggedIn && (
+        <p className="text-sm text-gray-500 mb-8">Vérifiez et complétez vos informations ci-dessous.</p>
+      )}
       <div className="w-full max-w-[600px] bg-white rounded-2xl p-8 shadow-sm" style={{ border: "1px solid #E8E8E8" }}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div><label className={labelClass}>Prénom *</label><input className={inputClass} placeholder="Alex" value={form.firstName} onChange={e => onChange("firstName", e.target.value)} /></div>
@@ -346,8 +353,9 @@ function ResScreen4({ form, onChange, onNext, minStartDate }: {
   );
 }
 
-function ResScreen5({ form, onChange, onNext }: {
+function ResScreen5({ form, onChange, onNext, submitError, isSubmitting }: {
   form: FormData; onChange: (k: keyof FormData, v: string) => void; onNext: () => void;
+  submitError?: string | null; isSubmitting?: boolean;
 }) {
   const name = [form.firstName, form.lastName].filter(Boolean).join(" ") || "vous";
   const ok = form.birthDate && form.citizenship && form.personalStatus;
@@ -382,7 +390,16 @@ function ResScreen5({ form, onChange, onNext }: {
           </div>
         </div>
       </div>
-      <NextButton onClick={onNext} disabled={!ok} />
+      {submitError && (
+        <div className="w-full max-w-[600px] mx-auto mt-4 px-4 py-3 rounded-xl text-sm text-red-700 bg-red-50 border border-red-200 text-center">
+          {submitError.includes("connecté") || submitError.includes("401")
+            ? <>{submitError}{" "}<a href="/sign-in" className="font-semibold underline">Se connecter</a></>
+            : submitError}
+        </div>
+      )}
+      <NextButton onClick={onNext} disabled={!ok || !!isSubmitting}>
+        {isSubmitting ? "Envoi en cours…" : "Soumettre ma candidature →"}
+      </NextButton>
     </div>
   );
 }
@@ -503,8 +520,9 @@ function ComScreen4({ form, onChange, onNext }: {
   );
 }
 
-function ComScreen5({ form, onChange, onNext }: {
+function ComScreen5({ form, onChange, onNext, submitError, isSubmitting }: {
   form: FormData; onChange: (k: keyof FormData, v: string) => void; onNext: () => void;
+  submitError?: string | null; isSubmitting?: boolean;
 }) {
   const ok = form.businessSector;
   return (
@@ -540,7 +558,16 @@ function ComScreen5({ form, onChange, onNext }: {
           </div>
         </div>
       </div>
-      <NextButton onClick={onNext} disabled={!ok} />
+      {submitError && (
+        <div className="w-full max-w-[600px] mx-auto mt-4 px-4 py-3 rounded-xl text-sm text-red-700 bg-red-50 border border-red-200 text-center">
+          {submitError.includes("connecté") || submitError.includes("401")
+            ? <>{submitError}{" "}<a href="/sign-in" className="font-semibold underline">Se connecter</a></>
+            : submitError}
+        </div>
+      )}
+      <NextButton onClick={onNext} disabled={!ok || !!isSubmitting}>
+        {isSubmitting ? "Envoi en cours…" : "Soumettre ma candidature →"}
+      </NextButton>
     </div>
   );
 }
@@ -704,11 +731,31 @@ export default function PropertyApplicationPage() {
 
   const [step, setStep] = useState<Step>(0);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
+  const createRequest = useCreateRentalRequest();
 
   const { data: property } = useGetProperty(id, {
     query: { enabled: !!id, queryKey: ["getProperty", id] as const },
   });
+
+  /* Pre-fill form from session when user is logged in */
+  useEffect(() => {
+    if (!session?.user) return;
+    const u = session.user;
+    const nameParts = (u.name ?? "").split(" ");
+    const firstName = nameParts[0] ?? "";
+    const lastName = nameParts.slice(1).join(" ");
+    setForm(prev => ({
+      ...prev,
+      firstName: prev.firstName || firstName,
+      lastName: prev.lastName || lastName,
+      email: prev.email || (u.email ?? ""),
+    }));
+  }, [session?.user?.id]);
 
   const propType = property?.type ?? "";
   const isCommercial = propType === "office" || propType === "commercial" || propType === "industrial";
@@ -752,6 +799,58 @@ export default function PropertyApplicationPage() {
 
   const confirmStep: Step = isCoLiving ? 7 : 6;
 
+  async function handleSubmitAndConfirm() {
+    setSubmitError(null);
+    const applicantName = isCommercial
+      ? (form.companyContact || form.companyName)
+      : [form.firstName, form.lastName].filter(Boolean).join(" ");
+    const applicantEmail = isCommercial ? form.companyEmail : form.email;
+    const applicantPhone = isCommercial ? form.companyPhone : form.phone;
+
+    const messageParts: string[] = [];
+    if (!isCommercial) {
+      if (form.occupantType) messageParts.push(`Type d'occupant: ${form.occupantType}`);
+      if (form.startDate) messageParts.push(`Début souhaité: ${form.startDate}`);
+      if (form.duration) messageParts.push(`Durée prévue: ${form.duration}`);
+      if (form.citizenship) messageParts.push(`Citoyenneté: ${form.citizenship}`);
+      if (form.monthlyIncome) messageParts.push(`Revenu mensuel: ${form.monthlyIncome} CA$`);
+      if (form.description) messageParts.push(`Description: ${form.description}`);
+      if (isCoLiving && form.selectedRoom !== null) {
+        messageParts.push(`Chambre sélectionnée: ${form.selectedRoom === "all" ? "Tout le logement" : `Chambre ${form.selectedRoom}`}`);
+      }
+    } else {
+      if (form.companyType) messageParts.push(`Type d'entreprise: ${form.companyType}`);
+      if (form.companyName) messageParts.push(`Raison sociale: ${form.companyName}`);
+      if (form.companyNEQ) messageParts.push(`NEQ: ${form.companyNEQ}`);
+      if (form.startDate) messageParts.push(`Début souhaité: ${form.startDate}`);
+      if (form.leaseDuration) messageParts.push(`Durée du bail: ${form.leaseDuration}`);
+      if (form.businessSector) messageParts.push(`Secteur: ${form.businessSector}`);
+      if (form.annualRevenue) messageParts.push(`CA annuel: ${form.annualRevenue} CA$`);
+      if (form.activityDescription) messageParts.push(`Activité: ${form.activityDescription}`);
+    }
+    if (form.source) messageParts.push(`Source: ${form.source}`);
+
+    try {
+      await createRequest.mutateAsync({
+        data: {
+          propertyId: id,
+          applicantName,
+          applicantEmail,
+          applicantPhone: applicantPhone || undefined,
+          message: messageParts.join(" | ") || "Candidature déposée",
+        },
+      });
+      goTo(confirmStep);
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || err?.message || "Erreur lors de l'envoi";
+      if (msg.includes("401") || msg.includes("non authentifié") || msg.includes("connecté")) {
+        setSubmitError("Vous devez être connecté pour soumettre une candidature.");
+      } else {
+        setSubmitError(msg);
+      }
+    }
+  }
+
   function handleBack() {
     if (step === 0) navigate(`/properties/${id}`);
     else goTo((step - 1) as Step);
@@ -792,10 +891,10 @@ export default function PropertyApplicationPage() {
               />
             )}
             {step === 2 && <ResScreen1 value={form.occupantType} onChange={v => setField("occupantType", v)} onNext={() => goTo(3)} addr={addr} singleRoomOnly={typeof form.selectedRoom === "number"} />}
-            {step === 3 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(4)} />}
+            {step === 3 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(4)} isLoggedIn={isLoggedIn} />}
             {step === 4 && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(5)} />}
             {step === 5 && <ResScreen4 form={form} onChange={setField} onNext={() => goTo(6)} minStartDate={form.selectedRoom === "all" && wholeUnitMinDate ? wholeUnitMinDate : undefined} />}
-            {step === 6 && <ResScreen5 form={form} onChange={setField} onNext={() => goTo(7)} />}
+            {step === 6 && <ResScreen5 form={form} onChange={setField} onNext={handleSubmitAndConfirm} submitError={submitError} isSubmitting={createRequest.isPending} />}
           </>
         ) : isCommercial ? (
           <>
@@ -803,15 +902,15 @@ export default function PropertyApplicationPage() {
             {step === 2 && <ComScreen2 form={form} onChange={setField} onNext={() => goTo(3)} />}
             {step === 3 && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(4)} />}
             {step === 4 && <ComScreen4 form={form} onChange={setField} onNext={() => goTo(5)} />}
-            {step === 5 && <ComScreen5 form={form} onChange={setField} onNext={() => goTo(6)} />}
+            {step === 5 && <ComScreen5 form={form} onChange={setField} onNext={handleSubmitAndConfirm} submitError={submitError} isSubmitting={createRequest.isPending} />}
           </>
         ) : (
           <>
             {step === 1 && <ResScreen1 value={form.occupantType} onChange={v => setField("occupantType", v)} onNext={() => goTo(2)} addr={addr} />}
-            {step === 2 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(3)} />}
+            {step === 2 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(3)} isLoggedIn={isLoggedIn} />}
             {step === 3 && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(4)} />}
             {step === 4 && <ResScreen4 form={form} onChange={setField} onNext={() => goTo(5)} />}
-            {step === 5 && <ResScreen5 form={form} onChange={setField} onNext={() => goTo(6)} />}
+            {step === 5 && <ResScreen5 form={form} onChange={setField} onNext={handleSubmitAndConfirm} submitError={submitError} isSubmitting={createRequest.isPending} />}
           </>
         )}
         {step === confirmStep && <Screen6 form={form} propertyAddr={addr} propertyId={id} isCommercial={isCommercial} selectedRoom={form.selectedRoom} />}
