@@ -299,24 +299,28 @@ function SharedScreen3({ value, onChange, onNext }: {
   );
 }
 
-function ResScreen4({ form, onChange, onNext }: {
+function ResScreen4({ form, onChange, onNext, minStartDate }: {
   form: FormData; onChange: (k: keyof FormData, v: string) => void; onNext: () => void;
+  minStartDate?: string;
 }) {
   const [durationOpen, setDurationOpen] = useState(false);
   const ok = form.startDate && form.duration;
-  const minDateStr = `${new Date().getFullYear()}-07-01`;
+  const defaultMin = `${new Date().getFullYear()}-07-01`;
+  const minDateStr = minStartDate ?? defaultMin;
+  const minDateLabel = new Date(minDateStr + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
   return (
     <div className="min-h-screen flex flex-col items-center pt-20 pb-32 px-4" style={{ background: LAVENDER_BG }}>
       <StepTitle>Informations sur votre location</StepTitle>
       <div className="w-full max-w-[560px] bg-white rounded-2xl p-8 shadow-sm mt-6" style={{ border: "1px solid #E8E8E8" }}>
         <div className="rounded-lg p-3 mb-6 text-[13px] text-gray-700" style={{ background: "#EAE8F5" }}>
-          Le logement sera libre le{" "}
-          <span className="font-semibold" style={{ color: YELLOW }}>01 juillet</span>{" "}
-          et les propriétaires préfèrent en général les candidats qui peuvent emménager le plus tôt possible.
+          {minStartDate
+            ? <>Le logement entier sera disponible à partir du{" "}<span className="font-semibold" style={{ color: YELLOW }}>{minDateLabel}</span>. Votre bail ne peut pas débuter avant cette date.</>
+            : <>Le logement sera libre le{" "}<span className="font-semibold" style={{ color: YELLOW }}>01 juillet</span>{" "}et les propriétaires préfèrent en général les candidats qui peuvent emménager le plus tôt possible.</>
+          }
         </div>
         <div className="mb-5">
           <label className={labelClass}>À quelle date souhaitez-vous faire débuter votre bail ? *</label>
-          <div className="text-[11px] mb-2 flex items-center gap-1" style={{ color: "#5C9BF5" }}>ⓘ Au plus tôt le 01/07/2026</div>
+          <div className="text-[11px] mb-2 flex items-center gap-1" style={{ color: "#5C9BF5" }}>ⓘ Au plus tôt le {minDateLabel}</div>
           <input type="date" className={inputClass} min={minDateStr} value={form.startDate} onChange={e => onChange("startDate", e.target.value)} />
           <p className="text-[11px] text-[#999] italic mt-1.5">*La date à laquelle commencera votre bail. Vous pourrez emménager à une date ultérieure si besoin.</p>
         </div>
@@ -544,15 +548,22 @@ function ComScreen5({ form, onChange, onNext }: {
 /* ─── Co-living Room Selection Screen ───────────────────────── */
 type CoLivingRoomEntry = { number: number; price: number | null; status: string; availableFrom?: string | null };
 
-function CoLivingRoomScreen({ rooms, selectedRoom, onSelect, onNext, addr }: {
+function CoLivingRoomScreen({ rooms, selectedRoom, onSelect, onNext, addr, wholeUnitMinDate }: {
   rooms: CoLivingRoomEntry[];
   selectedRoom: "all" | number | null;
   onSelect: (r: "all" | number) => void;
   onNext: () => void;
   addr: string;
+  wholeUnitMinDate?: string | null;
 }) {
   const anyRented = rooms.some(r => r.status === "rented");
   const isAllSelected = selectedRoom === "all";
+  const blockedAll = anyRented;
+  const restrictedAll = !anyRented && !!wholeUnitMinDate;
+
+  const minDateLabel = wholeUnitMinDate
+    ? new Date(wholeUnitMinDate + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })
+    : null;
 
   return (
     <div className="min-h-screen flex flex-col items-center pt-20 pb-32 px-4" style={{ background: LAVENDER_BG }}>
@@ -564,23 +575,27 @@ function CoLivingRoomScreen({ rooms, selectedRoom, onSelect, onNext, addr }: {
         </p>
       )}
       <div className="w-full max-w-[520px] space-y-3">
-        {/* Tout le logement — bloqué si au moins une chambre est déjà louée */}
+        {/* Tout le logement */}
         <button
-          onClick={() => !anyRented && onSelect("all")}
-          disabled={anyRented}
+          onClick={() => !blockedAll && onSelect("all")}
+          disabled={blockedAll}
           className="w-full flex items-center gap-4 p-5 rounded-[14px] bg-white text-left transition-all"
           style={{
             border: isAllSelected ? `2px solid ${YELLOW}` : "1.5px solid #E8E8E8",
             boxShadow: isAllSelected ? `0 0 0 3px rgba(245,166,35,0.15)` : "none",
-            opacity: anyRented ? 0.45 : 1,
-            cursor: anyRented ? "not-allowed" : "pointer",
+            opacity: blockedAll ? 0.45 : 1,
+            cursor: blockedAll ? "not-allowed" : "pointer",
           }}>
           <div className="w-5 h-5 rounded-full flex-shrink-0"
             style={{ border: isAllSelected ? `2px solid ${YELLOW}` : "2px solid #CCC", background: isAllSelected ? YELLOW : "transparent", boxShadow: isAllSelected ? `inset 0 0 0 3px white` : "none" }} />
           <div className="flex-1">
             <p className="text-[15px] font-semibold text-[#1A1A1A]">🏠 Tout le logement</p>
-            <p className="text-xs mt-0.5" style={{ color: anyRented ? "#C62828" : "#6B7280" }}>
-              {anyRented ? "Non disponible — une ou plusieurs chambres sont déjà louées" : "Postuler pour l'ensemble du bien"}
+            <p className="text-xs mt-0.5" style={{ color: blockedAll ? "#C62828" : restrictedAll ? "#B45309" : "#6B7280" }}>
+              {blockedAll
+                ? "Non disponible — une ou plusieurs chambres sont déjà louées"
+                : restrictedAll
+                  ? `⏰ Disponible à partir du ${minDateLabel}`
+                  : "Postuler pour l'ensemble du bien"}
             </p>
           </div>
         </button>
@@ -701,6 +716,14 @@ export default function PropertyApplicationPage() {
   const addr = property ? (property.address || property.title) : "";
   const rooms = (property?.rooms ?? []) as CoLivingRoomEntry[];
 
+  /* Compute the latest "availableFrom" among "soon" rooms for whole-unit restriction */
+  const wholeUnitMinDate: string | null = (() => {
+    if (rooms.some(r => r.status === "rented")) return null; // fully blocked, not restricted
+    const soonDates = rooms.filter(r => r.status === "soon" && r.availableFrom).map(r => r.availableFrom!);
+    if (soonDates.length === 0) return null;
+    return soonDates.reduce((latest, d) => (d > latest ? d : latest), soonDates[0]);
+  })();
+
   /* Pre-fill room from URL query param ?room=all|N */
   useEffect(() => {
     const roomParam = new URLSearchParams(search).get("room");
@@ -765,12 +788,13 @@ export default function PropertyApplicationPage() {
                 onSelect={r => setForm(prev => ({ ...prev, selectedRoom: r }))}
                 onNext={() => goTo(2)}
                 addr={addr}
+                wholeUnitMinDate={wholeUnitMinDate}
               />
             )}
             {step === 2 && <ResScreen1 value={form.occupantType} onChange={v => setField("occupantType", v)} onNext={() => goTo(3)} addr={addr} singleRoomOnly={typeof form.selectedRoom === "number"} />}
             {step === 3 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(4)} />}
             {step === 4 && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(5)} />}
-            {step === 5 && <ResScreen4 form={form} onChange={setField} onNext={() => goTo(6)} />}
+            {step === 5 && <ResScreen4 form={form} onChange={setField} onNext={() => goTo(6)} minStartDate={form.selectedRoom === "all" && wholeUnitMinDate ? wholeUnitMinDate : undefined} />}
             {step === 6 && <ResScreen5 form={form} onChange={setField} onNext={() => goTo(7)} />}
           </>
         ) : isCommercial ? (
