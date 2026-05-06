@@ -10,6 +10,7 @@ import dashboardRouter from "./dashboard";
 import managersRouter from "./managers";
 import subscriptionsRouter from "./subscriptions";
 import profileRouter from "./profile";
+import proAuthRouter from "./pro-auth";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(dashboardRouter);
 router.use(managersRouter);
 router.use(subscriptionsRouter);
 router.use(profileRouter);
+router.use(proAuthRouter);
 
 export default router;

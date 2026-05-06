@@ -10,11 +10,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import UserLayout from "@/components/layout/user-layout";
 import { User, MessageSquare, Heart, Calendar, Loader2, Building2, LayoutDashboard } from "lucide-react";
 import { Link } from "wouter";
 import { authClient } from "@/lib/auth-client";
+import { ProAuthModal } from "./pro-auth-modal";
 
 const YELLOW = "#F5A623";
 const NAVY   = "#1A237E";
@@ -26,7 +28,7 @@ const profileSchema = z.object({
 });
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-function ProButton({ role }: { role: string }) {
+function ProButton({ role, onProClick }: { role: string; onProClick: () => void }) {
   const isPro = role === "owner" || role === "manager";
 
   if (isPro) {
@@ -44,15 +46,14 @@ function ProButton({ role }: { role: string }) {
   }
 
   return (
-    <Link href="/pro">
-      <span
-        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
-        style={{ background: YELLOW, color: "#1A1A1A" }}
-      >
-        <Building2 className="w-4 h-4" />
-        Devenir Pro
-      </span>
-    </Link>
+    <button
+      onClick={onProClick}
+      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
+      style={{ background: YELLOW, color: "#1A1A1A" }}
+    >
+      <Building2 className="w-4 h-4" />
+      Vous êtes un pro ?
+    </button>
   );
 }
 
@@ -60,6 +61,7 @@ export default function ProfilePage() {
   const { toast }      = useToast();
   const queryClient    = useQueryClient();
   const { data: session } = authClient.useSession();
+  const [showProModal, setShowProModal] = useState(false);
 
   const { data: profile,       isLoading: pL } = useGetProfile();
   const { data: requestsData,  isLoading: rL } = useListRentalRequests();
@@ -116,6 +118,15 @@ export default function ProfilePage() {
 
   return (
     <UserLayout>
+      {/* Pro auth modal */}
+      {showProModal && (
+        <ProAuthModal
+          onClose={() => {
+            setShowProModal(false);
+            queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
+          }}
+        />
+      )}
 
       {/* Header row: greeting + Pro button */}
       <div className="flex items-start justify-between gap-4 mb-8">
@@ -125,7 +136,7 @@ export default function ProfilePage() {
           </h1>
           <p className="text-gray-500 text-sm mt-1">Gérez votre profil et suivez vos activités.</p>
         </div>
-        {profile && <ProButton role={role} />}
+        {profile && <ProButton role={role} onProClick={() => setShowProModal(true)} />}
       </div>
 
       {/* Stats cards — only when real data exists */}

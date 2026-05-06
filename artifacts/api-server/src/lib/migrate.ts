@@ -48,6 +48,34 @@ async function addColumnIfMissing(client: any, column: string, definition: strin
 export async function runMigrations(): Promise<void> {
   const client = await pool.connect();
   try {
+    /* ── pro_otp table ─────────────────────────────────────── */
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS pro_otp (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        code TEXT NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        used BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    /* ── new profile columns ───────────────────────────────── */
+    const profileCols: [string, string][] = [
+      ["pro_email",            "text"],
+      ["residential_address",  "text"],
+    ];
+    for (const [col, def] of profileCols) {
+      const check = await client.query(
+        `SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = $1`,
+        [col]
+      );
+      if (check.rowCount === 0) {
+        logger.info(`Adding '${col}' column to profiles table…`);
+        await client.query(`ALTER TABLE profiles ADD COLUMN ${col} ${def}`);
+      }
+    }
     await addColumnIfMissing(client, "rooms",               "jsonb NOT NULL DEFAULT '[]'::jsonb");
     await addColumnIfMissing(client, "floor",               "integer");
     await addColumnIfMissing(client, "floor_plan",          "text");
