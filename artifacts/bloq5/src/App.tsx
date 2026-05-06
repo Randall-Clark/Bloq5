@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation, useSearch, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, useRef } from "react";
 
@@ -149,9 +149,10 @@ const GithubIcon = () => (
   </svg>
 );
 
-function SocialButtons() {
+function SocialButtons({ returnTo }: { returnTo?: string }) {
   async function handleSocial(provider: "google" | "github") {
-    await authClient.signIn.social({ provider, callbackURL: `${basePath}/profile` });
+    const dest = returnTo ? `${window.location.origin}${returnTo}` : `${window.location.origin}${basePath}/profile`;
+    await authClient.signIn.social({ provider, callbackURL: dest });
   }
   return (
     <div className="flex flex-col gap-3 mb-6">
@@ -182,6 +183,8 @@ function Divider() {
 /* ── Sign In Page ── */
 function SignInPage() {
   const [, navigate] = useLocation();
+  const search = useSearch();
+  const returnTo = new URLSearchParams(search).get("returnTo") ?? "";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -191,12 +194,12 @@ function SignInPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const result = await authClient.signIn.email({ email, password, callbackURL: "/profile" });
+    const result = await authClient.signIn.email({ email, password, callbackURL: returnTo || "/profile" });
     setLoading(false);
     if (result.error) {
       setError(result.error.message ?? "Identifiants incorrects");
     } else {
-      navigate("/profile");
+      navigate(returnTo || "/profile");
     }
   }
 
@@ -205,7 +208,7 @@ function SignInPage() {
       <div>
         <h2 className="text-2xl font-bold text-[#1A1A1A] mb-1">Se connecter</h2>
         <p className="text-gray-500 text-sm mb-6">Bienvenue sur bloq5</p>
-        <SocialButtons />
+        <SocialButtons returnTo={returnTo} />
         <Divider />
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (

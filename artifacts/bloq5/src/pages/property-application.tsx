@@ -236,23 +236,18 @@ function ResScreen1({ value, onChange, onNext, addr, singleRoomOnly = false }: {
   );
 }
 
-function ResScreen2({ form, onChange, onNext, isLoggedIn }: {
+function ResScreen2({ form, onChange, onNext, onSaveDraftAndLogin }: {
   form: FormData; onChange: (k: keyof FormData, v: string) => void; onNext: () => void;
-  isLoggedIn?: boolean;
+  onSaveDraftAndLogin: () => void;
 }) {
   const ok = form.firstName && form.lastName && form.email && form.phone;
   return (
     <div className="min-h-screen flex flex-col items-center pt-20 pb-32 px-4" style={{ background: LAVENDER_BG }}>
       <StepTitle>Informations candidat·e</StepTitle>
-      {!isLoggedIn && (
-        <p className="text-sm text-gray-500 mb-8">
-          Vous avez déjà un compte ?{" "}
-          <a href="/sign-in" className="font-semibold" style={{ color: YELLOW }}>Connectez-vous</a>
-        </p>
-      )}
-      {isLoggedIn && (
-        <p className="text-sm text-gray-500 mb-8">Vérifiez et complétez vos informations ci-dessous.</p>
-      )}
+      <p className="text-sm text-gray-500 mb-8">
+        Vous avez déjà un compte ?{" "}
+        <button onClick={onSaveDraftAndLogin} className="font-semibold" style={{ color: YELLOW }}>Connectez-vous</button>
+      </p>
       <div className="w-full max-w-[600px] bg-white rounded-2xl p-8 shadow-sm" style={{ border: "1px solid #E8E8E8" }}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div><label className={labelClass}>Prénom *</label><input className={inputClass} placeholder="Alex" value={form.firstName} onChange={e => onChange("firstName", e.target.value)} /></div>
@@ -712,6 +707,8 @@ function Screen6({ form, propertyAddr, propertyId, isCommercial, selectedRoom }:
   );
 }
 
+const DRAFT_KEY = "bloq5_application_draft";
+
 /* ─── Main page ─────────────────────────────────────────────── */
 export default function PropertyApplicationPage() {
   const [, params] = useRoute("/properties/:id/application");
@@ -724,13 +721,28 @@ export default function PropertyApplicationPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { data: session } = useSession();
+  const { data: session, isPending: sessionLoading } = useSession();
   const isLoggedIn = !!session?.user;
   const createRequest = useCreateRentalRequest();
 
   const { data: property } = useGetProperty(id, {
     query: { enabled: !!id, queryKey: ["getProperty", id] as const },
   });
+
+  /* Restore draft from localStorage after login */
+  useEffect(() => {
+    if (sessionLoading) return;
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as { propertyId: number; step: Step; form: FormData; ts: number };
+      if (draft.propertyId !== id) return;
+      if (Date.now() - draft.ts > 60 * 60 * 1000) { localStorage.removeItem(DRAFT_KEY); return; }
+      setForm(draft.form);
+      setStep(draft.step);
+      localStorage.removeItem(DRAFT_KEY);
+    } catch { /* ignore */ }
+  }, [id, sessionLoading]);
 
   /* Pre-fill form from session when user is logged in */
   useEffect(() => {
@@ -841,11 +853,21 @@ export default function PropertyApplicationPage() {
     }
   }
 
+  function saveDraftAndLogin() {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ propertyId: id, step, form, ts: Date.now() }));
+    } catch { /* ignore */ }
+    const returnTo = `/properties/${id}/application`;
+    navigate(`/sign-in?returnTo=${encodeURIComponent(returnTo)}`);
+  }
+
   function handleBack() {
     if (step === 0) navigate(`/properties/${id}`);
-    // When logged in, the source step (3 for residential/commercial, 4 for co-living) is skipped
-    else if (isLoggedIn && !isCoLiving && !isCommercial && step === 4) goTo(2);
-    else if (isLoggedIn && isCoLiving && step === 5) goTo(3);
+    // Residential logged in: steps 2 (info) and 3 (source) are skipped
+    else if (isLoggedIn && !isCoLiving && !isCommercial && step === 4) goTo(1);
+    // Co-living logged in: steps 3 (info) and 4 (source) are skipped
+    else if (isLoggedIn && isCoLiving && step === 5) goTo(2);
+    // Commercial logged in: only step 3 (source) is skipped; step 2 (company info) stays
     else if (isLoggedIn && isCommercial && step === 4) goTo(2);
     else goTo((step - 1) as Step);
   }
@@ -884,8 +906,8 @@ export default function PropertyApplicationPage() {
                 wholeUnitMinDate={wholeUnitMinDate}
               />
             )}
-            {step === 2 && <ResScreen1 value={form.occupantType} onChange={v => setField("occupantType", v)} onNext={() => goTo(3)} addr={addr} singleRoomOnly={typeof form.selectedRoom === "number"} />}
-            {step === 3 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(isLoggedIn ? 5 : 4)} isLoggedIn={isLoggedIn} />}
+            {step === 2 && <ResScreen1 value={form.occupantType} onChange={v => setField("occupantType", v)} onNext={() => goTo(isLoggedIn ? 5 : 3)} addr={addr} singleRoomOnly={typeof form.selectedRoom === "number"} />}
+            {step === 3 && !isLoggedIn && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(4)} onSaveDraftAndLogin={saveDraftAndLogin} />}
             {step === 4 && !isLoggedIn && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(5)} />}
             {step === 5 && <ResScreen4 form={form} onChange={setField} onNext={() => goTo(6)} minStartDate={form.selectedRoom === "all" && wholeUnitMinDate ? wholeUnitMinDate : undefined} />}
             {step === 6 && <ResScreen5 form={form} onChange={setField} onNext={handleSubmitAndConfirm} submitError={submitError} isSubmitting={createRequest.isPending} />}
@@ -900,8 +922,8 @@ export default function PropertyApplicationPage() {
           </>
         ) : (
           <>
-            {step === 1 && <ResScreen1 value={form.occupantType} onChange={v => setField("occupantType", v)} onNext={() => goTo(2)} addr={addr} />}
-            {step === 2 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(isLoggedIn ? 4 : 3)} isLoggedIn={isLoggedIn} />}
+            {step === 1 && <ResScreen1 value={form.occupantType} onChange={v => setField("occupantType", v)} onNext={() => goTo(isLoggedIn ? 4 : 2)} addr={addr} />}
+            {step === 2 && !isLoggedIn && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(3)} onSaveDraftAndLogin={saveDraftAndLogin} />}
             {step === 3 && !isLoggedIn && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(4)} />}
             {step === 4 && <ResScreen4 form={form} onChange={setField} onNext={() => goTo(5)} />}
             {step === 5 && <ResScreen5 form={form} onChange={setField} onNext={handleSubmitAndConfirm} submitError={submitError} isSubmitting={createRequest.isPending} />}
