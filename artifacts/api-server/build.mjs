@@ -29,6 +29,10 @@ async function buildAll() {
     // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
     external: [
       "*.node",
+      "pg",
+      "pg-pool",
+      "stripe",
+      "stripe-replit-sync",
       "drizzle-orm",
       "drizzle-orm/*",
       "drizzle-zod",

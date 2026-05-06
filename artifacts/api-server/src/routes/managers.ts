@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
-import { managersTable, insertManagerSchema } from "@workspace/db/schema";
-import { eq, and } from "drizzle-orm";
+import { managersTable, insertManagerSchema, subscriptionsTable } from "@workspace/db/schema";
+import { eq, and, sql } from "drizzle-orm";
 import type { Request, Response } from "express";
 
 const router = Router();
@@ -10,7 +10,6 @@ const router = Router();
 router.get("/api/managers", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { id: userId } = getAuthUser(req);
-
     const managers = await db.select().from(managersTable).where(eq(managersTable.ownerId, userId)).orderBy(managersTable.createdAt);
     res.json(managers);
   } catch (error) {
@@ -22,6 +21,35 @@ router.get("/api/managers", requireAuth(), async (req: Request, res: Response): 
 router.post("/api/managers", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
     const { id: userId } = getAuthUser(req);
+
+    /* ── Vérification forfait ─────────────────────────────────── */
+    const [sub] = await db.select().from(subscriptionsTable).where(eq(subscriptionsTable.ownerId, userId));
+    const planId = sub?.planId ?? "free";
+
+    if (!["pro", "enterprise"].includes(planId) || sub?.status !== "active") {
+      res.status(403).json({
+        error: "Le forfait Pro (160 $/mois) est requis pour ajouter des gestionnaires.",
+        code: "PLAN_UPGRADE_REQUIRED",
+        requiredPlan: "pro",
+      });
+      return;
+    }
+
+    /* ── Vérification limite gestionnaires ───────────────────── */
+    const maxManagers = planId === "enterprise" ? Infinity : 2;
+    const [countResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(managersTable)
+      .where(eq(managersTable.ownerId, userId));
+    const currentCount = Number(countResult?.count ?? 0);
+
+    if (currentCount >= maxManagers) {
+      res.status(403).json({
+        error: `Limite de ${maxManagers} gestionnaire(s) atteinte pour le forfait Pro.`,
+        code: "MANAGER_LIMIT_REACHED",
+      });
+      return;
+    }
 
     const parsed = insertManagerSchema.safeParse({ ...req.body, ownerId: userId });
     if (!parsed.success) { res.status(400).json({ error: parsed.error.issues }); return; }

@@ -61,6 +61,22 @@ export async function runMigrations(): Promise<void> {
       )
     `);
 
+    /* ── subscriptions: stripe columns ────────────────────── */
+    const subStripeCols: [string, string][] = [
+      ["stripe_customer_id",     "text"],
+      ["stripe_subscription_id", "text"],
+    ];
+    for (const [col, def] of subStripeCols) {
+      const check = await client.query(
+        `SELECT 1 FROM information_schema.columns WHERE table_name = 'subscriptions' AND column_name = $1`,
+        [col]
+      );
+      if (check.rowCount === 0) {
+        logger.info(`Adding '${col}' column to subscriptions table…`);
+        await client.query(`ALTER TABLE subscriptions ADD COLUMN ${col} ${def}`);
+      }
+    }
+
     /* ── new profile columns ───────────────────────────────── */
     const profileCols: [string, string][] = [
       ["pro_email",            "text"],

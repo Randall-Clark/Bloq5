@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
-import { propertiesTable, insertPropertySchema, managersTable } from "@workspace/db/schema";
+import { propertiesTable, insertPropertySchema, subscriptionsTable } from "@workspace/db/schema";
 import { eq, sql, ilike, and, gte, lte } from "drizzle-orm";
 import type { Request, Response } from "express";
+import { getPlanById } from "./subscriptions";
 
 const router = Router();
 
@@ -90,7 +91,28 @@ router.post("/api/properties", requireAuth(), async (req: Request, res: Response
   try {
     const { id: userId } = getAuthUser(req);
 
-    // drizzle-zod 0.8 generates z.string() for numeric columns — coerce numbers to strings
+    /* ── Vérification limite de propriétés ───────────────────── */
+    const [sub] = await db.select().from(subscriptionsTable).where(eq(subscriptionsTable.ownerId, userId));
+    const plan = getPlanById(sub?.planId ?? "free");
+
+    if (plan.maxProperties !== -1) {
+      const [countResult] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(propertiesTable)
+        .where(eq(propertiesTable.ownerId, userId));
+      const current = Number(countResult?.count ?? 0);
+
+      if (current >= plan.maxProperties) {
+        res.status(403).json({
+          error: `Limite de ${plan.maxProperties} propriété(s) atteinte pour le forfait ${plan.name}. Passez au forfait Pro pour en ajouter davantage.`,
+          code: "PROPERTY_LIMIT_REACHED",
+          currentPlan: plan.id,
+          maxProperties: plan.maxProperties,
+        });
+        return;
+      }
+    }
+
     const body = {
       ...req.body,
       ownerId: userId,
@@ -118,6 +140,20 @@ router.put("/api/properties/:id", requireAuth(), async (req: Request, res: Respo
     const [existing] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, id));
     if (!existing) { res.status(404).json({ error: "Propriété non trouvée" }); return; }
     if (existing.ownerId !== userId) { res.status(403).json({ error: "Accès refusé" }); return; }
+
+    /* ── Vérification abonnement actif pour publier ───────────── */
+    if (req.body.status === "available") {
+      const [sub] = await db.select().from(subscriptionsTable).where(eq(subscriptionsTable.ownerId, userId));
+      const plan = getPlanById(sub?.planId ?? "free");
+
+      if (!plan.canPublish || sub?.status !== "active" || sub.planId === "free") {
+        res.status(403).json({
+          error: "Un abonnement payant actif (Starter ou Pro) est requis pour publier une annonce.",
+          code: "SUBSCRIPTION_REQUIRED",
+        });
+        return;
+      }
+    }
 
     const [updated] = await db.update(propertiesTable).set({ ...req.body, updatedAt: new Date() }).where(eq(propertiesTable.id, id)).returning();
     res.json(updated);

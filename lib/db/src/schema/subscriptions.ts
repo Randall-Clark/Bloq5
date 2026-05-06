@@ -17,11 +17,13 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
 export const subscriptionsTable = pgTable("subscriptions", {
   id: serial("id").primaryKey(),
   ownerId: text("owner_id").notNull().unique(),
-  planId: text("plan_id").notNull().default("starter"),
+  planId: text("plan_id").notNull().default("free"),
   status: subscriptionStatusEnum("status").notNull().default("active"),
   currentPeriodEnd: timestamp("current_period_end"),
   propertiesUsed: integer("properties_used").notNull().default(0),
   managersUsed: integer("managers_used").notNull().default(0),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
