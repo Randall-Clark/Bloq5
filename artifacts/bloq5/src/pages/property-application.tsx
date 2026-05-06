@@ -312,24 +312,14 @@ function ResScreen4({ form, onChange, onNext, minStartDate }: {
 }) {
   const [durationOpen, setDurationOpen] = useState(false);
   const ok = form.startDate && form.duration;
-  const defaultMin = `${new Date().getFullYear()}-07-01`;
-  const minDateStr = minStartDate ?? defaultMin;
-  const minDateLabel = new Date(minDateStr + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" });
+  const minDateStr = minStartDate ?? `${new Date().getFullYear()}-01-01`;
   return (
     <div className="min-h-screen flex flex-col items-center pt-20 pb-32 px-4" style={{ background: LAVENDER_BG }}>
       <StepTitle>Informations sur votre location</StepTitle>
       <div className="w-full max-w-[560px] bg-white rounded-2xl p-8 shadow-sm mt-6" style={{ border: "1px solid #E8E8E8" }}>
-        <div className="rounded-lg p-3 mb-6 text-[13px] text-gray-700" style={{ background: "#EAE8F5" }}>
-          {minStartDate
-            ? <>Le logement entier sera disponible à partir du{" "}<span className="font-semibold" style={{ color: YELLOW }}>{minDateLabel}</span>. Votre bail ne peut pas débuter avant cette date.</>
-            : <>Le logement sera libre le{" "}<span className="font-semibold" style={{ color: YELLOW }}>01 juillet</span>{" "}et les propriétaires préfèrent en général les candidats qui peuvent emménager le plus tôt possible.</>
-          }
-        </div>
         <div className="mb-5">
           <label className={labelClass}>À quelle date souhaitez-vous faire débuter votre bail ? *</label>
-          <div className="text-[11px] mb-2 flex items-center gap-1" style={{ color: "#5C9BF5" }}>ⓘ Au plus tôt le {minDateLabel}</div>
           <input type="date" className={inputClass} min={minDateStr} value={form.startDate} onChange={e => onChange("startDate", e.target.value)} />
-          <p className="text-[11px] text-[#999] italic mt-1.5">*La date à laquelle commencera votre bail. Vous pourrez emménager à une date ultérieure si besoin.</p>
         </div>
         <div className="relative">
           <label className={labelClass}>Combien de temps prévoyez-vous de rester ? *</label>
@@ -853,6 +843,10 @@ export default function PropertyApplicationPage() {
 
   function handleBack() {
     if (step === 0) navigate(`/properties/${id}`);
+    // When logged in, the source step (3 for residential/commercial, 4 for co-living) is skipped
+    else if (isLoggedIn && !isCoLiving && !isCommercial && step === 4) goTo(2);
+    else if (isLoggedIn && isCoLiving && step === 5) goTo(3);
+    else if (isLoggedIn && isCommercial && step === 4) goTo(2);
     else goTo((step - 1) as Step);
   }
 
@@ -891,24 +885,24 @@ export default function PropertyApplicationPage() {
               />
             )}
             {step === 2 && <ResScreen1 value={form.occupantType} onChange={v => setField("occupantType", v)} onNext={() => goTo(3)} addr={addr} singleRoomOnly={typeof form.selectedRoom === "number"} />}
-            {step === 3 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(4)} isLoggedIn={isLoggedIn} />}
-            {step === 4 && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(5)} />}
+            {step === 3 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(isLoggedIn ? 5 : 4)} isLoggedIn={isLoggedIn} />}
+            {step === 4 && !isLoggedIn && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(5)} />}
             {step === 5 && <ResScreen4 form={form} onChange={setField} onNext={() => goTo(6)} minStartDate={form.selectedRoom === "all" && wholeUnitMinDate ? wholeUnitMinDate : undefined} />}
             {step === 6 && <ResScreen5 form={form} onChange={setField} onNext={handleSubmitAndConfirm} submitError={submitError} isSubmitting={createRequest.isPending} />}
           </>
         ) : isCommercial ? (
           <>
             {step === 1 && <ComScreen1 value={form.companyType} onChange={v => setField("companyType", v)} onNext={() => goTo(2)} addr={addr} />}
-            {step === 2 && <ComScreen2 form={form} onChange={setField} onNext={() => goTo(3)} />}
-            {step === 3 && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(4)} />}
+            {step === 2 && <ComScreen2 form={form} onChange={setField} onNext={() => goTo(isLoggedIn ? 4 : 3)} />}
+            {step === 3 && !isLoggedIn && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(4)} />}
             {step === 4 && <ComScreen4 form={form} onChange={setField} onNext={() => goTo(5)} />}
             {step === 5 && <ComScreen5 form={form} onChange={setField} onNext={handleSubmitAndConfirm} submitError={submitError} isSubmitting={createRequest.isPending} />}
           </>
         ) : (
           <>
             {step === 1 && <ResScreen1 value={form.occupantType} onChange={v => setField("occupantType", v)} onNext={() => goTo(2)} addr={addr} />}
-            {step === 2 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(3)} isLoggedIn={isLoggedIn} />}
-            {step === 3 && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(4)} />}
+            {step === 2 && <ResScreen2 form={form} onChange={setField} onNext={() => goTo(isLoggedIn ? 4 : 3)} isLoggedIn={isLoggedIn} />}
+            {step === 3 && !isLoggedIn && <SharedScreen3 value={form.source} onChange={v => setField("source", v)} onNext={() => goTo(4)} />}
             {step === 4 && <ResScreen4 form={form} onChange={setField} onNext={() => goTo(5)} />}
             {step === 5 && <ResScreen5 form={form} onChange={setField} onNext={handleSubmitAndConfirm} submitError={submitError} isSubmitting={createRequest.isPending} />}
           </>
