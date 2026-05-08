@@ -3,95 +3,152 @@ import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { pool } from "@workspace/db";
 import { db } from "@workspace/db";
 import { profilesTable } from "@workspace/db/schema";
-import { eq, or } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { Request, Response } from "express";
+import { getUncachableResendClient } from "../lib/resend-client";
+import {
+  otpEmailHtml,
+  otpEmailText,
+  proRecoveryEmailHtml,
+  proRecoveryEmailText,
+} from "../lib/email-templates";
 
 const router = Router();
 
 /* ── helpers ─────────────────────────────────────── */
 function generateOtp(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous O/0/I/1
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
 }
 
 function normalizePhone(raw: string): string {
   return raw.replace(/[\s\-().]/g, "");
 }
 
-async function sendSms(phone: string, code: string, log: (obj: unknown, msg: string) => void) {
-  /* DEV MODE — log the OTP; replace with Twilio in production:
-     const twilio = require("twilio")(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
-     await twilio.messages.create({ body: `Votre code bloq5 Pro : ${code}`, from: process.env.TWILIO_FROM, to: phone });
-  */
-  log({ phone, code }, "⚡ [DEV] SMS OTP (replace with Twilio in production)");
+async function sendOtpEmail(
+  toEmail: string,
+  code: string,
+  log: (obj: unknown, msg: string) => void
+) {
+  try {
+    const { client, fromEmail } = await getUncachableResendClient();
+    const result = await client.emails.send({
+      from: `BLOQ5 Pro <${fromEmail}>`,
+      to: [toEmail],
+      subject: `Votre code d'accès Pro BLOQ5 : ${code}`,
+      html: otpEmailHtml(code, toEmail),
+      text: otpEmailText(code),
+    });
+    log({ to: toEmail, resendId: result.data?.id }, "[EMAIL] OTP Pro envoyé");
+  } catch (err) {
+    log({ err, to: toEmail, code }, "[EMAIL] Échec envoi OTP — code affiché en fallback");
+    throw err;
+  }
 }
 
-async function sendRecoveryEmail(email: string, phone: string, log: (obj: unknown, msg: string) => void) {
-  /* DEV MODE — log the recovery info; replace with real email (Resend/SendGrid) in production */
-  log({ email, phone }, "⚡ [DEV] Pro account recovery email (replace with email provider in production)");
+async function sendRecoveryEmail(
+  toEmail: string,
+  phone: string,
+  log: (obj: unknown, msg: string) => void
+) {
+  try {
+    const { client, fromEmail } = await getUncachableResendClient();
+    const result = await client.emails.send({
+      from: `BLOQ5 <${fromEmail}>`,
+      to: [toEmail],
+      subject: "Récupération de votre accès Pro BLOQ5",
+      html: proRecoveryEmailHtml(phone, toEmail),
+      text: proRecoveryEmailText(phone),
+    });
+    log({ to: toEmail, resendId: result.data?.id }, "[EMAIL] Récupération Pro envoyée");
+  } catch (err) {
+    log({ err, to: toEmail }, "[EMAIL] Échec envoi récupération Pro");
+    throw err;
+  }
 }
 
 /* ── POST /api/pro/auth/send-otp ─────────────────── */
 router.post("/api/pro/auth/send-otp", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id: userId } = getAuthUser(req);
-    const rawPhone = String(req.body.phone ?? "").trim();
-    if (!rawPhone) { res.status(400).json({ error: "Numéro de téléphone requis" }); return; }
+    const { id: userId, email: userEmail } = getAuthUser(req);
 
-    const phone = normalizePhone(rawPhone);
+    if (!userEmail) {
+      res.status(400).json({ error: "Aucune adresse e-mail associée à votre compte" });
+      return;
+    }
+
     const code = generateOtp();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     const client = await pool.connect();
     try {
-      await client.query(`DELETE FROM pro_otp WHERE user_id = $1`, [userId]);
+      // Delete all previous OTPs for this user + purge globally expired ones
+      await client.query(`DELETE FROM pro_otp WHERE user_id = $1 OR expires_at < NOW()`, [userId]);
       await client.query(
         `INSERT INTO pro_otp (user_id, phone, code, expires_at) VALUES ($1, $2, $3, $4)`,
-        [userId, phone, code, expiresAt]
+        [userId, userEmail, code, expiresAt]
       );
     } finally {
       client.release();
     }
 
-    await sendSms(phone, code, req.log.info.bind(req.log));
-    res.json({ success: true });
+    await sendOtpEmail(userEmail, code, req.log.info.bind(req.log));
+    res.json({ success: true, sentTo: userEmail });
   } catch (error) {
     req.log.error(error);
-    res.status(500).json({ error: "Erreur serveur" });
+    res.status(500).json({ error: "Erreur lors de l'envoi du code. Réessayez." });
   }
 });
 
 /* ── POST /api/pro/auth/verify-otp ──────────────── */
 router.post("/api/pro/auth/verify-otp", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id: userId } = getAuthUser(req);
-    const rawPhone = String(req.body.phone ?? "").trim();
-    const code = String(req.body.code ?? "").trim();
-    if (!rawPhone || !code) { res.status(400).json({ error: "Données manquantes" }); return; }
+    const { id: userId, email: userEmail } = getAuthUser(req);
+    const code = String(req.body.code ?? "").trim().toUpperCase();
 
-    const phone = normalizePhone(rawPhone);
+    if (!code) {
+      res.status(400).json({ error: "Code manquant" });
+      return;
+    }
 
     const client = await pool.connect();
     let hasProAccount = false;
     try {
       const otpRes = await client.query(
-        `SELECT id, code, expires_at, used FROM pro_otp WHERE user_id = $1 AND phone = $2 ORDER BY created_at DESC LIMIT 1`,
-        [userId, phone]
+        `SELECT id, code, expires_at, used FROM pro_otp WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1`,
+        [userId]
       );
 
       if (otpRes.rowCount === 0) {
-        res.status(400).json({ error: "Aucun code envoyé pour ce numéro" }); return;
+        res.status(400).json({ error: "Aucun code envoyé — demandez un nouveau code" });
+        return;
       }
 
       const row = otpRes.rows[0];
-      if (row.used) { res.status(400).json({ error: "Ce code a déjà été utilisé" }); return; }
-      if (new Date(row.expires_at) < new Date()) { res.status(400).json({ error: "Code expiré — veuillez en demander un nouveau" }); return; }
-      if (row.code !== code) { res.status(400).json({ error: "Code incorrect" }); return; }
+      if (row.used) {
+        res.status(400).json({ error: "Ce code a déjà été utilisé" });
+        return;
+      }
+      if (new Date(row.expires_at) < new Date()) {
+        res.status(400).json({ error: "Code expiré — demandez un nouveau code" });
+        return;
+      }
+      if (row.code !== code) {
+        res.status(400).json({ error: "Code incorrect" });
+        return;
+      }
 
-      await client.query(`UPDATE pro_otp SET used = true WHERE id = $1`, [row.id]);
+      // Delete after use — OTPs are single-use and temporary, not stored permanently
+      await client.query(`DELETE FROM pro_otp WHERE id = $1`, [row.id]);
 
-      /* Check if the current user already has a pro profile */
-      const [profile] = await db.select({ role: profilesTable.role })
-        .from(profilesTable).where(eq(profilesTable.userId, userId));
+      const [profile] = await db
+        .select({ role: profilesTable.role })
+        .from(profilesTable)
+        .where(eq(profilesTable.userId, userId));
       hasProAccount = profile?.role === "owner" || profile?.role === "manager";
     } finally {
       client.release();
@@ -107,11 +164,12 @@ router.post("/api/pro/auth/verify-otp", requireAuth(), async (req: Request, res:
 /* ── POST /api/pro/auth/complete ─────────────────── */
 router.post("/api/pro/auth/complete", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id: userId, email: authEmail } = getAuthUser(req);
+    const { id: userId } = getAuthUser(req);
     const { phone, proEmail, firstName, lastName, residentialAddress } = req.body as Record<string, string>;
 
-    if (!phone || !proEmail || !firstName || !lastName || !residentialAddress) {
-      res.status(400).json({ error: "Tous les champs sont requis" }); return;
+    if (!proEmail || !firstName || !lastName || !residentialAddress) {
+      res.status(400).json({ error: "Tous les champs sont requis" });
+      return;
     }
 
     const client = await pool.connect();
@@ -126,7 +184,7 @@ router.post("/api/pro/auth/complete", requireAuth(), async (req: Request, res: R
           residential_address = $6,
           updated_at = NOW()
         WHERE clerk_id = $1`,
-        [userId, normalizePhone(phone), proEmail, firstName, lastName, residentialAddress]
+        [userId, phone ? normalizePhone(phone) : null, proEmail, firstName, lastName, residentialAddress]
       );
     } finally {
       client.release();
@@ -143,7 +201,10 @@ router.post("/api/pro/auth/complete", requireAuth(), async (req: Request, res: R
 router.post("/api/pro/auth/recover", requireAuth(), async (req: Request, res: Response): Promise<void> => {
   try {
     const proEmail = String(req.body.proEmail ?? "").trim().toLowerCase();
-    if (!proEmail) { res.status(400).json({ error: "Adresse e-mail requise" }); return; }
+    if (!proEmail) {
+      res.status(400).json({ error: "Adresse e-mail requise" });
+      return;
+    }
 
     const client = await pool.connect();
     try {
@@ -153,8 +214,9 @@ router.post("/api/pro/auth/recover", requireAuth(), async (req: Request, res: Re
       );
       if (result.rowCount && result.rowCount > 0) {
         const row = result.rows[0];
-        await sendRecoveryEmail(proEmail, row.phone ?? "non renseigné", req.log.info.bind(req.log));
+        await sendRecoveryEmail(proEmail, row.phone ?? "", req.log.info.bind(req.log));
       }
+      // Always return success (security: don't reveal if email exists)
     } finally {
       client.release();
     }

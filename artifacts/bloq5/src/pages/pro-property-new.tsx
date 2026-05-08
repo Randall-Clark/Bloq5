@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, CheckCircle2, Megaphone, X, Plus, Video, MapPin, Camera, Check, Paperclip, FileText, Zap } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Megaphone, X, Plus, Video, MapPin, Camera, Check, Paperclip, FileText, Zap, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -128,37 +128,89 @@ const ADDRESS_SUGGESTIONS: AddressSuggestion[] = [
   { street: "1055 Dunsmuir Street",                  city: "Vancouver",  province: "BC", postalCode: "V7X 1L4", country: "Canada" },
 ];
 
-const NEARBY_BY_CITY: Record<string, string[]> = {
-  montréal: [
-    "Métro (500 m)", "Épicerie IGA (300 m)", "Parc (450 m)",
-    "Pharmacie Jean Coutu (250 m)", "École primaire (600 m)",
-    "Restaurant (150 m)", "Gym Éconofitness (900 m)", "Hôpital (1.2 km)",
-  ],
-  toronto: [
-    "TTC Station (600 m)", "Loblaws (400 m)", "Park (350 m)",
-    "Shoppers Drug Mart (500 m)", "School (700 m)", "Restaurant Row (200 m)",
-    "GoodLife Fitness (1 km)",
-  ],
-  laval: [
-    "Métro Montmorency (800 m)", "Maxi (500 m)", "Parc (300 m)",
-    "Pharmacie (400 m)", "École (650 m)", "Clinique médicale (900 m)",
-  ],
-  default: [
-    "Épicerie (500 m)", "École primaire (800 m)", "Parc (300 m)",
-    "Pharmacie (400 m)", "Restaurant (200 m)", "Transport en commun (600 m)",
-  ],
+/* ─── Overpass / nearby places ───────────────────────────────── */
+function haversineM(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000, r = (x: number) => x * Math.PI / 180;
+  const dLat = r(lat2 - lat1), dLon = r(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(r(lat1)) * Math.cos(r(lat2)) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+function fmtDist(m: number): string {
+  return m < 1000 ? `${Math.round(m / 10) * 10} m` : `${(m / 1000).toFixed(1)} km`;
+}
+
+const OVERPASS_LABELS: Record<string, string> = {
+  supermarket: "Supermarché", convenience: "Dépanneur", grocery: "Épicerie",
+  pharmacy: "Pharmacie", school: "École", college: "Cégep", university: "Université",
+  hospital: "Hôpital", clinic: "Clinique", restaurant: "Restaurant",
+  cafe: "Café", fast_food: "Restauration rapide",
+  station: "Station de métro", subway_entrance: "Entrée de métro",
+  bus_stop: "Arrêt d'autobus", park: "Parc", fitness_centre: "Centre de fitness",
+  library: "Bibliothèque", bank: "Banque",
 };
 
-function getNearby(city: string): string[] {
-  const k = city.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return NEARBY_BY_CITY[k] ?? NEARBY_BY_CITY.default;
+async function fetchNearbyFromOverpass(lat: number, lon: number): Promise<string[]> {
+  const q = `[out:json][timeout:15];
+(
+  node["shop"~"^(supermarket|convenience|grocery)$"](around:800,${lat},${lon});
+  node["amenity"~"^(pharmacy|school|college|university|hospital|clinic|restaurant|cafe|fast_food|library|bank)$"](around:800,${lat},${lon});
+  node["railway"~"^(station|subway_entrance)$"](around:800,${lat},${lon});
+  node["highway"="bus_stop"]["name"](around:500,${lat},${lon});
+  node["leisure"~"^(park|fitness_centre)$"](around:800,${lat},${lon});
+  way["leisure"="park"]["name"](around:800,${lat},${lon});
+);out center;`;
+
+  const resp = await fetch("https://overpass-api.de/api/interpreter", {
+    method: "POST",
+    body: `data=${encodeURIComponent(q)}`,
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  });
+  if (!resp.ok) throw new Error("overpass");
+  const json = await resp.json();
+
+  type OsmEl = { tags?: Record<string, string>; lat?: number; lon?: number; center?: { lat: number; lon: number } };
+  const elements: OsmEl[] = json.elements ?? [];
+
+  type R = { name: string; category: string; dist: number };
+  const results: R[] = [];
+
+  for (const el of elements) {
+    const name = el.tags?.name;
+    if (!name) continue;
+    const elLat = el.lat ?? el.center?.lat;
+    const elLon = el.lon ?? el.center?.lon;
+    if (elLat == null || elLon == null) continue;
+    const dist = haversineM(lat, lon, elLat, elLon);
+    const cat = el.tags?.amenity ?? el.tags?.shop ?? el.tags?.railway ?? el.tags?.highway ?? el.tags?.leisure ?? "";
+    results.push({ name, category: cat, dist });
+  }
+
+  results.sort((a, b) => a.dist - b.dist);
+
+  const seen = new Set<string>();
+  const perCat: Record<string, number> = {};
+  const MAX_CAT = 2, MAX_TOTAL = 12;
+  const out: string[] = [];
+
+  for (const r of results) {
+    const key = r.name.toLowerCase();
+    if (seen.has(key)) continue;
+    if ((perCat[r.category] ?? 0) >= MAX_CAT) continue;
+    seen.add(key);
+    perCat[r.category] = (perCat[r.category] ?? 0) + 1;
+    const label = OVERPASS_LABELS[r.category] ?? r.category;
+    out.push(`${r.name} · ${label} (${fmtDist(r.dist)})`);
+    if (out.length >= MAX_TOTAL) break;
+  }
+  return out;
 }
 
 /* ─── Types & Schema ─────────────────────────────────────────── */
 const propertySchema = z.object({
   title:            z.string().min(5, "Le titre doit faire au moins 5 caractères"),
   description:      z.string().min(20, "La description est trop courte"),
-  type:             z.enum(["house", "apartment", "co-living", "commercial", "office", "industrial"]),
+  type:             z.enum(["house", "apartment", "co-living", "commercial", "office"]),
   address:          z.string().min(5, "L'adresse est requise"),
   city:             z.string().min(2, "La ville est requise"),
   country:          z.string().min(2, "Le pays est requis"),
@@ -202,8 +254,8 @@ function Section({ icon: Icon, title, subtitle, children }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/60">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/60 rounded-t-2xl">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#FFF8EE" }}>
           <Icon className="w-4 h-4" style={{ color: YELLOW }} />
         </div>
@@ -300,14 +352,20 @@ function highlightMatch(text: string, query: string) {
   );
 }
 
-function AddressInput({ value, onChange, onSelect }: {
+type GeoStatus = "idle" | "loading" | "valid" | "not_found";
+
+function AddressInput({ value, onChange, onSelect, onGeocode }: {
   value: string;
   onChange: (v: string) => void;
   onSelect: (s: AddressSuggestion) => void;
+  onGeocode?: (lat: number, lon: number) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [geoStatus, setGeoStatus] = useState<GeoStatus>("idle");
   const ref = useRef<HTMLDivElement>(null);
+  const onGeocodeRef = useRef(onGeocode);
+  onGeocodeRef.current = onGeocode;
 
   const q = value.trim().toLowerCase();
   const filtered = q.length >= 1
@@ -319,6 +377,7 @@ function AddressInput({ value, onChange, onSelect }: {
       ).slice(0, 6)
     : [];
 
+  /* Close dropdown on outside click */
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -326,6 +385,36 @@ function AddressInput({ value, onChange, onSelect }: {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
+
+  /* Nominatim geocoding — debounce 600ms, min 10 chars */
+  useEffect(() => {
+    const trimmed = value.trim();
+    if (trimmed.length < 10) {
+      setGeoStatus("idle");
+      return;
+    }
+    setGeoStatus("loading");
+    const timer = setTimeout(async () => {
+      try {
+        const encoded = encodeURIComponent(trimmed);
+        const resp = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encoded}&countrycodes=ca`,
+          { headers: { "Accept-Language": "fr-CA,fr;q=0.9,en;q=0.8" } }
+        );
+        if (!resp.ok) { setGeoStatus("idle"); return; }
+        const data = await resp.json();
+        if (data.length > 0) {
+          setGeoStatus("valid");
+          onGeocodeRef.current?.(parseFloat(data[0].lat), parseFloat(data[0].lon));
+        } else {
+          setGeoStatus("not_found");
+        }
+      } catch {
+        setGeoStatus("idle");
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [value]);
 
   return (
     <div ref={ref} className="relative">
@@ -338,11 +427,47 @@ function AddressInput({ value, onChange, onSelect }: {
           onBlur={() => setFocused(false)}
           onChange={e => { onChange(e.target.value); setOpen(true); }}
           placeholder="Ex: 3500 Boulevard de Maisonneuve O, Montréal"
-          className="w-full bg-white border border-gray-200 focus:border-[#F5A623] focus:outline-none rounded-xl h-11 pl-10 pr-4 text-sm transition-colors"
-          style={{ borderColor: focused ? YELLOW : undefined }}
+          className="w-full bg-white border focus:outline-none rounded-xl h-11 pl-10 pr-10 text-sm transition-colors"
+          style={{
+            borderColor: focused
+              ? geoStatus === "valid"   ? "#22C55E"
+              : geoStatus === "not_found" ? "#EF4444"
+              : YELLOW
+              : geoStatus === "valid"   ? "#22C55E"
+              : geoStatus === "not_found" ? "#EF4444"
+              : "#E5E7EB",
+          }}
           autoComplete="off"
         />
+        {/* Geocoding status indicator */}
+        <span className="absolute right-3 flex items-center justify-center w-5 h-5">
+          {geoStatus === "loading" && (
+            <span className="w-4 h-4 rounded-full border-2 border-yellow-400 border-t-transparent animate-spin" />
+          )}
+          {geoStatus === "valid" && (
+            <svg className="w-5 h-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          )}
+          {geoStatus === "not_found" && (
+            <svg className="w-5 h-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          )}
+        </span>
       </div>
+      {/* Geocoding hint */}
+      {geoStatus === "valid" && (
+        <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+          Adresse reconnue sur la carte
+        </p>
+      )}
+      {geoStatus === "not_found" && (
+        <p className="mt-1 text-xs text-red-400">
+          Adresse introuvable — vérifiez l'orthographe ou saisissez une adresse plus précise.
+        </p>
+      )}
       {open && filtered.length > 0 && (
         <div className="absolute z-20 top-full left-0 right-0 mt-1.5 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden">
           {filtered.map((s, i) => (
@@ -352,6 +477,7 @@ function AddressInput({ value, onChange, onSelect }: {
                 e.preventDefault();
                 onSelect(s);
                 setOpen(false);
+                setGeoStatus("valid");
               }}>
               <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
               <div>
@@ -376,6 +502,224 @@ function ImageRow({ url, onRemove }: { url: string; onRemove: () => void }) {
         className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors">
         <X className="w-3.5 h-3.5" />
       </button>
+    </div>
+  );
+}
+
+/* ─── Floor stepper ─────────────────────────────────────────── */
+function floorLabel(v: number | null | undefined, mode: "floor" | "building"): string {
+  if (v == null) return "—";
+  if (mode === "floor") {
+    if (v === -1) return "Sous-sol";
+    if (v === 0)  return "Rez-de-chaussée";
+    return `${v}${v === 1 ? "er" : "e"} étage`;
+  } else {
+    if (v === -1) return "Sous-sol + RDC";
+    if (v === 0)  return "RDC seulement";
+    return `${v} étage${v > 1 ? "s" : ""}`;
+  }
+}
+
+function FloorStepper({ value, onChange, mode, min = -1, max }: {
+  value: number | null | undefined;
+  onChange: (v: number | null) => void;
+  mode: "floor" | "building";
+  min?: number;
+  max: number;
+}) {
+  const current = value ?? null;
+  const dec = () => {
+    if (current === null) { onChange(max); return; }
+    if (current <= min) { onChange(null); return; }
+    onChange(current - 1);
+  };
+  const inc = () => {
+    if (current === null) { onChange(min); return; }
+    if (current >= max) return;
+    onChange(current + 1);
+  };
+  return (
+    <div className="flex items-center gap-0 rounded-xl border border-gray-200 h-11 overflow-hidden focus-within:border-[#F5A623] transition-colors">
+      <button type="button" onClick={dec}
+        className="flex items-center justify-center w-10 h-full text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors shrink-0 border-r border-gray-100">
+        <ChevronDown className="w-4 h-4" />
+      </button>
+      <span className="flex-1 text-center text-sm font-medium text-gray-800 select-none px-2 truncate">
+        {floorLabel(current, mode)}
+      </span>
+      <button type="button" onClick={inc}
+        className="flex items-center justify-center w-10 h-full text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors shrink-0 border-l border-gray-100">
+        <ChevronUp className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+/* ─── Visit availability scheduler ──────────────────────────── */
+type VisitSlot = { date: string; times: string[] };
+
+const VISIT_TIMES = ["9:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
+const MONTHS_FR   = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+const DAYS_FR     = ["Lu","Ma","Me","Je","Ve","Sa","Di"];
+const DAY_NAMES   = ["Dim","Lun","Mar","Mer","Jeu","Ven","Sam"];
+
+function VisitScheduler({ value, onChange }: {
+  value: VisitSlot[];
+  onChange: (s: VisitSlot[]) => void;
+}) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const [viewDate, setViewDate] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+  const [editingDate, setEditingDate] = useState<string | null>(null);
+
+  const year  = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+
+  /* Build grid cells (Mon-first) */
+  const firstDow   = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells: (number | null)[] = [
+    ...Array(firstDow).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const toKey = (d: number) =>
+    `${year}-${String(month + 1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+
+  const selectedDates = new Set(value.map(s => s.date));
+
+  const toggleDate = (day: number) => {
+    const key = toKey(day);
+    if (new Date(year, month, day) < today) return;
+    if (selectedDates.has(key)) {
+      onChange(value.filter(s => s.date !== key));
+      if (editingDate === key) setEditingDate(null);
+    } else {
+      onChange([...value, { date: key, times: [] }]);
+      setEditingDate(key);
+    }
+  };
+
+  const removeDate = (key: string) => {
+    onChange(value.filter(s => s.date !== key));
+    if (editingDate === key) setEditingDate(null);
+  };
+
+  const toggleTime = (date: string, t: string) => {
+    onChange(value.map(s => {
+      if (s.date !== date) return s;
+      const has = s.times.includes(t);
+      return { ...s, times: has ? s.times.filter(x => x !== t) : [...s.times, t].sort() };
+    }));
+  };
+
+  const editingSlot = value.find(s => s.date === editingDate);
+
+  const formatLabel = (dateStr: string) => {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    return `${DAY_NAMES[dt.getDay()]} ${d} ${MONTHS_FR[m - 1].toLowerCase()}`;
+  };
+
+  return (
+    <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm">
+      {/* Month nav */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-gray-50/80">
+        <button type="button" onClick={() => setViewDate(new Date(year, month - 1, 1))}
+          className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors">
+          <ChevronLeft className="w-4 h-4 text-gray-500" />
+        </button>
+        <span className="text-sm font-semibold text-gray-800">{MONTHS_FR[month]} {year}</span>
+        <button type="button" onClick={() => setViewDate(new Date(year, month + 1, 1))}
+          className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors">
+          <ChevronRight className="w-4 h-4 text-gray-500" />
+        </button>
+      </div>
+
+      {/* Day-of-week header */}
+      <div className="grid grid-cols-7 border-b border-gray-100 bg-gray-50/40">
+        {DAYS_FR.map(d => (
+          <div key={d} className="text-center text-[10px] font-bold text-gray-400 py-1.5 uppercase tracking-wide">{d}</div>
+        ))}
+      </div>
+
+      {/* Day cells */}
+      <div className="grid grid-cols-7 gap-px bg-gray-100">
+        {cells.map((day, i) => {
+          if (day === null) return <div key={i} className="bg-white h-9" />;
+          const key     = toKey(day);
+          const isPast  = new Date(year, month, day) < today;
+          const isSel   = selectedDates.has(key);
+          const isEdit  = editingDate === key;
+          const hasTimes = (value.find(s => s.date === key)?.times.length ?? 0) > 0;
+          return (
+            <button key={i} type="button" disabled={isPast} onClick={() => toggleDate(day)}
+              className={`relative bg-white h-9 flex flex-col items-center justify-center text-xs font-medium transition-colors
+                ${isPast ? "text-gray-300 cursor-not-allowed" : "hover:bg-amber-50 cursor-pointer"}
+                ${isSel && !isEdit ? "bg-amber-50 font-semibold" : ""}
+                ${isEdit ? "ring-2 ring-inset ring-[#F5A623]" : ""}`}
+              style={isSel ? { color: YELLOW } : {}}>
+              {day}
+              {isSel && hasTimes && (
+                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#F5A623]" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Time slot editor for selected date */}
+      {editingDate && editingSlot && (
+        <div className="border-t border-amber-100 px-4 py-3 bg-amber-50/40">
+          <p className="text-xs font-semibold text-gray-600 mb-2.5 flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5 text-amber-500" />
+            Créneaux horaires — {formatLabel(editingDate)}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {VISIT_TIMES.map(t => {
+              const active = editingSlot.times.includes(t);
+              return (
+                <button key={t} type="button" onClick={() => toggleTime(editingDate, t)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors
+                    ${active
+                      ? "border-[#F5A623] bg-[#FEF9EE] text-[#D97706]"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"}`}>
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-[10px] text-gray-400">Cliquez sur les horaires pour les activer / désactiver</p>
+        </div>
+      )}
+
+      {/* Summary */}
+      {value.length > 0 ? (
+        <div className="border-t border-gray-100 px-4 py-3">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-2">Récapitulatif des disponibilités</p>
+          <div className="space-y-1.5">
+            {[...value].sort((a,b) => a.date.localeCompare(b.date)).map(s => (
+              <div key={s.date} className="flex items-start gap-2 text-xs">
+                <button type="button" onClick={() => removeDate(s.date)}
+                  className="mt-0.5 text-gray-300 hover:text-red-400 transition-colors shrink-0">
+                  <X className="w-3 h-3" />
+                </button>
+                <button type="button" onClick={() => setEditingDate(s.date === editingDate ? null : s.date)}
+                  className="font-semibold text-gray-700 hover:text-[#F5A623] transition-colors min-w-[80px] text-left shrink-0">
+                  {formatLabel(s.date)}
+                </button>
+                {s.times.length > 0
+                  ? <span className="text-gray-500">{s.times.join(", ")}</span>
+                  : <span className="text-amber-400 italic">Aucun créneau sélectionné</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="border-t border-gray-100 px-4 py-3 text-center">
+          <p className="text-xs text-gray-400">Cliquez sur une date pour définir vos disponibilités</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -456,9 +800,14 @@ export default function ProPropertyNew() {
   const [coLivingRooms, setCoLivingRooms] = useState<CoLivingRoom[]>([]);
   const [samePriceForAll, setSamePriceForAll] = useState(false);
 
+  /* Visit availability */
+  const [visitSlots, setVisitSlots] = useState<VisitSlot[]>([]);
+
+  /* Nearby places loading */
+  const [nearbyLoading, setNearbyLoading] = useState(false);
+
   /* Nearby places */
   const [nearbyPlaces, setNearbyPlaces] = useState<string[]>([]);
-  const [nearbyAutoFilled, setNearbyAutoFilled] = useState(false);
 
   /* Address extras */
   const [postalCode, setPostalCode] = useState("");
@@ -481,7 +830,6 @@ export default function ProPropertyNew() {
 
   const watchType     = form.watch("type");
   const watchBedrooms = form.watch("bedrooms");
-  const watchCity     = form.watch("city");
   const watchDpeClass = form.watch("dpeClass");
   const watchHousingAid = form.watch("housingAidEligible");
 
@@ -503,14 +851,19 @@ export default function ProPropertyNew() {
     }
   }, [watchBedrooms, watchType]);
 
-  /* Auto-populate nearby places when city changes */
-  useEffect(() => {
-    if (watchCity && watchCity.length >= 2 && !nearbyAutoFilled) {
-      setNearbyPlaces(getNearby(watchCity));
-      setNearbyAutoFilled(true);
+  /* Fetch nearby places from Overpass when address is geocoded */
+  const handleGeocode = async (lat: number, lon: number) => {
+    setNearbyLoading(true);
+    setNearbyPlaces([]);
+    try {
+      const places = await fetchNearbyFromOverpass(lat, lon);
+      setNearbyPlaces(places);
+    } catch {
+      // silently fall back to empty
+    } finally {
+      setNearbyLoading(false);
     }
-    if (!watchCity) setNearbyAutoFilled(false);
-  }, [watchCity, nearbyAutoFilled]);
+  };
 
   const onSubmit = (data: PropertyFormValues) => {
     const validImages = imageUrls.filter(u => u.trim());
@@ -644,7 +997,6 @@ export default function ProPropertyNew() {
                         <SelectItem value="co-living">Colocation</SelectItem>
                         <SelectItem value="commercial">Local commercial</SelectItem>
                         <SelectItem value="office">Bureau</SelectItem>
-                        <SelectItem value="industrial">Industriel</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -702,8 +1054,13 @@ export default function ProPropertyNew() {
                   <FormItem>
                     <FormLabel className="text-sm font-semibold text-gray-700">Étage</FormLabel>
                     <FormControl>
-                      <Input type="number" min={0} {...field} value={field.value ?? ""} placeholder="1"
-                        className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
+                      <FloorStepper
+                        value={field.value}
+                        onChange={(v) => field.onChange(v)}
+                        mode="floor"
+                        min={-1}
+                        max={20}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -898,9 +1255,10 @@ export default function ProPropertyNew() {
           <Section icon={VideoIcon2} title="Visite virtuelle"
             subtitle="Augmentez vos candidatures avec une visite 3D immersive">
             <div className="space-y-4">
+              {/* Option A: own URL */}
               <FormField control={form.control} name="virtualTourUrl" render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-semibold text-gray-700">Lien de visite virtuelle</FormLabel>
+                  <FormLabel className="text-sm font-semibold text-gray-700">Mon lien de visite virtuelle</FormLabel>
                   <FormControl>
                     <div className="relative">
                       <Video className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -911,18 +1269,34 @@ export default function ProPropertyNew() {
                   <FormMessage />
                 </FormItem>
               )} />
+
+              {/* Option B: in-person visit availability scheduler */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#EFF6FF" }}>
+                    <Clock className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">Disponibilités pour visites sur place</p>
+                    <p className="text-xs text-gray-500">Définissez vos dates et créneaux horaires — les candidats pourront les voir.</p>
+                  </div>
+                </div>
+                <VisitScheduler value={visitSlots} onChange={setVisitSlots} />
+              </div>
+
+              {/* Option C: BLOQ5 Pro 3D scan */}
               <div className="flex items-center gap-4 py-3 px-4 rounded-xl border border-dashed border-gray-200 bg-gray-50">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#FFF8EE" }}>
                   <Video className="w-5 h-5" style={{ color: YELLOW }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-gray-800">Vous n'avez pas de visite virtuelle ?</p>
-                  <p className="text-xs text-gray-500">Nos équipes se déplacent pour créer votre visite 3D Matterport.</p>
+                  <p className="text-sm font-semibold text-gray-800">Visite 3D Matterport par BLOQ5</p>
+                  <p className="text-xs text-gray-500">Nos équipes se déplacent pour créer votre visite 3D professionnelle — inclus dans les formules Pro & Premium.</p>
                 </div>
                 <a href="/pro/subscription"
-                  className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg text-white transition-colors"
-                  style={{ background: YELLOW }}>
-                  Souscrire
+                  className="shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg text-white transition-opacity hover:opacity-85"
+                  style={{ background: YELLOW, color: "#1A1A1A" }}>
+                  Voir les offres
                 </a>
               </div>
             </div>
@@ -1089,14 +1463,13 @@ export default function ProPropertyNew() {
                     <AddressInput
                       value={field.value}
                       onChange={field.onChange}
+                      onGeocode={handleGeocode}
                       onSelect={s => {
                         field.onChange(s.street);
                         form.setValue("city", s.city);
                         form.setValue("country", s.country);
                         setPostalCode(s.postalCode);
                         setProvince(s.province);
-                        setNearbyPlaces(getNearby(s.city));
-                        setNearbyAutoFilled(true);
                       }}
                     />
                   </FormControl>
@@ -1118,10 +1491,15 @@ export default function ProPropertyNew() {
 
                 <FormField control={form.control} name="buildingFloors" render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-semibold text-gray-700">Nb étages bâtiment</FormLabel>
+                    <FormLabel className="text-sm font-semibold text-gray-700">Étages bâtiment</FormLabel>
                     <FormControl>
-                      <Input type="number" min={1} {...field} value={field.value ?? ""} placeholder="5"
-                        className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
+                      <FloorStepper
+                        value={field.value}
+                        onChange={(v) => field.onChange(v)}
+                        mode="building"
+                        min={-1}
+                        max={30}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1183,11 +1561,27 @@ export default function ProPropertyNew() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-semibold text-gray-700">Équipements à proximité</span>
-                  {nearbyPlaces.length === 0 && (
-                    <span className="text-xs text-gray-400">Remplissez la ville pour auto-remplir</span>
+                  {nearbyLoading && (
+                    <span className="flex items-center gap-1.5 text-xs text-amber-500">
+                      <span className="w-3 h-3 rounded-full border-2 border-amber-400 border-t-transparent animate-spin inline-block" />
+                      Recherche en cours…
+                    </span>
+                  )}
+                  {!nearbyLoading && nearbyPlaces.length > 0 && (
+                    <span className="text-xs text-green-600 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+                      {nearbyPlaces.length} résultats réels · OpenStreetMap
+                    </span>
                   )}
                 </div>
-                {nearbyPlaces.length > 0 ? (
+                {nearbyLoading ? (
+                  <div className="flex flex-wrap gap-2">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <span key={i} className="inline-block h-7 rounded-full bg-gray-100 animate-pulse"
+                        style={{ width: `${70 + (i * 23) % 60}px` }} />
+                    ))}
+                  </div>
+                ) : nearbyPlaces.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {nearbyPlaces.map((p, i) => (
                       <PlaceChip key={i} label={p} onRemove={() => setNearbyPlaces(prev => prev.filter((_, j) => j !== i))} />
@@ -1196,7 +1590,9 @@ export default function ProPropertyNew() {
                 ) : (
                   <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-gray-50 border border-dashed border-gray-200">
                     <MapPin className="w-4 h-4 text-gray-300" />
-                    <span className="text-xs text-gray-400">Les équipements s'afficheront automatiquement une fois la ville renseignée.</span>
+                    <span className="text-xs text-gray-400">
+                      Saisissez l'adresse complète — les équipements réels à proximité s'afficheront automatiquement.
+                    </span>
                   </div>
                 )}
               </div>

@@ -5,6 +5,7 @@ import { useLocation_ } from "@/context/location-context";
 import { authClient } from "@/lib/auth-client";
 import { countryPrep } from "@/data/countries";
 import { PublicNavbar } from "@/components/public-navbar";
+import { SiteFooter } from "@/components/layout/site-footer";
 import {
   Search, Bell, ChevronDown, ChevronLeft, ChevronRight, Map, List, X,
   SlidersHorizontal, Check,
@@ -217,6 +218,7 @@ export default function PropertiesPage() {
   const [filterBedrooms, setFilterBedrooms] = useState<number | null>(null);
   const [activeFilterPanel, setActiveFilterPanel] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [radiusKm, setRadiusKm] = useState(5);
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
   const [alertFreq, setAlertFreq] = useState<"immediate" | "daily" | "weekly">("daily");
@@ -251,7 +253,7 @@ export default function PropertiesPage() {
   const NEARBY_REGIONS = NEARBY_REGIONS_MAP[country.code] ?? NEARBY_REGIONS_MAP.FR;
 
   /* API call */
-  const { data } = useListProperties({
+  const { data, isLoading: propsLoading } = useListProperties({
     city: cityFromUrl || undefined,
     type: (filterType !== "all" ? filterType : undefined) as any,
     minPrice: filterMinPrice || undefined,
@@ -286,7 +288,7 @@ export default function PropertiesPage() {
   const hasAnyFilter = hasCategoryFilter || activeFilterCount > 0;
 
   /* Total to display in header */
-  const total = hasApiData ? apiTotal : (hasAnyFilter || !apiLoaded ? 0 : ITEMS_PER_PAGE * 2);
+  const total = hasApiData ? apiTotal : 0;
   const totalPages = hasApiData
     ? (data?.totalPages ?? Math.ceil(apiTotal / ITEMS_PER_PAGE))
     : 1;
@@ -332,35 +334,20 @@ export default function PropertiesPage() {
   }
   const pageNumbers = getPageNumbers(currentPage, totalPages);
 
-  /* Build display cards:
-     - If API returned real rows → use exactly those rows (with their real IDs for routing)
-     - If no API data yet / no results → use static fallbacks (for browsing experience) */
-  const displayCards = hasApiData
-    ? apiProps.map((ap, i) => ({
-        id:     ap.id,
-        idx:    i,
-        title:  ap.title,
-        price:  Number(ap.price),
-        area:   Number(ap.area ?? AREAS[i % AREAS.length]),
-        rooms:  ap.bedrooms   ?? ROOMS[i % ROOMS.length],
-        baths:  ap.bathrooms  ?? BATHS[i % BATHS.length],
-        arrond: ap.city       ?? ARRONDISSEMENTS[i % ARRONDISSEMENTS.length],
-        type:   ap.type,
-        status: ap.status,
-        image:  ap.images?.[0] || undefined,
-      }))
-    : Array.from({ length: ITEMS_PER_PAGE }, (_, i) => ({
-        id:     i + 1,
-        idx:    i,
-        title:  TYPES[i % TYPES.length],
-        price:  PRICES[i % PRICES.length],
-        area:   AREAS[i % AREAS.length],
-        rooms:  ROOMS[i % ROOMS.length],
-        baths:  BATHS[i % BATHS.length],
-        arrond: ARRONDISSEMENTS[i % ARRONDISSEMENTS.length],
-        type:   "apartment" as const,
-        status: (["available", "available", "available", "available", "rented", "available", "available"] as const)[i % 7],
-      }));
+  /* Build display cards — only use real API data */
+  const displayCards = apiProps.map((ap, i) => ({
+    id:     ap.id,
+    idx:    i,
+    title:  ap.title,
+    price:  Number(ap.price),
+    area:   Number(ap.area ?? AREAS[i % AREAS.length]),
+    rooms:  ap.bedrooms   ?? ROOMS[i % ROOMS.length],
+    baths:  ap.bathrooms  ?? BATHS[i % BATHS.length],
+    arrond: ap.city       ?? ARRONDISSEMENTS[i % ARRONDISSEMENTS.length],
+    type:   ap.type,
+    status: ap.status,
+    image:  ap.images?.[0] || undefined,
+  }));
 
   return (
     <div className="min-h-screen bg-white font-sans" style={{ color: "#1A1A1A" }}>
@@ -383,7 +370,7 @@ export default function PropertiesPage() {
       <div ref={filterBarRef} className="bg-white sticky top-16 z-40" style={{ borderBottom: "1px solid #E8E8E8" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-2 sm:gap-3 flex-wrap">
           {/* Search input */}
-          <div className="flex items-stretch flex-1 min-w-0 max-w-sm rounded-lg overflow-hidden border border-gray-200">
+          <div className="flex items-stretch flex-1 min-w-0 max-w-sm rounded-lg overflow-hidden border border-gray-200 focus-within:border-yellow-400 transition-colors">
             <div className="flex items-center px-3 bg-white">
               <Search className="w-4 h-4 text-gray-400" />
             </div>
@@ -391,24 +378,54 @@ export default function PropertiesPage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && searchInput.trim()) {
+                if (e.key === "Enter") {
                   const q = new URLSearchParams(search);
-                  q.set("city", searchInput.trim());
+                  if (searchInput.trim()) {
+                    q.set("city", searchInput.trim());
+                  } else {
+                    q.delete("city");
+                  }
+                  q.delete("page");
+                  navigate(`/properties?${q.toString()}`);
+                  setCurrentPage(1);
+                }
+                if (e.key === "Escape") {
+                  setSearchInput("");
+                  const q = new URLSearchParams(search);
+                  q.delete("city");
                   q.delete("page");
                   navigate(`/properties?${q.toString()}`);
                   setCurrentPage(1);
                 }
               }}
-              placeholder="Ville, quartier…"
+              placeholder="Ville, quartier, adresse…"
               className="flex-1 py-2 text-sm text-gray-700 placeholder-gray-400 outline-none bg-white min-w-0"
             />
+            {searchInput && (
+              <button
+                className="px-2 flex items-center text-gray-300 hover:text-gray-500 transition-colors bg-white"
+                onClick={() => {
+                  setSearchInput("");
+                  const q = new URLSearchParams(search);
+                  q.delete("city");
+                  q.delete("page");
+                  navigate(`/properties?${q.toString()}`);
+                  setCurrentPage(1);
+                }}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
             <button
               className="px-3 sm:px-4 flex items-center"
               style={{ background: YELLOW }}
               onClick={() => {
-                if (!searchInput.trim()) return;
                 const q = new URLSearchParams(search);
-                q.set("city", searchInput.trim());
+                if (searchInput.trim()) {
+                  q.set("city", searchInput.trim());
+                } else {
+                  q.delete("city");
+                }
                 q.delete("page");
                 navigate(`/properties?${q.toString()}`);
                 setCurrentPage(1);
@@ -701,9 +718,27 @@ export default function PropertiesPage() {
         {/* Cards grid or Map */}
         {viewMode === "map" ? (
           <div className="mb-8">
+            {/* Radius slider */}
+            <div className="flex items-center gap-4 mb-4 px-1">
+              <span className="text-xs font-semibold text-gray-500 whitespace-nowrap">Rayon de recherche</span>
+              <input
+                type="range"
+                min={1}
+                max={50}
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(Number(e.target.value))}
+                className="flex-1 h-1.5 rounded-full outline-none cursor-pointer"
+                style={{
+                  accentColor: YELLOW,
+                  background: `linear-gradient(to right, ${YELLOW} 0%, ${YELLOW} ${((radiusKm - 1) / 49) * 100}%, #E5E7EB ${((radiusKm - 1) / 49) * 100}%, #E5E7EB 100%)`,
+                }}
+              />
+              <span className="text-xs font-bold min-w-[38px] text-right" style={{ color: YELLOW }}>{radiusKm} km</span>
+            </div>
             <Suspense fallback={<div className="w-full rounded-xl bg-gray-100 animate-pulse" style={{ height: 540 }} />}>
               <PropertiesMapView
                 city={city}
+                radiusKm={radiusKm}
                 properties={displayCards.map((card) => ({
                   id: card.idx + 1,
                   title: card.title,
@@ -715,6 +750,20 @@ export default function PropertiesPage() {
                 }))}
               />
             </Suspense>
+          </div>
+        ) : propsLoading ? (
+          /* ── Chargement — skeleton ── */
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-lg overflow-hidden bg-white animate-pulse" style={{ border: "1px solid #E8E8E8" }}>
+                <div className="bg-gray-200" style={{ height: 170 }} />
+                <div className="p-3 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                  <div className="h-4 bg-gray-200 rounded w-1/3 mt-3" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : !hasApiData && hasCategoryFilter && !activeFilterCount ? (
           /* ── Catégorie vide (pas encore d'annonces dans ce type) ── */
@@ -760,8 +809,24 @@ export default function PropertiesPage() {
               </button>
             </div>
           </div>
+        ) : !hasApiData ? (
+          /* ── Aucun bien dans la base ── */
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6" style={{ background: "#F5F5F5" }}>
+              <Home className="w-9 h-9 text-gray-300" />
+            </div>
+            <h2 className="text-xl font-bold mb-2" style={{ color: "#1A1A1A" }}>Aucune annonce disponible</h2>
+            <p className="text-sm text-gray-400 max-w-sm mb-6">
+              Il n'y a pas encore d'annonces à {city}. Revenez bientôt ou créez une alerte pour être notifié dès qu'un bien est publié.
+            </p>
+            <button onClick={openAlert}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-85"
+              style={{ background: YELLOW, color: "#1A1A1A" }}>
+              <Bell className="w-4 h-4" /> Créer une alerte
+            </button>
+          </div>
         ) : (
-          /* ── Grille de biens (API ou données de repli) ── */
+          /* ── Grille de biens ── */
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
             {displayCards.map((card) => (
               <PropCard
@@ -815,7 +880,7 @@ export default function PropertiesPage() {
 
       {/* ══ "+ de filtres" modal overlay ══ */}
       {moreFiltersOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.45)" }}
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.45)" }}
           onClick={() => setMoreFiltersOpen(false)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
             onClick={e => e.stopPropagation()}>
@@ -908,7 +973,7 @@ export default function PropertiesPage() {
 
       {/* ══ Créer une alerte — modal ══ */}
       {alertOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.45)" }}
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center px-4" style={{ background: "rgba(0,0,0,0.45)" }}
           onClick={() => setAlertOpen(false)}>
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
             onClick={e => e.stopPropagation()}>
@@ -1047,50 +1112,7 @@ export default function PropertiesPage() {
         </div>
       </section>
 
-      {/* ─── MAIN FOOTER ─── */}
-      <footer style={{ background: "#1A1A1A", color: "#ccc" }} className="relative pt-14 pb-8 overflow-hidden">
-        <div className="absolute bottom-0 left-0 pointer-events-none" style={{ width: 220, height: 220, borderRadius: "50%", background: "rgba(255,255,255,0.03)", transform: "translate(-50%, 40%)" }} />
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
-            <div>
-              <div className="text-2xl font-black text-white mb-2">BLOQ<span style={{ color: YELLOW }}>5</span></div>
-              <p className="text-xs text-gray-500 leading-relaxed">Carte professionnelle :<br />n°CPI 6901 2019 000 039 604</p>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold text-sm mb-4">Nos services</h4>
-              <ul className="space-y-2 text-xs text-gray-500">
-                {["Gestion locative", "Gestion de colocations", "Gestion nourrice", "BLOQ5 ULTRA", "Tarifs"].map(l => (
-                  <li key={l}><a href="#" className="hover:text-yellow-400 transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold text-sm mb-4">Nos outils</h4>
-              <ul className="space-y-2 text-xs text-gray-500">
-                {["Estimation de loyer", "Générateur d'avis d'échéance", "Générateur de quittance", "Aide / FAQ"].map(l => (
-                  <li key={l}><a href="#" className="hover:text-yellow-400 transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold text-sm mb-4">Société</h4>
-              <ul className="space-y-2 text-xs text-gray-500">
-                {["Partenaires", "Presse", "Recrutement", "Politique cookies", "Politique confidentialité", "Mentions légales", "Conditions générales d'utilisation"].map(l => (
-                  <li key={l}><a href="#" className="hover:text-yellow-400 transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between text-xs text-gray-600 gap-3">
-            <p>© {new Date().getFullYear()} BLOQ5. Tous droits réservés.</p>
-            <div className="flex gap-4">
-              <a href="#" className="hover:text-gray-400">Mentions légales</a>
-              <a href="#" className="hover:text-gray-400">Politique de confidentialité</a>
-              <a href="#" className="hover:text-gray-400">CGU</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

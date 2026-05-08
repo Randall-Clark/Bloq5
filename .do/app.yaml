@@ -1,0 +1,76 @@
+name: bloq5
+region: tor1
+
+services:
+  - name: api
+    source_dir: /
+    github:
+      repo: Randall-Clark/Bloq5
+      branch: main
+      deploy_on_push: true
+    environment_slug: node-js
+    build_command: npm install -g pnpm@10 && pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build
+    run_command: node --enable-source-maps artifacts/api-server/dist/index.mjs
+    http_port: 8080
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    routes:
+      - path: /api
+        preserve_path_prefix: true
+    health_check:
+      http_path: /api/healthz
+      initial_delay_seconds: 30
+      period_seconds: 30
+      timeout_seconds: 10
+      failure_threshold: 3
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "8080"
+      - key: BETTER_AUTH_URL
+        value: https://bloq5.com
+      # REPLIT_DOMAINS used by CORS allowlist — include both apex and www
+      - key: REPLIT_DOMAINS
+        value: bloq5.com,www.bloq5.com
+      # ── Secrets: fill these in the DigitalOcean dashboard ──────────
+      # (Never commit actual values to this file if the repo is public)
+      - key: SUPABASE_DATABASE_URL
+        type: SECRET
+        value: REPLACE_IN_DO_DASHBOARD
+      - key: SESSION_SECRET
+        type: SECRET
+        value: REPLACE_IN_DO_DASHBOARD
+      - key: GOOGLE_CLIENT_ID
+        type: SECRET
+        value: REPLACE_IN_DO_DASHBOARD
+      - key: GOOGLE_CLIENT_SECRET
+        type: SECRET
+        value: REPLACE_IN_DO_DASHBOARD
+      - key: RESEND_API_KEY
+        type: SECRET
+        value: REPLACE_IN_DO_DASHBOARD
+      # Stripe — add once your account is set up
+      # - key: STRIPE_SECRET_KEY
+      #   type: SECRET
+      #   value: REPLACE_IN_DO_DASHBOARD
+      # - key: STRIPE_WEBHOOK_SECRET
+      #   type: SECRET
+      #   value: REPLACE_IN_DO_DASHBOARD
+
+static_sites:
+  - name: frontend
+    source_dir: /
+    github:
+      repo: Randall-Clark/Bloq5
+      branch: main
+      deploy_on_push: true
+    build_command: npm install -g pnpm@10 && pnpm install --frozen-lockfile && PORT=3000 BASE_PATH=/ NODE_ENV=production pnpm --filter @workspace/bloq5 run build
+    output_dir: artifacts/bloq5/dist/public
+    index_document: index.html
+    error_document: index.html
+    routes:
+      - path: /
+    envs:
+      - key: NODE_ENV
+        value: production

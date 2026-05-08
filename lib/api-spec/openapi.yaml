@@ -51,7 +51,7 @@ paths:
           name: type
           schema:
             type: string
-            enum: [house, apartment, co-living, commercial, office, industrial]
+            enum: [house, apartment, co-living, commercial, office]
         - in: query
           name: city
           schema:
@@ -629,7 +629,7 @@ components:
           type: string
         type:
           type: string
-          enum: [house, apartment, co-living, commercial, office, industrial]
+          enum: [house, apartment, co-living, commercial, office]
         address:
           type: string
         city:
@@ -782,7 +782,7 @@ components:
           type: string
         type:
           type: string
-          enum: [house, apartment, co-living, commercial, office, industrial]
+          enum: [house, apartment, co-living, commercial, office]
         address:
           type: string
         city:

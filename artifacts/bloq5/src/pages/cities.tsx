@@ -73,7 +73,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   "co-living": "Colocations",
   office: "Bureaux",
   commercial: "Locaux commerciaux",
-  industrial: "Espaces industriels",
 };
 
 export default function CitiesPage() {

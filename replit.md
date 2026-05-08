@@ -69,6 +69,16 @@ Added via startup migration: `apartment_number` (text), `building_floors` (integ
 - Form sections: DPE (A-G picker + cost range), Plan du bâtiment (URL+file), Pièces jointes (multi-file), Aides & conditions (checkbox), Photos with file upload
 - File upload via FileReader → base64 data URL stored in DB (MVP)
 
+### Phase 1.2 Features (current session)
+- **SiteFooter**: shared `artifacts/bloq5/src/components/layout/site-footer.tsx` — used by home, properties, about, articles, contact (replaces inline footers)
+- **Public pages**: `/about`, `/articles`, `/contact` — routes in App.tsx, navbar links updated (Link, not `<a href="#">`)
+- **Map radius slider**: 1–50 km slider + dashed yellow `<Circle>` overlay in `properties-map-view.tsx`; slider shown only when viewMode === "map"
+- **Z-index fix**: `moreFiltersOpen` and `alertOpen` modals changed from `z-[60]` to `z-[9999]` (above Leaflet)
+- **Floor selects**: `floor` field uses Sous-sol (-1) / RDC (0) / 1e–20e étage; `buildingFloors` uses Sous-sol+RDC (-1) / RDC (0) / 1–30 étages (both Select components)
+- **Address validation**: AddressInput calls Nominatim (debounce 600ms, min 10 chars, countrycodes=ca), shows green ✓ / red ✗ / spinner indicator
+- **Owner email notification**: POST /api/rental-requests now queries property + `user` table and logs `[EMAIL → PROPRIÉTAIRE]` with all details
+- **Virtual tour section**: 3 options — own URL / réserver visite par email (mailto:visites@bloq5.com) / BLOQ5 Pro Matterport CTA
+
 ### Codegen Note
 - `lib/api-zod/src/index.ts` only exports `./generated/api` (the zod generator does NOT emit `api.schemas.ts`)
 - `lib/api-client-react/src/index.ts` exports both `./generated/api` and `./generated/api.schemas`

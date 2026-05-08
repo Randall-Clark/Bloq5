@@ -1,106 +1,119 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Menu, X, User } from "lucide-react";
+
 import { authClient } from "@/lib/auth-client";
+import { ProAuthModal } from "@/pages/pro-auth-modal";
 
 const YELLOW = "#F5A623";
 
 export function PublicNavbar({ activeItem }: { activeItem?: "biens" }) {
   const [open, setOpen] = useState(false);
+  const [showProModal, setShowProModal] = useState(false);
   const { data: session, isPending } = authClient.useSession();
   const [location] = useLocation();
-  const isProPage = location.startsWith("/pro");
+  const isProPage = location === "/pro" || location.startsWith("/pro/");
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-6 md:gap-8">
-          <Link href="/" className="text-2xl font-black tracking-tight" style={{ color: "#1A1A1A" }}>
-            BLOQ<span style={{ color: YELLOW }}>5</span>
-          </Link>
-          <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-            <Link
-              href="/cities"
-              className={activeItem === "biens" ? "font-semibold" : "hover:text-gray-900 transition-colors"}
-              style={activeItem === "biens" ? { color: YELLOW } : {}}
+    <>
+      <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-6 md:gap-8">
+            <Link href="/" className="text-2xl font-black tracking-tight" style={{ color: "#1A1A1A" }}>
+              BLOQ<span style={{ color: YELLOW }}>5</span>
+            </Link>
+            <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
+              <Link
+                href="/cities"
+                className={activeItem === "biens" ? "font-semibold" : "hover:text-gray-900 transition-colors"}
+                style={activeItem === "biens" ? { color: YELLOW } : {}}
+              >
+                Biens à louer
+              </Link>
+              <Link href="/about" className="hover:text-gray-900 transition-colors">À propos</Link>
+              <Link href="/articles" className="hover:text-gray-900 transition-colors">Articles</Link>
+              <Link href="/contact" className="hover:text-gray-900 transition-colors">Contact</Link>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            {!isPending && (
+              session ? (
+                <Link
+                  href="/profile"
+                  className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold rounded-md px-3 py-1.5 transition-opacity hover:opacity-85"
+                  style={{ background: YELLOW, color: "#1A1A1A" }}
+                >
+                  <User className="w-4 h-4" />
+                  Mon compte
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/sign-in"
+                    className="hidden sm:block text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors"
+                  >
+                    Se connecter
+                  </Link>
+                  {!isProPage && (
+                    <button
+                      onClick={() => setShowProModal(true)}
+                      className="hidden sm:flex items-center gap-1.5 text-sm font-bold rounded-md px-3 py-1.5 transition-opacity hover:opacity-85"
+                      style={{ background: YELLOW, color: "#1A1A1A" }}
+                    >
+                      <span className="hidden lg:inline">Je suis </span>propriétaire
+                    </button>
+                  )}
+                </>
+              )
+            )}
+            <button
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:bg-gray-50"
+              onClick={() => setOpen((v) => !v)}
+              aria-label="Menu"
             >
+              {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {open && (
+          <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-1 shadow-lg">
+            <Link href="/cities" className="text-sm font-semibold py-3 border-b border-gray-50" style={activeItem === "biens" ? { color: YELLOW } : { color: "#1A1A1A" }} onClick={() => setOpen(false)}>
               Biens à louer
             </Link>
-            <a href="#" className="hover:text-gray-900 transition-colors">À propos</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">Articles</a>
-            <a href="#" className="hover:text-gray-900 transition-colors">Contact</a>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 sm:gap-3">
-          {!isPending && (
-            session ? (
-              <Link
-                href="/profile"
-                className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold rounded-md px-3 py-1.5 transition-opacity hover:opacity-85"
-                style={{ background: YELLOW, color: "#1A1A1A" }}
-              >
-                <User className="w-4 h-4" />
-                Mon compte
-              </Link>
-            ) : (
-              <>
-                <Link
-                  href="/sign-in"
-                  className="hidden sm:block text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors"
-                >
-                  Se connecter
+            <Link href="/about" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-50" onClick={() => setOpen(false)}>À propos</Link>
+            <Link href="/articles" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-50" onClick={() => setOpen(false)}>Articles</Link>
+            <Link href="/contact" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-50" onClick={() => setOpen(false)}>Contact</Link>
+            <div className="pt-3 flex flex-col gap-2">
+              {session ? (
+                <Link href="/profile" className="text-sm font-bold rounded-md px-4 py-2.5 text-center transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }} onClick={() => setOpen(false)}>
+                  Mon compte
                 </Link>
-                {!isProPage && (
-                  <Link
-                    href="/sign-up"
-                    className="hidden sm:flex items-center gap-1.5 text-sm font-bold rounded-md px-3 py-1.5 transition-opacity hover:opacity-85"
-                    style={{ background: YELLOW, color: "#1A1A1A" }}
-                  >
-                    <span className="hidden lg:inline">Vous êtes </span>propriétaire ?
+              ) : (
+                <>
+                  <Link href="/sign-in" className="text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-4 py-2.5 text-center hover:bg-gray-50 transition-colors" onClick={() => setOpen(false)}>
+                    Se connecter
                   </Link>
-                )}
-              </>
-            )
-          )}
-          <button
-            className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:bg-gray-50"
-            onClick={() => setOpen((v) => !v)}
-            aria-label="Menu"
-          >
-            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
-        </div>
-      </div>
-
-      {open && (
-        <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-1 shadow-lg">
-          <Link href="/cities" className="text-sm font-semibold py-3 border-b border-gray-50" style={activeItem === "biens" ? { color: YELLOW } : { color: "#1A1A1A" }} onClick={() => setOpen(false)}>
-            Biens à louer
-          </Link>
-          <a href="#" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-50" onClick={() => setOpen(false)}>À propos</a>
-          <a href="#" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-50" onClick={() => setOpen(false)}>Articles</a>
-          <a href="#" className="text-sm font-medium text-gray-700 py-3 border-b border-gray-50" onClick={() => setOpen(false)}>Contact</a>
-          <div className="pt-3 flex flex-col gap-2">
-            {session ? (
-              <Link href="/profile" className="text-sm font-bold rounded-md px-4 py-2.5 text-center transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }} onClick={() => setOpen(false)}>
-                Mon compte
-              </Link>
-            ) : (
-              <>
-                <Link href="/sign-in" className="text-sm font-semibold text-gray-700 border border-gray-400 rounded-md px-4 py-2.5 text-center hover:bg-gray-50 transition-colors" onClick={() => setOpen(false)}>
-                  Se connecter
-                </Link>
-                {!isProPage && (
-                  <Link href="/sign-up" className="text-sm font-bold rounded-md px-4 py-2.5 text-center transition-opacity hover:opacity-85" style={{ background: YELLOW, color: "#1A1A1A" }} onClick={() => setOpen(false)}>
-                    Vous êtes propriétaire ?
-                  </Link>
-                )}
-              </>
-            )}
+                  {!isProPage && (
+                    <button
+                      onClick={() => { setOpen(false); setShowProModal(true); }}
+                      className="text-sm font-bold rounded-md px-4 py-2.5 text-center transition-opacity hover:opacity-85"
+                      style={{ background: YELLOW, color: "#1A1A1A" }}
+                    >
+                      Je suis propriétaire
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+      </nav>
+
+      {showProModal && (
+        <ProAuthModal onClose={() => setShowProModal(false)} />
       )}
-    </nav>
+    </>
   );
 }

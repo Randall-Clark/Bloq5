@@ -29,7 +29,6 @@ export const PropertyType = {
   "co-living": "co-living",
   commercial: "commercial",
   office: "office",
-  industrial: "industrial",
 } as const;
 
 export type PropertyStatus =
@@ -134,7 +133,6 @@ export const CreatePropertyBodyType = {
   "co-living": "co-living",
   commercial: "commercial",
   office: "office",
-  industrial: "industrial",
 } as const;
 
 export type CreatePropertyBodyRoomsItemStatus =
@@ -520,5 +518,4 @@ export const ListPropertiesType = {
   "co-living": "co-living",
   commercial: "commercial",
   office: "office",
-  industrial: "industrial",
 } as const;

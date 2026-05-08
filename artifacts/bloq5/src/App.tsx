@@ -13,6 +13,9 @@ import { authClient } from "@/lib/auth-client";
 
 // Pages
 import HomePage from "@/pages/home";
+import AboutPage from "@/pages/about";
+import ArticlesPage from "@/pages/articles";
+import ContactPage from "@/pages/contact";
 import PropertiesPage from "@/pages/properties";
 import PropertyDetailPage from "@/pages/property-detail";
 import PropertyDossierPage from "@/pages/property-dossier";
@@ -150,21 +153,16 @@ const GithubIcon = () => (
 );
 
 function SocialButtons({ returnTo }: { returnTo?: string }) {
-  async function handleSocial(provider: "google" | "github") {
-    const dest = returnTo ? `${window.location.origin}${returnTo}` : `${window.location.origin}${basePath}/profile`;
-    await authClient.signIn.social({ provider, callbackURL: dest });
+  async function handleGoogle() {
+    const dest = returnTo ? `${window.location.origin}${returnTo}` : `${window.location.origin}${basePath}/`;
+    await authClient.signIn.social({ provider: "google", callbackURL: dest });
   }
   return (
     <div className="flex flex-col gap-3 mb-6">
-      <button type="button" onClick={() => handleSocial("google")}
+      <button type="button" onClick={handleGoogle}
         className="flex items-center justify-center gap-3 w-full border border-gray-200 rounded-xl h-12 text-[#1A1A1A] font-semibold hover:bg-gray-50 transition-colors text-sm">
         <GoogleIcon />
         Continuer avec Google
-      </button>
-      <button type="button" onClick={() => handleSocial("github")}
-        className="flex items-center justify-center gap-3 w-full border border-gray-200 rounded-xl h-12 text-[#1A1A1A] font-semibold hover:bg-gray-50 transition-colors text-sm">
-        <GithubIcon />
-        Continuer avec GitHub
       </button>
     </div>
   );
@@ -194,12 +192,12 @@ function SignInPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const result = await authClient.signIn.email({ email, password, callbackURL: returnTo || "/profile" });
+    const result = await authClient.signIn.email({ email, password, callbackURL: returnTo || "/" });
     setLoading(false);
     if (result.error) {
       setError(result.error.message ?? "Identifiants incorrects");
     } else {
-      navigate(returnTo || "/profile");
+      navigate(returnTo || "/");
     }
   }
 
@@ -260,12 +258,12 @@ function SignUpPage() {
     setError("");
     if (password.length < 8) { setError("Le mot de passe doit contenir au moins 8 caractères"); return; }
     setLoading(true);
-    const result = await authClient.signUp.email({ name, email, password, callbackURL: "/profile" });
+    const result = await authClient.signUp.email({ name, email, password, callbackURL: "/" });
     setLoading(false);
     if (result.error) {
       setError(result.error.message ?? "Erreur lors de l'inscription");
     } else {
-      navigate("/profile");
+      navigate("/");
     }
   }
 
@@ -367,7 +365,7 @@ function ForgotPasswordPage() {
         ) : (
           /* Form state */
           <>
-            <div className="mb-8">
+            <div className="mb-6">
               <a href={`${basePath}/sign-in`}
                 className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors mb-6">
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -377,9 +375,10 @@ function ForgotPasswordPage() {
               </a>
               <h2 className="text-2xl font-bold text-[#1A1A1A] mb-2">Mot de passe oublié ?</h2>
               <p className="text-gray-500 text-sm leading-relaxed">
-                Entrez l'adresse e-mail associée à votre compte. Nous vous enverrons un lien pour réinitialiser votre mot de passe.
+                Entrez l'adresse e-mail associée à votre compte. Vous recevrez un lien pour créer ou réinitialiser votre mot de passe.
               </p>
             </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <div className="border border-red-200 bg-red-50 text-red-800 rounded-xl px-4 py-3 text-sm">{error}</div>
@@ -587,6 +586,84 @@ function ResetPasswordPage() {
   );
 }
 
+/* ── Set Password Banner (shown to Google-only accounts) ── */
+function SetPasswordBanner() {
+  const { data: session, isPending } = authClient.useSession();
+  const [hasCredential, setHasCredential] = useState<boolean | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [location] = useLocation();
+
+  const isAuthPage = ["/sign-in", "/sign-up", "/forgot-password", "/reset-password"].some(p => location.startsWith(p));
+
+  useEffect(() => {
+    if (!session?.user || isPending || isAuthPage) return;
+    fetch(`${basePath}/api/auth/has-credential`, { credentials: "include" })
+      .then(r => r.ok ? r.json() : null)
+      .then((d: { hasCredential?: boolean } | null) => {
+        if (d !== null) setHasCredential(d.hasCredential ?? true);
+      })
+      .catch(() => {});
+  }, [session?.user?.id, isPending, isAuthPage]);
+
+  if (isPending || !session?.user || hasCredential !== false || dismissed || isAuthPage) return null;
+
+  const email = session.user.email;
+
+  async function handleSend() {
+    setSending(true);
+    await authClient.requestPasswordReset({
+      email,
+      redirectTo: `${window.location.origin}${basePath}/reset-password`,
+    });
+    setSending(false);
+    setSent(true);
+  }
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-[9999] p-4 pointer-events-none flex justify-center">
+      <div className="pointer-events-auto w-full max-w-lg bg-[#1A1A1A] text-white rounded-2xl shadow-2xl px-5 py-4 flex items-start gap-4">
+        <div className="w-9 h-9 rounded-full bg-[#F5A623]/20 flex-shrink-0 flex items-center justify-center mt-0.5">
+          <svg className="w-5 h-5 text-[#F5A623]" viewBox="0 0 24 24" fill="none" stroke="#F5A623" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          {sent ? (
+            <>
+              <p className="font-semibold text-sm">Lien envoyé !</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Consultez <strong className="text-white">{email}</strong> pour définir votre mot de passe.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-semibold text-sm">Définissez un mot de passe pour votre compte</p>
+              <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">
+                Vous êtes connecté via Google, mais chaque compte doit aussi avoir un mot de passe BLOQ5.
+              </p>
+              <button
+                onClick={handleSend}
+                disabled={sending}
+                className="mt-2.5 bg-[#F5A623] hover:bg-[#e09520] text-[#1A1A1A] font-bold text-xs rounded-lg px-4 py-2 transition-colors disabled:opacity-60">
+                {sending ? "Envoi…" : "Recevoir le lien par e-mail"}
+              </button>
+            </>
+          )}
+        </div>
+        <button
+          onClick={() => setDismissed(true)}
+          className="flex-shrink-0 text-gray-500 hover:text-gray-300 transition-colors mt-0.5">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ── Route Guards ── */
 function HomeRedirect() {
   return <HomePage />;
@@ -614,6 +691,9 @@ function AppRoutes() {
       <Switch>
         {/* Public Routes */}
         <Route path="/" component={HomeRedirect} />
+        <Route path="/about" component={AboutPage} />
+        <Route path="/articles" component={ArticlesPage} />
+        <Route path="/contact" component={ContactPage} />
         <Route path="/cities" component={CitiesPage} />
         <Route path="/coming-soon" component={ComingSoonPage} />
         <Route path="/properties" component={PropertiesPage} />
@@ -667,6 +747,7 @@ function App() {
           <Toaster />
           <ConditionalLocationPopup />
           <CountryChangeBanner />
+          <SetPasswordBanner />
         </TooltipProvider>
       </LocationProvider>
     </WouterRouter>

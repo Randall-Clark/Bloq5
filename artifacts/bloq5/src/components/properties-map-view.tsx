@@ -1,10 +1,9 @@
 import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
 import L from "leaflet";
 
 const YELLOW = "#F5A623";
 
-/* City center coordinates (Canada) */
 const CITY_CENTERS: Record<string, [number, number]> = {
   "Montréal":  [45.5017, -73.5673],
   "Montreal":  [45.5017, -73.5673],
@@ -20,13 +19,11 @@ const CITY_CENTERS: Record<string, [number, number]> = {
   "default":   [45.5017, -73.5673],
 };
 
-/* Seeded pseudo-random offset so positions are stable between renders */
 function seededOffset(seed: number, range: number): number {
   const x = Math.sin(seed) * 10000;
   return (x - Math.floor(x)) * range * 2 - range;
 }
 
-/* Custom yellow marker icon */
 const yellowIcon = L.divIcon({
   className: "",
   html: `<div style="
@@ -37,6 +34,17 @@ const yellowIcon = L.divIcon({
   iconSize: [32, 32],
   iconAnchor: [16, 32],
   popupAnchor: [0, -36],
+});
+
+const centerIcon = L.divIcon({
+  className: "",
+  html: `<div style="
+    width:14px;height:14px;border-radius:50%;
+    background:#1A1A1A;
+    box-shadow:0 0 0 3px white,0 0 0 5px rgba(0,0,0,0.15);
+  "></div>`,
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
 });
 
 export interface MapProperty {
@@ -52,25 +60,27 @@ export interface MapProperty {
 interface PropertiesMapViewProps {
   properties: MapProperty[];
   city: string;
+  radiusKm?: number;
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  apartment:  "Appartement",
-  house:      "Maison",
-  condo:      "Condo",
+  apartment:   "Appartement",
+  house:       "Maison",
+  condo:       "Condo",
   "co-living": "Colocation",
-  office:     "Bureau",
-  commercial: "Commercial",
+  office:      "Bureau",
+  commercial:  "Commercial",
 };
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  available: { label: "Disponible",   color: "#22C55E" },
+  available: { label: "Disponible",    color: "#22C55E" },
   soon:      { label: "Bientôt dispo", color: "#F97316" },
   occupied:  { label: "Occupé",        color: "#EF4444" },
 };
 
-export default function PropertiesMapView({ properties, city }: PropertiesMapViewProps) {
+export default function PropertiesMapView({ properties, city, radiusKm }: PropertiesMapViewProps) {
   const center: [number, number] = CITY_CENTERS[city] ?? CITY_CENTERS["default"];
+  const radiusMeters = radiusKm ? radiusKm * 1000 : undefined;
 
   return (
     <div className="w-full rounded-xl overflow-hidden border border-gray-200" style={{ height: 540 }}>
@@ -79,6 +89,32 @@ export default function PropertiesMapView({ properties, city }: PropertiesMapVie
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        {/* Radius circle overlay */}
+        {radiusMeters && (
+          <>
+            <Circle
+              center={center}
+              radius={radiusMeters}
+              pathOptions={{
+                color: YELLOW,
+                fillColor: YELLOW,
+                fillOpacity: 0.08,
+                weight: 2,
+                dashArray: "6 4",
+              }}
+            />
+            <Marker position={center} icon={centerIcon}>
+              <Popup>
+                <div className="text-xs font-semibold" style={{ color: "#1A1A1A" }}>
+                  Centre de recherche<br />
+                  <span className="text-gray-500 font-normal">Rayon : {radiusKm} km</span>
+                </div>
+              </Popup>
+            </Marker>
+          </>
+        )}
+
         {properties.map((prop) => {
           const lat = center[0] + seededOffset(prop.id * 7, 0.03);
           const lng = center[1] + seededOffset(prop.id * 13, 0.05);

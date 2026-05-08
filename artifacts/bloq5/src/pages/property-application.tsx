@@ -760,7 +760,7 @@ export default function PropertyApplicationPage() {
   }, [session?.user?.id]);
 
   const propType = property?.type ?? "";
-  const isCommercial = propType === "office" || propType === "commercial" || propType === "industrial";
+  const isCommercial = propType === "office" || propType === "commercial";
   const isCoLiving = propType === "co-living";
   const addr = property ? (property.address || property.title) : "";
   const rooms = (property?.rooms ?? []) as CoLivingRoomEntry[];

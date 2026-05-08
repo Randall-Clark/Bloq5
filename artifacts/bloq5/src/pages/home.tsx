@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useGetFeaturedProperties } from "@workspace/api-client-react";
 import { useLocation_ } from "@/context/location-context";
 import { PublicNavbar } from "@/components/public-navbar";
+import { SiteFooter } from "@/components/layout/site-footer";
 import {
   Search, ChevronDown, Bed, Bath, Maximize2, MapPin,
   CheckCircle, FileText, PenLine, ClipboardList, ChevronRight,
@@ -45,7 +46,6 @@ const STATIC_PROPS_MAP: Record<string, StaticProp[]> = {
     { title: "Maison unifamiliale – banlieue sud",  city: "Toronto",     price: 3900, bedrooms: 4, bathrooms: 2, area: 180, img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=500&q=80" },
     { title: "Bureau moderne – Downtown core",      city: "Vancouver",   price: 7200, bedrooms: 0, bathrooms: 2, area: 240, img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80" },
     { title: "Local commercial – rue Sainte-Cath.", city: "Montréal",    price: 3200, bedrooms: 0, bathrooms: 1, area: 110, img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=500&q=80" },
-    { title: "Entrepôt industriel – zone logistique",city: "Calgary",    price: 5500, bedrooms: 0, bathrooms: 2, area: 850, img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=500&q=80" },
     { title: "Colocation – chambre privée meublée", city: "Québec",      price: 950,  bedrooms: 1, bathrooms: 1, area: 20,  img: "https://images.unsplash.com/photo-1484101403633-562f891dc89a?w=500&q=80" },
   ],
 };
@@ -55,12 +55,12 @@ const ARTICLES_MAP: Record<string, Article[]> = {
   FR: [
     { category: "Guide propriétaire", title: "Gestion locative : comment déléguer efficacement ?",  img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500&q=80" },
     { category: "Marché commercial",  title: "Louer un local commercial : les clauses à connaître", img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80" },
-    { category: "Immobilier industriel", title: "Entrepôts et ateliers : le marché locatif en 2025", img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=500&q=80" },
+    { category: "Guide locataire", title: "Constituer un dossier solide pour louer au Canada", img: "https://images.unsplash.com/photo-1568992688065-536aad8a12f6?w=500&q=80" },
   ],
   CA: [
     { category: "Guide propriétaire", title: "Gestion locative au Canada : déléguer en toute sérénité", img: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=500&q=80" },
     { category: "Marché commercial",  title: "Bail commercial au Québec : ce que tout propriétaire doit savoir", img: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=500&q=80" },
-    { category: "Industriel & Logistique", title: "Espaces industriels au Canada : tendances et opportunités 2025", img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=500&q=80" },
+    { category: "Juridique", title: "Bail de logement au Québec : droits et obligations en 2025", img: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=500&q=80" },
   ],
 };
 
@@ -70,7 +70,6 @@ const CATEGORIES = [
   { icon: Users,     label: "Colocations",  type: "co-living" },
   { icon: Briefcase, label: "Bureaux",      type: "office" },
   { icon: Store,     label: "Commerciales", type: "commercial" },
-  { icon: Factory,   label: "Industriel",   type: "industrial" },
 ];
 
 /* ── Pill selector helper ── */
@@ -113,15 +112,11 @@ function Chip({ label, checked, onChange }: { label: string; checked: boolean; o
 export default function HomePage() {
   const { country } = useLocation_();
   const currency = country.currency;
-  const { data: featured } = useGetFeaturedProperties();
+  const { data: featured, isLoading: featuredLoading } = useGetFeaturedProperties();
 
   /* Country-aware static data */
   const STATIC_PROPS = STATIC_PROPS_MAP[country.code] ?? STATIC_PROPS_MAP.FR;
   const ARTICLES     = ARTICLES_MAP[country.code]     ?? ARTICLES_MAP.FR;
-
-  /* Footer SEO: distribute cities across 4 columns */
-  const allCityNames   = country.cities.map((c) => c.name);
-  const footerCityCols = [0, 1, 2, 3].map((i) => allCityNames.filter((_, idx) => idx % 4 === i));
 
   /* Search state */
   const [budgetSlider, setBudgetSlider] = useState(BUDGET_STEPS);
@@ -169,17 +164,17 @@ export default function HomePage() {
   const budget = sliderToBudget(budgetSlider);
 
   const displayProps = (featured && featured.length > 0)
-    ? featured.slice(0, 6).map((p, i) => ({
+    ? featured.slice(0, 6).map((p) => ({
         title:     p.title,
         city:      p.city,
         price:     p.price,
         bedrooms:  p.bedrooms  ?? 1,
         bathrooms: p.bathrooms ?? 1,
         area:      p.area      ?? 20,
-        img:       p.images?.[0] ?? STATIC_PROPS[i % STATIC_PROPS.length].img,
+        img:       p.images?.[0] ?? `https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500&q=80`,
         id:        p.id,
       }))
-    : STATIC_PROPS.map((p, i) => ({ ...p, id: i + 1 }));
+    : [];
 
   return (
     <div className="min-h-screen bg-white font-sans" style={{ color: "#1A1A1A" }}>
@@ -497,52 +492,69 @@ export default function HomePage() {
       </section>
 
       {/* ─── NOS DERNIERS BIENS ─── */}
-      <section className="py-14 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-3">
-            <h2 className="text-2xl md:text-3xl font-bold" style={{ color: "#1A1A1A" }}>
-              Nos derniers biens à{" "}
-              <span className="script-yellow">louer</span>
-            </h2>
-            <p className="text-gray-500 text-sm mt-1">Appartements, maisons, bureaux, locaux commerciaux et espaces industriels — des biens gérés et vérifiés par BLOQ5.</p>
-          </div>
+      {(featuredLoading || displayProps.length > 0) && (
+        <section className="py-14 bg-white">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="text-center mb-3">
+              <h2 className="text-2xl md:text-3xl font-bold" style={{ color: "#1A1A1A" }}>
+                Nos derniers biens à{" "}
+                <span className="script-yellow">louer</span>
+              </h2>
+              <p className="text-gray-500 text-sm mt-1">Appartements, maisons, bureaux et locaux commerciaux — des biens gérés et vérifiés par BLOQ5.</p>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
-            {displayProps.map((prop, i) => (
-              <Link key={i} href={`/properties/${prop.id}`}>
-                <div className="rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer group bg-white">
-                  <div className="relative h-44 overflow-hidden">
-                    <span className="absolute top-2.5 left-2.5 z-10 bg-emerald-500 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">● Disponible</span>
-                    <img src={prop.img} alt={prop.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-sm text-gray-800 mb-2 line-clamp-1">{prop.title}</h3>
-                    <div className="flex items-center gap-4 text-gray-400 text-xs mb-3">
-                      {prop.bedrooms > 0 && <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" />{prop.bedrooms} ch.</span>}
-                      <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" />{prop.bathrooms} sdb</span>
-                      <span className="flex items-center gap-1"><Maximize2 className="w-3.5 h-3.5" />{prop.area} m²</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500 flex items-center gap-1"><MapPin className="w-3 h-3" />{prop.city}</span>
-                      <span className="text-sm font-bold rounded-md px-3 py-1" style={{ background: YELLOW, color: "#1A1A1A" }}>
-                        {prop.price} {currency.symbol}/mois
-                      </span>
+            {featuredLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+                {[1,2,3].map(i => (
+                  <div key={i} className="rounded-xl overflow-hidden border border-gray-100 shadow-sm bg-white animate-pulse">
+                    <div className="h-44 bg-gray-200" />
+                    <div className="p-4 space-y-3">
+                      <div className="h-4 bg-gray-200 rounded w-3/4" />
+                      <div className="h-3 bg-gray-100 rounded w-1/2" />
+                      <div className="h-6 bg-gray-200 rounded w-1/3 ml-auto" />
                     </div>
                   </div>
-                </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+                {displayProps.map((prop, i) => (
+                  <Link key={i} href={`/properties/${prop.id}`}>
+                    <div className="rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer group bg-white">
+                      <div className="relative h-44 overflow-hidden">
+                        <span className="absolute top-2.5 left-2.5 z-10 bg-emerald-500 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">● Disponible</span>
+                        <img src={prop.img} alt={prop.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-sm text-gray-800 mb-2 line-clamp-1">{prop.title}</h3>
+                        <div className="flex items-center gap-4 text-gray-400 text-xs mb-3">
+                          {prop.bedrooms > 0 && <span className="flex items-center gap-1"><Bed className="w-3.5 h-3.5" />{prop.bedrooms} ch.</span>}
+                          <span className="flex items-center gap-1"><Bath className="w-3.5 h-3.5" />{prop.bathrooms} sdb</span>
+                          <span className="flex items-center gap-1"><Maximize2 className="w-3.5 h-3.5" />{prop.area} m²</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-gray-500 flex items-center gap-1"><MapPin className="w-3 h-3" />{prop.city}</span>
+                          <span className="text-sm font-bold rounded-md px-3 py-1" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                            {prop.price} {currency.symbol}/mois
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+
+            <div className="text-center mt-10">
+              <Link href="/cities">
+                <button className="btn-outline-yellow text-sm px-8 py-3">
+                  Des milliers de biens disponibles — Voir toutes les annonces <ChevronRight className="w-4 h-4" />
+                </button>
               </Link>
-            ))}
+            </div>
           </div>
-
-          <div className="text-center mt-10">
-            <Link href="/cities">
-              <button className="btn-outline-yellow text-sm px-8 py-3">
-                Des milliers de biens disponibles — Voir toutes les annonces <ChevronRight className="w-4 h-4" />
-              </button>
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ─── COMMENT ÇA MARCHE ─── */}
       <section className="py-14" style={{ background: "#F8F8F8" }}>
@@ -551,12 +563,12 @@ export default function HomePage() {
             <div className="md:w-1/3 mb-8 md:mb-0">
               <h2 className="text-2xl font-bold mb-3" style={{ color: "#1A1A1A" }}>Comment ça marche ?</h2>
               <p className="text-gray-500 text-sm leading-relaxed">
-                BLOQ5 gère l'ensemble du cycle locatif pour tout type de bien — résidentiel, commercial ou industriel. Propriétaires et locataires, tout se fait en ligne.
+                BLOQ5 gère l'ensemble du cycle locatif pour tout type de bien — résidentiel et commercial. Propriétaires et locataires, tout se fait en ligne.
               </p>
             </div>
             <div className="md:w-2/3 grid grid-cols-1 sm:grid-cols-2 gap-6">
               {[
-                { icon: Search,        color: "#E3F2FD", iconColor: "#1565C0", step: "Trouvez le bien adapté",      desc: "Appartements, maisons, bureaux, locaux commerciaux ou entrepôts industriels — filtrez par type, superficie et loyer." },
+                { icon: Search,        color: "#E3F2FD", iconColor: "#1565C0", step: "Trouvez le bien adapté",      desc: "Appartements, maisons, bureaux, locaux commerciaux — filtrez par type, superficie et loyer." },
                 { icon: FileText,      color: "#FFF3E0", iconColor: "#E65100", step: "Déposez votre dossier",       desc: "Dossier locataire ou bail commercial en quelques minutes, directement depuis l'application." },
                 { icon: PenLine,       color: "#E8F5E9", iconColor: "#2E7D32", step: "Signez vos documents",        desc: "Signature électronique sécurisée : bail résidentiel, bail commercial, état des lieux et quittances." },
                 { icon: ClipboardList, color: "#F3E5F5", iconColor: "#6A1B9A", step: "BLOQ5 gère pour vous",        desc: "Suivi des paiements, gestion des incidents, renouvellement de bail — nous nous occupons de tout." },
@@ -614,10 +626,10 @@ export default function HomePage() {
             <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: YELLOW }}>✳ BLOQ5 Locataire</div>
             <h3 className="text-xl font-bold mb-2" style={{ color: "#1A1A1A" }}>Trouvez le bien qui correspond à votre activité.</h3>
             <p className="text-sm text-gray-500 mb-5">
-              Appartement, maison, bureau, local commercial ou espace industriel — accédez à des milliers d'annonces vérifiées et postulez en ligne sans paperasse.
+              Appartement, maison, bureau ou local commercial — accédez à des milliers d'annonces vérifiées et postulez en ligne sans paperasse.
             </p>
             <ul className="space-y-2 mb-7">
-              {["Résidentiel, commercial et industriel", "Dossier locataire ou bail commercial en ligne", "Visite virtuelle et signature électronique"].map((txt) => (
+              {["Résidentiel et commercial", "Dossier locataire ou bail commercial en ligne", "Visite virtuelle et signature électronique"].map((txt) => (
                 <li key={txt} className="flex items-center gap-2 text-sm text-gray-700">
                   <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: "#22C55E" }} />
                   {txt}
@@ -631,10 +643,10 @@ export default function HomePage() {
             <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: "#7a4a00" }}>✳ BLOQ5 Propriétaire</div>
             <h3 className="text-xl font-bold mb-2 text-white">Publiez votre annonce et gérez votre bien sans effort.</h3>
             <p className="text-sm text-white/80 mb-5">
-              Appartement, maison, bureau, local commercial ou entrepôt — confiez la gestion locative de tous vos biens à BLOQ5 : mise en location rapide, locataires qualifiés, suivi en temps réel.
+              Appartement, maison, bureau ou local commercial — confiez la gestion locative de tous vos biens à BLOQ5 : mise en location rapide, locataires qualifiés, suivi en temps réel.
             </p>
             <ul className="space-y-2 mb-7">
-              {["Tous types de biens : résidentiel, commercial, industriel", "Bail résidentiel ou commercial rédigé et signé en ligne", "Gestion complète, tableaux de bord en temps réel"].map((txt) => (
+              {["Tous types de biens : résidentiel et commercial", "Bail résidentiel ou commercial rédigé et signé en ligne", "Gestion complète, tableaux de bord en temps réel"].map((txt) => (
                 <li key={txt} className="flex items-center gap-2 text-sm text-white">
                   <CheckCircle className="w-4 h-4 flex-shrink-0 text-white" />
                   {txt}
@@ -655,7 +667,7 @@ export default function HomePage() {
             <div className="md:w-1/2 mb-8 md:mb-0">
               <h2 className="text-xl font-bold mb-2" style={{ color: "#1A1A1A" }}>BLOQ5 bien entourée</h2>
               <p className="text-sm text-gray-500 mb-5 leading-relaxed">
-                Reconnu parmi les plateformes PropTech les plus innovantes au Canada, BLOQ5 simplifie la gestion locative de tous types de biens — appartements, maisons, bureaux, locaux commerciaux et espaces industriels — pour les propriétaires et les locataires.
+                Reconnu parmi les plateformes PropTech les plus innovantes au Canada, BLOQ5 simplifie la gestion locative de tous types de biens — appartements, maisons, bureaux et locaux commerciaux — pour les propriétaires et les locataires.
               </p>
               <button className="btn-outline-dark text-sm px-6 py-2.5">En savoir +</button>
             </div>
@@ -682,7 +694,7 @@ export default function HomePage() {
             </div>
             <button className="btn-yellow text-sm px-5 py-2">Tous les articles</button>
           </div>
-          <p className="text-sm text-gray-500 mb-8">Conseils, guides et tendances pour propriétaires et locataires — résidentiel, commercial et industriel.</p>
+          <p className="text-sm text-gray-500 mb-8">Conseils, guides et tendances pour propriétaires et locataires — résidentiel et commercial.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {ARTICLES.map((a, i) => (
               <div key={i} className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
@@ -702,67 +714,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── FOOTER ─── */}
-      <footer style={{ background: "#1A1A1A", color: "#ccc" }} className="pt-14 pb-8">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
-            <div>
-              <div className="text-2xl font-black text-white mb-2">BLOQ<span style={{ color: YELLOW }}>5</span></div>
-              <p className="text-xs text-gray-500 leading-relaxed mb-4">La plateforme de gestion immobilière locative — résidentiel, commercial et industriel.<br />Carte professionnelle : n°CIN 4567 219-005-539-504</p>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold text-sm mb-4">Nos services</h4>
-              <ul className="space-y-2 text-xs text-gray-500">
-                {["Gestion locative résidentielle", "Gestion locative commerciale", "Espaces industriels & logistique", "Location longue durée", "BLOQ5 Pro", "Tarifs"].map(l => (
-                  <li key={l}><a href="#" className="hover:text-white transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold text-sm mb-4">Nos outils</h4>
-              <ul className="space-y-2 text-xs text-gray-500">
-                {["Générateur de bail", "Simulateur de loyer", "Générateur de quittance", "État des lieux digital"].map(l => (
-                  <li key={l}><a href="#" className="hover:text-white transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold text-sm mb-4">Société</h4>
-              <ul className="space-y-2 text-xs text-gray-500">
-                {["À propos", "Presse", "Recrutement", "Politique cookies", "Mentions légales", "CGU"].map(l => (
-                  <li key={l}><a href="#" className="hover:text-white transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 pt-8 grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            {["Location maison", "Location appartement", "Location colocation", "Location bureau"].map((title, colIdx) => (
-              <div key={title}>
-                <h5 className="text-xs font-semibold text-gray-400 mb-2">{title}</h5>
-                <ul className="space-y-1">
-                  {footerCityCols[colIdx].map((cityName) => (
-                    <li key={cityName}>
-                      <a href={`/properties?city=${encodeURIComponent(cityName)}`} className="text-xs text-gray-600 hover:text-gray-400 transition-colors">
-                        {cityName}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between text-xs text-gray-600 gap-3">
-            <p>© {new Date().getFullYear()} BLOQ5. Tous droits réservés.</p>
-            <div className="flex gap-4">
-              <a href="#" className="hover:text-gray-400">Mentions légales</a>
-              <a href="#" className="hover:text-gray-400">Politique de confidentialité</a>
-              <a href="#" className="hover:text-gray-400">CGU</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

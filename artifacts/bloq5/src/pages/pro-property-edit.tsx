@@ -21,7 +21,7 @@ import { Link } from "wouter";
 const editSchema = z.object({
   title: z.string().min(5, "Le titre doit faire au moins 5 caractères"),
   description: z.string().min(20, "La description est trop courte"),
-  type: z.enum(["house", "apartment", "co-living", "commercial", "office", "industrial"]),
+  type: z.enum(["house", "apartment", "co-living", "commercial", "office"]),
   address: z.string().min(5, "L'adresse est requise"),
   city: z.string().min(2, "La ville est requise"),
   country: z.string().min(2, "Le pays est requis"),
@@ -167,7 +167,6 @@ export default function ProPropertyEditPage() {
                           <SelectItem value="co-living">Coliving</SelectItem>
                           <SelectItem value="commercial">Local commercial</SelectItem>
                           <SelectItem value="office">Bureau</SelectItem>
-                          <SelectItem value="industrial">Industriel</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

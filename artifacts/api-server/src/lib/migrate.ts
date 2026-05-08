@@ -104,6 +104,22 @@ export async function runMigrations(): Promise<void> {
     await addColumnIfMissing(client, "dpe_annual_cost_max", "integer");
     await addColumnIfMissing(client, "attachments",         "jsonb NOT NULL DEFAULT '[]'::jsonb");
 
+    /* ── Remove 'industrial' from property_type enum ───────────────────── */
+    const industrialExists = await client.query(`
+      SELECT 1 FROM pg_enum
+      WHERE enumlabel = 'industrial'
+        AND enumtypid = (SELECT oid FROM pg_type WHERE typname = 'property_type')
+    `);
+    if (industrialExists.rowCount && industrialExists.rowCount > 0) {
+      logger.info("Removing 'industrial' from property_type enum…");
+      await client.query(`UPDATE properties SET type = 'commercial' WHERE type = 'industrial'`);
+      await client.query(`ALTER TYPE property_type RENAME TO property_type_old`);
+      await client.query(`CREATE TYPE property_type AS ENUM ('house', 'apartment', 'co-living', 'commercial', 'office')`);
+      await client.query(`ALTER TABLE properties ALTER COLUMN type TYPE property_type USING type::text::property_type`);
+      await client.query(`DROP TYPE property_type_old`);
+      logger.info("'industrial' enum value removed.");
+    }
+
     const colivingRes = await client.query(
       `SELECT id FROM properties WHERE type = 'co-living' AND (rooms IS NULL OR rooms::text = '[]') AND id = ANY($1)`,
       [Object.keys(COLIVING_ROOMS).map(Number)]

@@ -2,9 +2,14 @@ import { Router } from "express";
 import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
 import { propertiesTable, insertPropertySchema, subscriptionsTable } from "@workspace/db/schema";
-import { eq, sql, ilike, and, gte, lte } from "drizzle-orm";
+import { eq, sql, ilike, and, gte, lte, or } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { getPlanById } from "./subscriptions";
+
+/* Update schema: owner-editable fields only — never ownerId, isFeatured, views */
+const updatePropertySchema = insertPropertySchema
+  .partial()
+  .omit({ ownerId: true, isFeatured: true });
 
 const router = Router();
 
@@ -26,7 +31,13 @@ router.get("/api/properties", async (req: Request, res: Response): Promise<void>
 
     const conditions = [];
     if (type) conditions.push(eq(propertiesTable.type, type as any));
-    if (city) conditions.push(ilike(propertiesTable.city, `%${city}%`));
+    if (city) conditions.push(
+      or(
+        ilike(propertiesTable.city, `%${city}%`),
+        ilike(propertiesTable.address, `%${city}%`),
+        ilike(propertiesTable.title, `%${city}%`),
+      )
+    );
     if (minPrice) conditions.push(gte(propertiesTable.price, minPrice as any));
     if (maxPrice) conditions.push(lte(propertiesTable.price, maxPrice as any));
     if (bedrooms) conditions.push(eq(propertiesTable.bedrooms, parseInt(bedrooms)));
@@ -155,7 +166,13 @@ router.put("/api/properties/:id", requireAuth(), async (req: Request, res: Respo
       }
     }
 
-    const [updated] = await db.update(propertiesTable).set({ ...req.body, updatedAt: new Date() }).where(eq(propertiesTable.id, id)).returning();
+    const parsed = updatePropertySchema.safeParse(req.body);
+    if (!parsed.success) { res.status(400).json({ error: parsed.error.issues }); return; }
+
+    const [updated] = await db.update(propertiesTable)
+      .set({ ...parsed.data, updatedAt: new Date() })
+      .where(eq(propertiesTable.id, id))
+      .returning();
     res.json(updated);
   } catch (error) {
     req.log.error(error);

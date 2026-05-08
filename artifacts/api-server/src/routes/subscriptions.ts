@@ -16,11 +16,16 @@ export const PLANS = [
     interval: "month",
     maxProperties: 1,
     maxManagers: 0,
-    canPublish: false,
+    canPublish: true,
+    publicationCredits: 1,
+    listingDurationMonths: 1,
+    virtualTourCredits: 0,
+    addonDiscount: 0,
     features: [
-      "1 annonce (brouillon uniquement)",
-      "Visite virtuelle payante",
-      "Gestion des demandes basique",
+      "1 crédit de publication",
+      "Annonce visible pendant 1 mois",
+      "Gestion des demandes",
+      "Support 24/7",
     ],
     isEnterprise: false,
   },
@@ -30,13 +35,18 @@ export const PLANS = [
     price: 45,
     currency: "CAD",
     interval: "month",
-    maxProperties: 1,
+    maxProperties: 3,
     maxManagers: 0,
     canPublish: true,
+    publicationCredits: 3,
+    listingDurationMonths: 3,
+    virtualTourCredits: 2,
+    addonDiscount: 25,
     features: [
-      "1 annonce publiée",
-      "Photos illimitées",
-      "Visite virtuelle payante",
+      "3 crédits de publication",
+      "Annonces visibles pendant 3 mois",
+      "2 visites virtuelles offertes",
+      "25 % de rabais sur les services à la carte",
       "Gestion des demandes",
       "Support 24/7",
     ],
@@ -49,14 +59,19 @@ export const PLANS = [
     currency: "CAD",
     interval: "month",
     maxProperties: 10,
-    maxManagers: 2,
+    maxManagers: 3,
     canPublish: true,
+    publicationCredits: 10,
+    listingDurationMonths: 3,
+    virtualTourCredits: -1,
+    addonDiscount: 40,
     features: [
-      "Jusqu'à 10 propriétés publiées",
-      "2 gestionnaires inclus",
-      "Photos illimitées",
-      "Visites virtuelles incluses",
-      "Tableau de bord avancé",
+      "Jusqu'à 10 crédits de publication",
+      "Annonces visibles pendant 3 mois",
+      "Équipe de 3 gestionnaires inclus",
+      "Visites virtuelles illimitées incluses",
+      "40 % de rabais sur les services à la carte",
+      "Tableaux de bord avancés",
       "Statistiques détaillées",
       "Export des données",
       "Support prioritaire",
@@ -72,11 +87,15 @@ export const PLANS = [
     maxProperties: -1,
     maxManagers: -1,
     canPublish: true,
+    publicationCredits: -1,
+    listingDurationMonths: 12,
+    virtualTourCredits: -1,
+    addonDiscount: 50,
     features: [
-      "Propriétés illimitées",
+      "Crédits de publication illimités",
       "Gestionnaires illimités",
-      "API dédiée",
-      "Intégrations personnalisées",
+      "Visites virtuelles illimitées",
+      "API dédiée & intégrations personnalisées",
       "SLA garanti",
       "Responsable de compte dédié",
       "Formation et onboarding",
@@ -92,6 +111,7 @@ export function getPlanById(planId: string) {
 const router = Router();
 
 router.get("/api/subscriptions/plans", (_req: Request, res: Response): void => {
+  res.setHeader("Cache-Control", "no-store");
   res.json(PLANS);
 });
 
@@ -216,6 +236,104 @@ router.get("/api/subscriptions/verify-checkout", requireAuth(), async (req: Requ
   } catch (error: any) {
     req.log.error(error);
     res.status(500).json({ error: "Erreur lors de la vérification du paiement" });
+  }
+});
+
+/* ── Cancel subscription: cancel at period end ──────────────── */
+router.post("/api/subscriptions/cancel", requireAuth(), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id: userId } = getAuthUser(req);
+
+    const [sub] = await db.select().from(subscriptionsTable).where(eq(subscriptionsTable.ownerId, userId));
+    if (!sub) {
+      res.status(404).json({ error: "Aucun abonnement trouvé" });
+      return;
+    }
+    if (sub.planId === "free" || !sub.stripeSubscriptionId) {
+      res.status(400).json({ error: "Aucun abonnement payant actif à résilier" });
+      return;
+    }
+
+    const stripe = await getUncachableStripeClient();
+    await stripe.subscriptions.update(sub.stripeSubscriptionId, {
+      cancel_at_period_end: true,
+    });
+
+    await db.update(subscriptionsTable)
+      .set({ status: "cancelled", updatedAt: new Date() })
+      .where(eq(subscriptionsTable.ownerId, userId));
+
+    const [updated] = await db.select().from(subscriptionsTable).where(eq(subscriptionsTable.ownerId, userId));
+    res.json({ ...updated, plan: getPlanById(updated.planId) });
+  } catch (error: any) {
+    req.log.error(error);
+    if (error.message?.includes("Missing Replit") || error.message?.includes("not connected")) {
+      res.status(503).json({ error: "Stripe non configuré — contactez le support" });
+    } else {
+      res.status(500).json({ error: "Erreur lors de la résiliation" });
+    }
+  }
+});
+
+/* ── List payment methods ────────────────────────────────────── */
+router.get("/api/subscriptions/payment-methods", requireAuth(), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id: userId } = getAuthUser(req);
+    const [sub] = await db.select().from(subscriptionsTable).where(eq(subscriptionsTable.ownerId, userId));
+    if (!sub?.stripeCustomerId) { res.json({ paymentMethods: [], defaultPaymentMethodId: null }); return; }
+
+    const stripe = await getUncachableStripeClient();
+    const pms = await stripe.paymentMethods.list({ customer: sub.stripeCustomerId, type: "card" });
+    const customer = await stripe.customers.retrieve(sub.stripeCustomerId) as any;
+    const defaultPmId = customer.invoice_settings?.default_payment_method ?? null;
+
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ paymentMethods: pms.data, defaultPaymentMethodId: defaultPmId });
+  } catch (error: any) {
+    req.log.error(error);
+    res.status(500).json({ error: "Erreur lors de la récupération des méthodes de paiement" });
+  }
+});
+
+/* ── Delete a payment method ─────────────────────────────────── */
+router.delete("/api/subscriptions/payment-methods/:pmId", requireAuth(), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id: userId } = getAuthUser(req);
+    const [sub] = await db.select().from(subscriptionsTable).where(eq(subscriptionsTable.ownerId, userId));
+    if (!sub?.stripeCustomerId) { res.status(400).json({ error: "Aucun compte Stripe trouvé" }); return; }
+
+    const stripe = await getUncachableStripeClient();
+
+    // Verify the payment method belongs to this customer before detaching
+    const pm = await stripe.paymentMethods.retrieve(req.params.pmId);
+    if (pm.customer !== sub.stripeCustomerId) {
+      res.status(403).json({ error: "Accès refusé" });
+      return;
+    }
+
+    await stripe.paymentMethods.detach(req.params.pmId);
+    res.json({ success: true });
+  } catch (error: any) {
+    req.log.error(error);
+    res.status(500).json({ error: "Erreur lors de la suppression" });
+  }
+});
+
+/* ── Set default payment method ──────────────────────────────── */
+router.post("/api/subscriptions/payment-methods/:pmId/default", requireAuth(), async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id: userId } = getAuthUser(req);
+    const [sub] = await db.select().from(subscriptionsTable).where(eq(subscriptionsTable.ownerId, userId));
+    if (!sub?.stripeCustomerId) { res.status(400).json({ error: "Aucun compte Stripe trouvé" }); return; }
+
+    const stripe = await getUncachableStripeClient();
+    await stripe.customers.update(sub.stripeCustomerId, {
+      invoice_settings: { default_payment_method: req.params.pmId },
+    });
+    res.json({ success: true });
+  } catch (error: any) {
+    req.log.error(error);
+    res.status(500).json({ error: "Erreur lors de la mise à jour" });
   }
 });
 

@@ -18,7 +18,6 @@ export const propertyTypeEnum = pgEnum("property_type", [
   "co-living",
   "commercial",
   "office",
-  "industrial",
 ]);
 
 export const propertyStatusEnum = pgEnum("property_status", [

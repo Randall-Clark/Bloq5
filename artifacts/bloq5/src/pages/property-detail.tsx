@@ -1131,13 +1131,13 @@ export default function PropertyDetailPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
             <div>
               <div className="text-2xl font-black text-white mb-2">BLOQ<span style={{ color: YELLOW }}>5</span></div>
-              <p className="text-xs text-gray-500 leading-relaxed mb-2">La plateforme de gestion immobilière locative — résidentiel, commercial et industriel.</p>
+              <p className="text-xs text-gray-500 leading-relaxed mb-2">La plateforme de gestion immobilière locative — résidentiel et commercial.</p>
               <p className="text-xs text-gray-600">Carte professionnelle : n°CPI 6901 2019 000 039 604</p>
             </div>
             <div>
               <h4 className="text-white font-semibold text-sm mb-4">Nos services</h4>
               <ul className="space-y-2 text-xs text-gray-500">
-                {["Gestion locative résidentielle", "Gestion locative commerciale", "Espaces industriels & logistique", "Location longue durée", "BLOQ5 Pro"].map(l => (
+                {["Gestion locative résidentielle", "Gestion locative commerciale", "Location longue durée", "BLOQ5 Pro"].map(l => (
                   <li key={l}><a href="#" className="hover:text-white transition-colors">{l}</a></li>
                 ))}
               </ul>

@@ -3,9 +3,13 @@ import { HealthCheckResponse } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-router.get("/healthz", (_req, res) => {
+const healthHandler = (_req: any, res: any) => {
   const data = HealthCheckResponse.parse({ status: "ok" });
   res.json(data);
-});
+};
+
+router.get("/healthz", healthHandler);
+// Alias used by DigitalOcean App Platform health checks
+router.get("/api/healthz", healthHandler);
 
 export default router;

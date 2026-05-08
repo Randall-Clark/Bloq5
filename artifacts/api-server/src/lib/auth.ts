@@ -2,6 +2,9 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@workspace/db";
 import { user, session, account, verification } from "@workspace/db/schema";
+import { getUncachableResendClient } from "./resend-client";
+import { resetPasswordEmailHtml, resetPasswordEmailText, welcomeEmailHtml, welcomeEmailText } from "./email-templates";
+import { logger } from "./logger";
 
 const baseURL =
   process.env.BETTER_AUTH_URL ??
@@ -27,9 +30,44 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false,
     minPasswordLength: 8,
-    sendResetPassword: async ({ user, url }) => {
-      // In production, send a real email. For now, log the reset link.
-      console.log(`[bloq5] Lien de réinitialisation pour ${user.email}: ${url}`);
+    sendResetPassword: async ({ user: u, url }) => {
+      try {
+        const { client, fromEmail } = await getUncachableResendClient();
+        await client.emails.send({
+          from: `BLOQ5 <${fromEmail}>`,
+          to: [u.email],
+          subject: "Réinitialisation de votre mot de passe BLOQ5",
+          html: resetPasswordEmailHtml(url, u.name ?? ""),
+          text: resetPasswordEmailText(url),
+        });
+        logger.info({ to: u.email }, "[EMAIL] Lien reset mot de passe envoyé");
+      } catch (err) {
+        logger.error({ err, email: u.email, url }, "[EMAIL] Échec envoi reset password — lien loggé");
+      }
+    },
+  },
+  user: {
+    additionalFields: {},
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (newUser) => {
+          try {
+            const { client, fromEmail } = await getUncachableResendClient();
+            await client.emails.send({
+              from: `BLOQ5 <${fromEmail}>`,
+              to: [newUser.email],
+              subject: "Bienvenue sur BLOQ5 !",
+              html: welcomeEmailHtml(newUser.name ?? "", newUser.email),
+              text: welcomeEmailText(newUser.name ?? ""),
+            });
+            logger.info({ to: newUser.email }, "[EMAIL] Email de bienvenue envoyé");
+          } catch (err) {
+            logger.error({ err, email: newUser.email }, "[EMAIL] Échec envoi email de bienvenue");
+          }
+        },
+      },
     },
   },
   socialProviders: {
@@ -59,9 +97,6 @@ export const auth = betterAuth({
     },
     crossSubDomainCookies: { enabled: false },
     generateId: false,
-  },
-  user: {
-    additionalFields: {},
   },
 });
 
