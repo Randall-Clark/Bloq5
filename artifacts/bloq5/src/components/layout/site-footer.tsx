@@ -15,8 +15,7 @@ export function SiteFooter() {
           <div>
             <div className="text-2xl font-black text-white mb-2">BLOQ<span style={{ color: YELLOW }}>5</span></div>
             <p className="text-xs text-gray-500 leading-relaxed mb-4">
-              La plateforme de gestion immobilière locative — résidentiel et commercial.<br />
-              Carte professionnelle : n°CIN 4567 219-005-539-504
+              La plateforme de gestion immobilière locative — résidentiel et commercial.
             </p>
           </div>
           <div>
@@ -30,7 +29,7 @@ export function SiteFooter() {
           <div>
             <h4 className="text-white font-semibold text-sm mb-4">Nos outils</h4>
             <ul className="space-y-2 text-xs text-gray-500">
-              {["Générateur de bail", "Simulateur de loyer", "Générateur de quittance", "État des lieux digital"].map(l => (
+              {["Générateur de bail", "État des lieux digital"].map(l => (
                 <li key={l}><a href="#" className="hover:text-white transition-colors">{l}</a></li>
               ))}
             </ul>
