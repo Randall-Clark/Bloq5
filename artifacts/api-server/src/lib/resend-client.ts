@@ -1,10 +1,5 @@
 import { Resend } from "resend";
 
-// Replit Resend integration — credentials fetched via connector proxy
-// Never cache this client — tokens expire
-
-let _connectionSettings: { settings: { api_key: string; from_email: string } } | null = null;
-
 async function getCredentials(): Promise<{ apiKey: string; fromEmail: string }> {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
@@ -13,34 +8,42 @@ async function getCredentials(): Promise<{ apiKey: string; fromEmail: string }> 
     ? "depl " + process.env.WEB_REPL_RENEWAL
     : null;
 
-  if (!hostname || !xReplitToken) {
-    throw new Error("Resend: Replit connector environment variables not found");
-  }
+  if (hostname && xReplitToken) {
+    try {
+      const data = await fetch(
+        `https://${hostname}/api/v2/connection?include_secrets=true&connector_names=resend`,
+        {
+          headers: {
+            Accept: "application/json",
+            "X-Replit-Token": xReplitToken,
+          },
+        }
+      )
+        .then((r) => r.json())
+        .then((d: { items?: { settings: { api_key: string; from_email: string } }[] }) => d.items?.[0]);
 
-  const data = await fetch(
-    `https://${hostname}/api/v2/connection?include_secrets=true&connector_names=resend`,
-    {
-      headers: {
-        Accept: "application/json",
-        "X-Replit-Token": xReplitToken,
-      },
+      if (data?.settings?.api_key) {
+        return {
+          apiKey: data.settings.api_key,
+          fromEmail: data.settings.from_email || "noreply@bloq5.com",
+        };
+      }
+    } catch {
+      // Fall through to env var fallback
     }
-  )
-    .then((r) => r.json())
-    .then((d: { items?: typeof _connectionSettings[] }) => d.items?.[0]);
-
-  if (!data?.settings?.api_key) {
-    throw new Error("Resend not connected — complete the Resend integration in Replit");
   }
 
-  _connectionSettings = data;
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error("Resend: aucune clé API trouvée (RESEND_API_KEY ou connecteur Replit)");
+  }
+
   return {
-    apiKey: data.settings.api_key,
-    fromEmail: data.settings.from_email || "noreply@bloq5.com",
+    apiKey,
+    fromEmail: process.env.FROM_EMAIL || "noreply@bloq5.com",
   };
 }
 
-// WARNING: Never cache this client — call every time
 export async function getUncachableResendClient(): Promise<{
   client: Resend;
   fromEmail: string;
