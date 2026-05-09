@@ -6,6 +6,13 @@ import { profilesTable, user, verification, account } from "@workspace/db/schema
 import { propertiesTable } from "@workspace/db/schema";
 import { eq, count, and } from "drizzle-orm";
 import type { Request, Response } from "express";
+import { getUncachableResendClient } from "../lib/resend-client";
+import {
+  emailChangeOtpHtml,
+  emailChangeOtpText,
+  passwordChangeOtpHtml,
+  passwordChangeOtpText,
+} from "../lib/email-templates";
 
 const router = Router();
 
@@ -144,9 +151,20 @@ router.post("/api/profile/request-email-change", requireAuth(), async (req: Requ
       updatedAt: new Date(),
     });
 
-    req.log.info({ userId, newEmail }, "Code de vérification e-mail envoyé");
-    if (process.env.NODE_ENV !== "production") {
-      req.log.warn({ userId, newEmail }, "[DEV] email-change OTP logged — remove before production");
+    try {
+      const { client, fromEmail } = await getUncachableResendClient();
+      await client.emails.send({
+        from: `BLOQ5 <${fromEmail}>`,
+        to: [newEmail],
+        subject: `Votre code de vérification BLOQ5 : ${otp}`,
+        html: emailChangeOtpHtml(otp, newEmail),
+        text: emailChangeOtpText(otp, newEmail),
+      });
+      req.log.info({ userId, newEmail }, "Code de vérification e-mail envoyé");
+    } catch (emailErr) {
+      req.log.error({ userId, newEmail, err: emailErr }, "Échec envoi email de vérification");
+      res.status(500).json({ error: "Impossible d'envoyer l'e-mail de vérification. Réessayez." });
+      return;
     }
 
     res.json({ success: true });
@@ -226,9 +244,20 @@ router.post("/api/profile/request-password-change", requireAuth(), async (req: R
       updatedAt: new Date(),
     });
 
-    req.log.info({ userId }, "Code de changement de mot de passe envoyé");
-    if (process.env.NODE_ENV !== "production") {
-      req.log.warn({ userId }, "[DEV] password-change OTP logged — remove before production");
+    try {
+      const { client, fromEmail } = await getUncachableResendClient();
+      await client.emails.send({
+        from: `BLOQ5 <${fromEmail}>`,
+        to: [email],
+        subject: `Votre code de vérification BLOQ5 : ${otp}`,
+        html: passwordChangeOtpHtml(otp),
+        text: passwordChangeOtpText(otp),
+      });
+      req.log.info({ userId }, "Code de changement de mot de passe envoyé");
+    } catch (emailErr) {
+      req.log.error({ userId, err: emailErr }, "Échec envoi email de vérification mot de passe");
+      res.status(500).json({ error: "Impossible d'envoyer l'e-mail de vérification. Réessayez." });
+      return;
     }
 
     res.json({ success: true });
