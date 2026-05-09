@@ -660,24 +660,51 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── BIEN ENTOURÉE ─── */}
-      <section className="py-12 bg-white border-y border-gray-100">
+      {/* ─── RECHERCHE DE PARTENAIRES ─── */}
+      <section className="py-16 border-y border-gray-100" style={{ background: "#1A1A1A" }}>
         <div className="max-w-7xl mx-auto px-6">
-          <div className="md:flex items-center gap-12">
-            <div className="md:w-1/2 mb-8 md:mb-0">
-              <h2 className="text-xl font-bold mb-2" style={{ color: "#1A1A1A" }}>BLOQ5 bien entourée</h2>
-              <p className="text-sm text-gray-500 mb-5 leading-relaxed">
-                Reconnu parmi les plateformes PropTech les plus innovantes au Canada, BLOQ5 simplifie la gestion locative de tous types de biens — appartements, maisons, bureaux et locaux commerciaux — pour les propriétaires et les locataires.
+          <div className="md:flex items-center gap-16">
+            <div className="md:w-1/2 mb-10 md:mb-0">
+              <span className="inline-block text-xs font-bold uppercase tracking-widest mb-4 px-3 py-1 rounded-full" style={{ background: "#FFF8EE22", color: YELLOW }}>
+                Partenariats
+              </span>
+              <h2 className="text-2xl md:text-3xl font-black text-white mb-4 leading-tight">
+                Construisons l'immobilier de demain{" "}
+                <span style={{ color: YELLOW }}>ensemble</span>
+              </h2>
+              <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+                BLOQ5 est à la recherche de partenaires stratégiques — agences immobilières, investisseurs, développeurs, fintechs et acteurs de la PropTech — pour accélérer notre mission et étendre notre impact au Canada et en France.
               </p>
-              <button className="btn-outline-dark text-sm px-6 py-2.5">En savoir +</button>
+              <div className="flex gap-3 flex-wrap">
+                <a
+                  href="/contact"
+                  className="inline-block px-6 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-85"
+                  style={{ background: YELLOW, color: "#1A1A1A" }}
+                >
+                  Nous contacter
+                </a>
+                <a
+                  href="mailto:support@bloq5.com?subject=Partenariat BLOQ5"
+                  className="inline-block px-6 py-3 rounded-xl text-sm font-bold border text-white transition-colors hover:bg-white hover:text-gray-900"
+                  style={{ borderColor: "#ffffff33" }}
+                >
+                  support@bloq5.com
+                </a>
+              </div>
             </div>
-            <div className="md:w-1/2 flex items-center justify-center gap-8 flex-wrap">
+            <div className="md:w-1/2 grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { name: "bpifrance",      color: "#003189" },
-                { name: "La French Tech", color: "#e03531" },
-                { name: "Real Estech",    color: "#1A1A1A" },
-              ].map((p) => (
-                <div key={p.name} className="font-black text-lg" style={{ color: p.color }}>{p.name}</div>
+                { title: "Agences & courtiers", desc: "Intégrez BLOQ5 à vos services pour offrir une expérience locative moderne à vos clients." },
+                { title: "Investisseurs", desc: "Participez à la croissance d'une plateforme PropTech à fort potentiel en Amérique du Nord et en Europe." },
+                { title: "Fintechs & PropTech", desc: "Collaborons pour enrichir notre écosystème et créer des solutions innovantes pour le marché locatif." },
+              ].map((item) => (
+                <div key={item.title} className="rounded-2xl p-5" style={{ background: "#ffffff0d", border: "1px solid #ffffff1a" }}>
+                  <div className="w-8 h-8 rounded-lg mb-3 flex items-center justify-center" style={{ background: YELLOW + "22" }}>
+                    <span style={{ color: YELLOW, fontSize: 16 }}>✦</span>
+                  </div>
+                  <h3 className="font-bold text-sm text-white mb-1">{item.title}</h3>
+                  <p className="text-xs text-gray-400 leading-relaxed">{item.desc}</p>
+                </div>
               ))}
             </div>
           </div>
