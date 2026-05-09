@@ -215,8 +215,9 @@ export default function HomePage() {
 
           {/* Title */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-8">
-            Tous vos biens, une seule{" "}
-            <span className="script-yellow" style={{ fontSize: "1.1em" }}>Plateforme</span>
+            Trouvez votre Espace{" "}
+            <span className="script-yellow" style={{ fontSize: "1.1em" }}>Idéal</span>
+            {" "}dès Aujourd'hui
           </h1>
 
           {/* ── Search bar ── */}
