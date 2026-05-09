@@ -597,7 +597,7 @@ export default function HomePage() {
           <p className="text-gray-500 text-sm mb-10">
             BLOQ5 est disponible dans les plus grandes métropoles {country.flag && <span>{country.flag} </span>}{country.name}.
           </p>
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 sm:gap-4 mb-8">
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-8">
             {country.cities.slice(0, 8).map((city) => (
               <Link key={city.name} href={`/properties?city=${city.name}`}>
                 <div className="flex flex-col items-center gap-2 cursor-pointer group">
