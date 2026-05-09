@@ -1,0 +1,23 @@
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+RUN npm install -g pnpm@10
+
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY tsconfig.base.json tsconfig.json ./
+COPY lib/ ./lib/
+COPY artifacts/bloq5/ ./artifacts/bloq5/
+COPY scripts/ ./scripts/
+
+RUN pnpm install --frozen-lockfile
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV BASE_PATH=/
+
+RUN pnpm --filter @workspace/bloq5 run build
+
+FROM nginx:alpine
+COPY --from=builder /app/artifacts/bloq5/dist/public /usr/share/nginx/html
+EXPOSE 80
