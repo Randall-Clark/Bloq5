@@ -18,6 +18,5 @@ ENV BASE_PATH=/
 
 RUN pnpm --filter @workspace/bloq5 run build
 
-FROM nginx:alpine
-COPY --from=builder /app/artifacts/bloq5/dist/public /usr/share/nginx/html
-EXPOSE 80
+FROM busybox:latest AS export
+COPY --from=builder /app/artifacts/bloq5/dist/public /output
