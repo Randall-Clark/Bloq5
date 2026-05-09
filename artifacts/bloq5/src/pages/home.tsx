@@ -597,9 +597,9 @@ export default function HomePage() {
           <p className="text-gray-500 text-sm mb-10">
             BLOQ5 est disponible dans les plus grandes métropoles {country.flag && <span>{country.flag} </span>}{country.name}.
           </p>
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-8">
+          <div className="flex flex-wrap justify-center gap-6 mb-8">
             {country.cities.slice(0, 8).map((city) => (
-              <Link key={city.name} href={`/properties?city=${city.name}`}>
+              <Link key={city.name} href={`/properties?city=${city.name}`} style={{ width: 88 }}>
                 <div className="flex flex-col items-center gap-2 cursor-pointer group">
                   <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-white shadow-md group-hover:shadow-lg transition-shadow">
                     <img
@@ -608,7 +608,7 @@ export default function HomePage() {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   </div>
-                  <span className="text-xs font-medium text-gray-700">{city.name}</span>
+                  <span className="text-xs font-medium text-center text-gray-700">{city.name}</span>
                 </div>
               </Link>
             ))}
