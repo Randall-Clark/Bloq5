@@ -5,11 +5,21 @@ import { Mail, Phone, MapPin, Clock, Send, Check } from "lucide-react";
 
 const YELLOW = "#F5A623";
 
-const CONTACT_ITEMS = [
-  { icon: Mail,   label: "E-mail",    value: "contact@bloq5.com",       sub: "Réponse sous 24h" },
-  { icon: Phone,  label: "Téléphone", value: "+1 514 000 0000",         sub: "Lun–Ven, 9h–18h" },
-  { icon: MapPin, label: "Adresse",   value: "Montréal, QC, Canada",    sub: "Siège social BLOQ5" },
-  { icon: Clock,  label: "Horaires",  value: "Lun–Ven : 9h00 – 18h00", sub: "Fermé les jours fériés" },
+const OFFICES = [
+  {
+    country: "Canada",
+    city: "Montréal, QC",
+    flag: "🇨🇦",
+    phone: "(581) 668-8274",
+    hours: "Lun–Ven, 9h–18h (ET)",
+  },
+  {
+    country: "France",
+    city: "Paris",
+    flag: "🇫🇷",
+    phone: "+33 6 87 32 18 97",
+    hours: "Lun–Ven, 9h–18h (CET)",
+  },
 ];
 
 const SUBJECTS = [
@@ -57,38 +67,67 @@ export default function ContactPage() {
         </div>
       </section>
 
-      {/* Content */}
+      {/* Offices */}
+      <section className="py-10 px-6 border-b border-gray-100 bg-white">
+        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+          {OFFICES.map((office) => (
+            <div key={office.country} className="rounded-2xl border border-gray-100 shadow-sm p-6 flex gap-5 items-start">
+              <div className="text-3xl">{office.flag}</div>
+              <div>
+                <p className="font-bold text-sm mb-0.5" style={{ color: "#1A1A1A" }}>{office.country}</p>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
+                  <MapPin className="w-3.5 h-3.5" style={{ color: YELLOW }} />
+                  {office.city}
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
+                  <Phone className="w-3.5 h-3.5" style={{ color: YELLOW }} />
+                  <a href={`tel:${office.phone}`} className="hover:underline">{office.phone}</a>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <Clock className="w-3.5 h-3.5" style={{ color: YELLOW }} />
+                  {office.hours}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="max-w-4xl mx-auto mt-4">
+          <div className="rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#FFF8EE" }}>
+              <Mail className="w-4 h-4" style={{ color: YELLOW }} />
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 font-medium">E-mail</p>
+              <a href="mailto:support@bloq5.com" className="text-sm font-semibold hover:underline" style={{ color: "#1A1A1A" }}>support@bloq5.com</a>
+              <p className="text-xs text-gray-400">Réponse sous 24h ouvrées</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Form */}
       <section className="py-16 px-6">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-12">
 
           {/* Info side */}
           <div className="md:col-span-2 space-y-6">
-            <div>
-              <h2 className="text-lg font-bold mb-4" style={{ color: "#1A1A1A" }}>Nos coordonnées</h2>
-              <div className="space-y-4">
-                {CONTACT_ITEMS.map((item) => (
-                  <div key={item.label} className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#FFF8EE" }}>
-                      <item.icon className="w-4 h-4" style={{ color: YELLOW }} />
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400 font-medium">{item.label}</p>
-                      <p className="text-sm font-semibold" style={{ color: "#1A1A1A" }}>{item.value}</p>
-                      <p className="text-xs text-gray-400">{item.sub}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             <div className="rounded-2xl p-6 text-white" style={{ background: "#1A1A1A" }}>
               <h3 className="font-bold text-sm mb-2">Vous êtes propriétaire ?</h3>
               <p className="text-xs text-gray-300 leading-relaxed mb-4">
                 Déposez vos annonces, gérez vos locataires et suivez vos paiements depuis votre espace Pro.
               </p>
-              <a href="/sign-up" className="inline-block px-4 py-2 rounded-xl text-xs font-bold text-white transition-opacity hover:opacity-85"
+              <a href="/sign-up" className="inline-block px-4 py-2 rounded-xl text-xs font-bold transition-opacity hover:opacity-85"
                 style={{ background: YELLOW, color: "#1A1A1A" }}>
                 Créer un espace Pro
+              </a>
+            </div>
+            <div className="rounded-2xl border border-gray-100 p-6">
+              <h3 className="font-bold text-sm mb-2" style={{ color: "#1A1A1A" }}>Partenariat</h3>
+              <p className="text-xs text-gray-500 leading-relaxed mb-3">
+                Vous souhaitez collaborer avec BLOQ5 ? Nous sommes ouverts à toute proposition de partenariat stratégique.
+              </p>
+              <a href="mailto:support@bloq5.com?subject=Partenariat" className="text-xs font-semibold" style={{ color: YELLOW }}>
+                Nous écrire →
               </a>
             </div>
           </div>
