@@ -170,3 +170,52 @@ export function welcomeEmailHtml(name: string, email: string): string {
 export function welcomeEmailText(name: string): string {
   return `Bienvenue sur BLOQ5, ${name || ""} !\n\nVotre compte est prêt. Commencez à rechercher des biens sur bloq5.com/properties\n\nDes questions ? support@bloq5.com\n\nbloq5.com`;
 }
+
+export function emailChangeOtpHtml(code: string, newEmail: string): string {
+  // nosemgrep: javascript.lang.security.html-in-template-string -- user data escaped via h()
+  return baseLayout(`
+    <div style="text-align:center;margin-bottom:28px;">
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:${DARK};">Confirmation de changement d'adresse e-mail</h1>
+      <p style="margin:0;font-size:14px;color:#666;">Nouvelle adresse : <strong>${h(newEmail)}</strong></p>
+    </div>
+    <div style="background:#F9F9F9;border:1px solid #E8E8E8;border-radius:12px;padding:28px;text-align:center;margin-bottom:24px;">
+      <p style="margin:0 0 12px;font-size:12px;font-weight:600;color:#999;letter-spacing:2px;text-transform:uppercase;">Code de vérification</p>
+      <div style="letter-spacing:12px;font-size:38px;font-weight:900;color:${DARK};font-family:monospace;">${h(code)}</div>
+    </div>
+    <p style="margin:0 0 8px;font-size:14px;color:#555;text-align:center;">
+      Ce code est valide pendant <strong>10 minutes</strong>.<br/>
+      Ne le partagez jamais avec quelqu'un d'autre.
+    </p>
+    <p style="margin:16px 0 0;font-size:12px;color:#aaa;text-align:center;">
+      Si vous n'avez pas demandé ce changement, ignorez cet e-mail — votre adresse reste inchangée.
+    </p>
+  `);
+}
+
+export function emailChangeOtpText(code: string, newEmail: string): string {
+  return `Confirmation de changement d'adresse e-mail BLOQ5\n\nNouvelle adresse : ${newEmail}\nCode de vérification : ${code}\n\nCe code est valide 10 minutes.\n\nbloq5.com`;
+}
+
+export function passwordChangeOtpHtml(code: string): string {
+  return baseLayout(`
+    <div style="text-align:center;margin-bottom:28px;">
+      <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:${DARK};">Changement de mot de passe</h1>
+      <p style="margin:0;font-size:14px;color:#666;">Entrez ce code pour confirmer la modification.</p>
+    </div>
+    <div style="background:#F9F9F9;border:1px solid #E8E8E8;border-radius:12px;padding:28px;text-align:center;margin-bottom:24px;">
+      <p style="margin:0 0 12px;font-size:12px;font-weight:600;color:#999;letter-spacing:2px;text-transform:uppercase;">Code de vérification</p>
+      <div style="letter-spacing:12px;font-size:38px;font-weight:900;color:${DARK};font-family:monospace;">${h(code)}</div>
+    </div>
+    <p style="margin:0 0 8px;font-size:14px;color:#555;text-align:center;">
+      Ce code est valide pendant <strong>10 minutes</strong>.<br/>
+      Ne le partagez jamais avec quelqu'un d'autre.
+    </p>
+    <p style="margin:16px 0 0;font-size:12px;color:#aaa;text-align:center;">
+      Si vous n'avez pas demandé ce changement, ignorez cet e-mail — votre mot de passe reste inchangé.
+    </p>
+  `);
+}
+
+export function passwordChangeOtpText(code: string): string {
+  return `Changement de mot de passe BLOQ5\n\nCode de vérification : ${code}\n\nCe code est valide 10 minutes.\n\nbloq5.com`;
+}
