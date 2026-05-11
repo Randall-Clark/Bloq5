@@ -10,7 +10,6 @@ const TEAM = [
   { name: "Chia Jei Lane",          role: "Comptable",                              img: "https://picsum.photos/seed/chia/200/200" },
   { name: "Sergino Bradford",       role: "Analyste Stratégie",                     img: "https://picsum.photos/seed/sergino/200/200" },
   { name: "Fructueux Jefferson",    role: "CTO",                                    img: "https://picsum.photos/seed/fructueux/200/200" },
-  { name: "Samia",                  role: "Ressources Humaines & Partenariat",      img: "https://picsum.photos/seed/samia/200/200" },
 ];
 
 const VALUES = [
