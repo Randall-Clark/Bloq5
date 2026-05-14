@@ -14,12 +14,11 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import UserLayout from "@/components/layout/user-layout";
 import {
-  User, MessageSquare, Heart, Calendar, Loader2, Building2,
+  User, MessageSquare, Heart, Calendar, Loader2,
   LayoutDashboard, Mail, CheckCircle2, ArrowLeft, X, Lock, Eye, EyeOff,
 } from "lucide-react";
 import { Link } from "wouter";
 import { authClient } from "@/lib/auth-client";
-import { ProAuthModal } from "./pro-auth-modal";
 
 const YELLOW = "#F5A623";
 const NAVY   = "#1A237E";
@@ -35,32 +34,19 @@ type EmailChangeStep = "idle" | "input" | "verify" | "success";
 type PwdStep = "idle" | "send" | "verify" | "new-pwd" | "success";
 
 /* ── ProButton ────────────────────────────────────────── */
-function ProButton({ role, onProClick }: { role: string; onProClick: () => void }) {
+function ProButton({ role }: { role: string }) {
   const isPro = role === "owner" || role === "manager";
-
-  if (isPro) {
-    return (
-      <Link href="/pro/dashboard">
-        <span
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
-          style={{ background: NAVY, color: "#fff" }}
-        >
-          <LayoutDashboard className="w-4 h-4" />
-          Dashboard Pro
-        </span>
-      </Link>
-    );
-  }
-
+  if (!isPro) return null;
   return (
-    <button
-      onClick={onProClick}
-      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
-      style={{ background: YELLOW, color: "#1A1A1A" }}
-    >
-      <Building2 className="w-4 h-4" />
-      Vous êtes un pro ?
-    </button>
+    <Link href="/pro/dashboard">
+      <span
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-opacity hover:opacity-90"
+        style={{ background: NAVY, color: "#fff" }}
+      >
+        <LayoutDashboard className="w-4 h-4" />
+        Dashboard Pro
+      </span>
+    </Link>
   );
 }
 
@@ -548,7 +534,6 @@ export default function ProfilePage() {
   const { toast }      = useToast();
   const queryClient    = useQueryClient();
   const { data: session } = authClient.useSession();
-  const [showProModal, setShowProModal] = useState(false);
   const [displayEmail, setDisplayEmail] = useState<string | null>(null);
   const [hasCredential, setHasCredential] = useState<boolean>(false);
 
@@ -615,15 +600,6 @@ export default function ProfilePage() {
 
   return (
     <UserLayout>
-      {showProModal && (
-        <ProAuthModal
-          onClose={() => {
-            setShowProModal(false);
-            queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
-          }}
-        />
-      )}
-
       {/* Header row: greeting + Pro button */}
       <div className="flex items-start justify-between gap-4 mb-8">
         <div>
@@ -632,7 +608,7 @@ export default function ProfilePage() {
           </h1>
           <p className="text-gray-500 text-sm mt-1">Gérez votre profil et suivez vos activités.</p>
         </div>
-        {profile && <ProButton role={role} onProClick={() => setShowProModal(true)} />}
+        {profile && <ProButton role={role} />}
       </div>
 
       {/* Stats cards */}
