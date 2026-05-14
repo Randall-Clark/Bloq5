@@ -40,6 +40,8 @@ import ProProfilePage from "@/pages/pro-profile";
 import ServicesProPage from "@/pages/services-pro";
 import RecrutementPage from "@/pages/recrutement";
 import MentionsLegalesPage from "@/pages/mentions-legales";
+import EvenementsPage from "@/pages/evenements";
+import ArticleDetailPage from "@/pages/article-detail";
 
 const queryClient = new QueryClient();
 
@@ -707,6 +709,8 @@ function AppRoutes() {
         <Route path="/services-pro" component={ServicesProPage} />
         <Route path="/recrutement" component={RecrutementPage} />
         <Route path="/mentions-legales" component={MentionsLegalesPage} />
+        <Route path="/evenements" component={EvenementsPage} />
+        <Route path="/articles/:slug" component={ArticleDetailPage} />
 
         {/* Auth Routes */}
         <Route path="/sign-in"           component={SignInPage} />
