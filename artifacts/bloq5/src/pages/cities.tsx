@@ -3,6 +3,7 @@ import { MapPin, Plus } from "lucide-react";
 import { useLocation_ } from "@/context/location-context";
 import { countryPrep } from "@/data/countries";
 import { PublicNavbar } from "@/components/public-navbar";
+import { SiteFooter } from "@/components/layout/site-footer";
 
 const YELLOW = "#F5A623";
 
@@ -214,7 +215,7 @@ export default function CitiesPage() {
                 </span>
               </h2>
               <p className="text-sm text-gray-500 mt-4 mb-7 leading-relaxed max-w-md">
-                Plus de 2 500 clients, propriétaires et locataires, nous recommandent pour notre réactivité et notre efficacité. Grâce à leur confiance, nous gérons aujourd'hui plus de 8 000 lots répartis dans plus de 40 métropoles {countryPrep(country.code)} {country.name}.
+                Publiez votre annonce en quelques minutes et accédez à des locataires qualifiés. BLOQ5 centralise la gestion de vos biens : dossiers candidats, signature du bail, suivi des paiements et état des lieux — tout dans un espace conçu pour les propriétaires exigeants.
               </p>
               <button className="btn-yellow text-sm">
                 Vous êtes propriétaire ?
@@ -229,59 +230,7 @@ export default function CitiesPage() {
         </div>
       </section>
 
-      {/* ─── FOOTER ─── */}
-      <footer style={{ background: "#1A1A1A", color: "#ccc" }} className="relative pt-14 pb-8 overflow-hidden">
-        {/* Decorative circle */}
-        <div
-          className="absolute bottom-0 left-0 pointer-events-none"
-          style={{ width: 220, height: 220, borderRadius: "50%", background: "rgba(255,255,255,0.03)", transform: "translate(-50%, 40%)" }}
-        />
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
-            <div>
-              <div className="text-2xl font-black text-white mb-2">
-                BLOQ<span style={{ color: YELLOW }}>5</span>
-              </div>
-              <p className="text-xs text-gray-500 leading-relaxed">
-                Carte professionnelle :<br />n°CPI 6901 2019 000 039 604
-              </p>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold text-sm mb-4">Nos services</h4>
-              <ul className="space-y-2 text-xs text-gray-500">
-                {["Gestion locative", "Gestion de colocations", "Gestion nourrice", "BLOQ5 ULTRA", "Tarifs"].map(l => (
-                  <li key={l}><a href="#" className="hover:text-yellow-400 transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold text-sm mb-4">Nos outils</h4>
-              <ul className="space-y-2 text-xs text-gray-500">
-                {["Estimation de loyer", "Générateur d'avis d'échéance", "Générateur de quittance", "Aide / FAQ"].map(l => (
-                  <li key={l}><a href="#" className="hover:text-yellow-400 transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white font-semibold text-sm mb-4">Société</h4>
-              <ul className="space-y-2 text-xs text-gray-500">
-                {["Partenaires", "Presse", "Recrutement", "Politique cookies", "Politique confidentialité", "Mentions légales", "Conditions générales d'utilisation"].map(l => (
-                  <li key={l}><a href="#" className="hover:text-yellow-400 transition-colors">{l}</a></li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between text-xs text-gray-600 gap-3">
-            <p>© {new Date().getFullYear()} BLOQ5. Tous droits réservés.</p>
-            <div className="flex gap-4">
-              <a href="#" className="hover:text-gray-400">Mentions légales</a>
-              <a href="#" className="hover:text-gray-400">Politique de confidentialité</a>
-              <a href="#" className="hover:text-gray-400">CGU</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
