@@ -38,6 +38,8 @@ import PropertyApplicationPage from "@/pages/property-application";
 import ProPropertyEditPage from "@/pages/pro-property-edit";
 import ProProfilePage from "@/pages/pro-profile";
 import ServicesProPage from "@/pages/services-pro";
+import RecrutementPage from "@/pages/recrutement";
+import MentionsLegalesPage from "@/pages/mentions-legales";
 
 const queryClient = new QueryClient();
 
@@ -703,6 +705,8 @@ function AppRoutes() {
         <Route path="/properties/:id" component={PropertyDetailPage} />
         <Route path="/pro" component={ProPricingPage} />
         <Route path="/services-pro" component={ServicesProPage} />
+        <Route path="/recrutement" component={RecrutementPage} />
+        <Route path="/mentions-legales" component={MentionsLegalesPage} />
 
         {/* Auth Routes */}
         <Route path="/sign-in"           component={SignInPage} />
