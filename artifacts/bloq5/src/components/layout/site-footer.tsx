@@ -9,7 +9,6 @@ const SERVICES = [
   "Gestion locative résidentielle",
   "Gestion locative commerciale",
   "Location longue durée",
-  "BLOQ5 Pro",
 ];
 
 export function SiteFooter() {
@@ -66,10 +65,9 @@ export function SiteFooter() {
                 <li><Link href="/about" className="hover:text-white transition-colors">À propos</Link></li>
                 <li><Link href="/articles" className="hover:text-white transition-colors">Articles</Link></li>
                 <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Presse</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Recrutement</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Mentions légales</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">CGU</a></li>
+                <li><Link href="/recrutement" className="hover:text-white transition-colors">Recrutement</Link></li>
+                <li><Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link></li>
+                <li><Link href="/mentions-legales" className="hover:text-white transition-colors">CGU</Link></li>
               </ul>
             </div>
           </div>
@@ -94,9 +92,9 @@ export function SiteFooter() {
           <div className="border-t border-gray-800 pt-6 flex flex-col md:flex-row items-center justify-between text-xs text-gray-600 gap-3">
             <p>© {new Date().getFullYear()} BLOQ5. Tous droits réservés.</p>
             <div className="flex gap-4">
-              <a href="#" className="hover:text-gray-400">Mentions légales</a>
-              <a href="#" className="hover:text-gray-400">Politique de confidentialité</a>
-              <a href="#" className="hover:text-gray-400">CGU</a>
+              <Link href="/mentions-legales" className="hover:text-gray-400">Mentions légales</Link>
+              <Link href="/mentions-legales" className="hover:text-gray-400">Politique de confidentialité</Link>
+              <Link href="/mentions-legales" className="hover:text-gray-400">CGU</Link>
             </div>
           </div>
         </div>
