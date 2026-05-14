@@ -65,6 +65,7 @@ export function SiteFooter() {
                 <li><Link href="/about" className="hover:text-white transition-colors">À propos</Link></li>
                 <li><Link href="/articles" className="hover:text-white transition-colors">Articles</Link></li>
                 <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                <li><Link href="/evenements" className="hover:text-white transition-colors">Événements</Link></li>
                 <li><Link href="/recrutement" className="hover:text-white transition-colors">Recrutement</Link></li>
                 <li><Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link></li>
                 <li><Link href="/mentions-legales" className="hover:text-white transition-colors">CGU</Link></li>
