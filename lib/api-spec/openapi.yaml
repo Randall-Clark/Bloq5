@@ -747,6 +747,10 @@ components:
                   url:
                     type: string
                 required: [name, url]
+            moveInDate:
+              type: ["string", "null"]
+            rentalOffer:
+              type: ["string", "null"]
           required:
             - amenities
             - nearbyPlaces
@@ -860,6 +864,10 @@ components:
             required: [name, url]
         floorPlan:
           type: ["string", "null"]
+        moveInDate:
+          type: ["string", "null"]
+        rentalOffer:
+          type: ["string", "null"]
       required:
         - title
         - description
@@ -898,6 +906,10 @@ components:
             type: string
         isFeatured:
           type: boolean
+        moveInDate:
+          type: ["string", "null"]
+        rentalOffer:
+          type: ["string", "null"]
 
     PropertyWithStats:
       allOf:
