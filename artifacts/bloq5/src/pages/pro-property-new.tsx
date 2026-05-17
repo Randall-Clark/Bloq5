@@ -227,6 +227,8 @@ const propertySchema = z.object({
   dpeAnnualCostMin: z.coerce.number().int().optional().nullable(),
   dpeAnnualCostMax: z.coerce.number().int().optional().nullable(),
   floorPlan:        z.string().optional().nullable(),
+  moveInDate:       z.string().optional().nullable(),
+  rentalOffer:      z.string().optional().nullable(),
 });
 
 type PropertyFormValues = z.infer<typeof propertySchema>;
@@ -910,6 +912,8 @@ export default function ProPropertyNew() {
       dpeAnnualCostMax: data.dpeAnnualCostMax ?? null,
       floorPlan: effectiveFloorPlan,
       attachments,
+      moveInDate: data.moveInDate?.trim() || null,
+      rentalOffer: data.rentalOffer?.trim() || null,
     };
     setPendingPayload(payload);
     setShowPricing(true);
@@ -1015,6 +1019,32 @@ export default function ProPropertyNew() {
                           className="rounded-xl h-11 pl-7 focus-visible:ring-[#F5A623]" />
                       </div>
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FormField control={form.control} name="moveInDate" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold text-gray-700">Date d'emménagement possible</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} value={field.value ?? ""}
+                        className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
+                    </FormControl>
+                    <p className="text-xs text-gray-400">Laissez vide si disponible immédiatement.</p>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="rentalOffer" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-semibold text-gray-700">Offre spéciale <span className="font-normal text-gray-400">(optionnel)</span></FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value ?? ""} placeholder="Ex : 1 mois de loyer offert"
+                        className="rounded-xl h-11 focus-visible:ring-[#F5A623]" />
+                    </FormControl>
+                    <p className="text-xs text-gray-400">Visible sur l'annonce dans la section honoraires.</p>
                     <FormMessage />
                   </FormItem>
                 )} />
