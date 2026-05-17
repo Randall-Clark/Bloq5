@@ -62,6 +62,8 @@ export const propertiesTable = pgTable("properties", {
   dpeAnnualCostMin: integer("dpe_annual_cost_min"),
   dpeAnnualCostMax: integer("dpe_annual_cost_max"),
   attachments: json("attachments").$type<Array<{ name: string; url: string }>>().notNull().default([]),
+  moveInDate: text("move_in_date"),
+  rentalOffer: text("rental_offer"),
   ownerId: text("owner_id").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
