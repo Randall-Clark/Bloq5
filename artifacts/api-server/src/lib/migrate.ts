@@ -103,6 +103,8 @@ export async function runMigrations(): Promise<void> {
     await addColumnIfMissing(client, "dpe_annual_cost_min", "integer");
     await addColumnIfMissing(client, "dpe_annual_cost_max", "integer");
     await addColumnIfMissing(client, "attachments",         "jsonb NOT NULL DEFAULT '[]'::jsonb");
+    await addColumnIfMissing(client, "move_in_date",        "text");
+    await addColumnIfMissing(client, "rental_offer",        "text");
 
     /* ── Remove 'industrial' from property_type enum ───────────────────── */
     const industrialExists = await client.query(`
