@@ -16,7 +16,7 @@ import {
   Flame, Wifi, Droplets, Zap, Trash2, Wind,
   AlertCircle, HeartPulse, Key, Camera, Shirt, Layers, Wand2, Tv, Snowflake, Coffee,
   GraduationCap, BookOpen, Train, ShoppingCart, Dumbbell, Store, TreePine,
-  CheckCircle, Info, ArrowLeft, ArrowRight, type LucideProps, Paperclip
+  CheckCircle, Info, ArrowLeft, ArrowRight, type LucideProps, Paperclip, CalendarDays
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -866,8 +866,28 @@ export default function PropertyDetailPage() {
 
                 <div className="border-t border-gray-100 my-4" />
 
+                {/* Rental offer badge */}
+                {(property as any).rentalOffer && (
+                  <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold mb-3" style={{ background: "#FFF8EE", border: `1.5px solid ${YELLOW}`, color: "#92400E" }}>
+                    <span className="text-base">🎁</span>
+                    {(property as any).rentalOffer}
+                  </div>
+                )}
+
                 {/* Honoraires */}
                 <div className="mb-3">
+                  {/* Move-in date */}
+                  {(property as any).moveInDate && (
+                    <div className="flex items-center justify-between text-sm mb-2">
+                      <span className="text-gray-500 flex items-center gap-1.5">
+                        <CalendarDays className="w-4 h-4" />
+                        Disponible à partir du
+                      </span>
+                      <span className="font-semibold text-gray-800">
+                        {new Date((property as any).moveInDate + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between text-sm mb-1">
                     <span className="text-gray-500 flex items-center gap-1.5">
                       <FileText className="w-4 h-4" />
@@ -1027,8 +1047,28 @@ export default function PropertyDetailPage() {
 
               <div className="border-t border-gray-100 my-4" />
 
+              {/* Rental offer badge */}
+              {(property as any).rentalOffer && (
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold mb-3" style={{ background: "#FFF8EE", border: `1.5px solid ${YELLOW}`, color: "#92400E" }}>
+                  <span className="text-base">🎁</span>
+                  {(property as any).rentalOffer}
+                </div>
+              )}
+
               {/* Honoraires — différents selon type */}
               <div className="mb-3">
+                {/* Move-in date */}
+                {(property as any).moveInDate && (
+                  <div className="flex items-center justify-between text-sm mb-2">
+                    <span className="text-gray-500 flex items-center gap-1.5">
+                      <CalendarDays className="w-4 h-4" />
+                      Disponible à partir du
+                    </span>
+                    <span className="font-semibold text-gray-800">
+                      {new Date((property as any).moveInDate + "T00:00:00").toLocaleDateString("fr-CA", { day: "numeric", month: "long", year: "numeric" })}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-sm mb-1">
                   <span className="text-gray-500 flex items-center gap-1.5">
                     <FileText className="w-4 h-4" />
