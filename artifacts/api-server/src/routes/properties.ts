@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth, getAuthUser } from "../middlewares/requireAuth";
 import { db } from "@workspace/db";
-import { propertiesTable, insertPropertySchema, subscriptionsTable } from "@workspace/db/schema";
+import { propertiesTable, insertPropertySchema, subscriptionsTable, user as userTable } from "@workspace/db/schema";
 import { eq, sql, ilike, and, gte, lte, or } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { getPlanById } from "./subscriptions";
@@ -76,7 +76,14 @@ router.get("/api/properties/:id", async (req: Request, res: Response): Promise<v
     if (!property) { res.status(404).json({ error: "Propriété non trouvée" }); return; }
 
     await db.update(propertiesTable).set({ views: sql`${propertiesTable.views} + 1` }).where(eq(propertiesTable.id, id));
-    res.json({ ...property, views: property.views + 1 });
+
+    /* Resolve owner name from auth user table */
+    const [owner] = await db
+      .select({ name: userTable.name, email: userTable.email })
+      .from(userTable)
+      .where(eq(userTable.id, property.ownerId));
+
+    res.json({ ...property, views: property.views + 1, ownerName: owner?.name ?? null, ownerEmail: owner?.email ?? null });
   } catch (error) {
     req.log.error(error);
     res.status(500).json({ error: "Erreur serveur" });
