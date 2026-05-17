@@ -504,11 +504,31 @@ export default function PropertyDetailPage() {
                   : <p className="italic text-gray-400">Aucune description renseignée.</p>
                 }
               </div>
-              {/* Publié par BLOQ5 badge */}
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 w-fit mt-5">
-                <span className="text-sm font-black" style={{ color: "#1A1A1A" }}>BLOQ<span style={{ color: YELLOW }}>5</span></span>
-                <span className="text-xs text-gray-400">Annonce publiée et vérifiée par BLOQ5</span>
-              </div>
+              {/* Badge annonceur */}
+              {(() => {
+                const ownerName = (property as any).ownerName as string | null | undefined;
+                const isBloq5 = !ownerName || ownerName.toLowerCase().includes("bloq5") || ownerName.toLowerCase().includes("bloq 5");
+                return (
+                  <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-gray-200 w-fit mt-5">
+                    {isBloq5 ? (
+                      <>
+                        <span className="text-sm font-black" style={{ color: "#1A1A1A" }}>BLOQ<span style={{ color: YELLOW }}>5</span></span>
+                        <span className="text-xs text-gray-400">Annonce publiée et vérifiée par BLOQ5</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0" style={{ background: YELLOW, color: "#1A1A1A" }}>
+                          {ownerName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold leading-tight" style={{ color: "#1A1A1A" }}>{ownerName}</p>
+                          <p className="text-[10px] text-gray-400 leading-tight">Annonceur · Vérifié par BLOQ5</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
             </section>
 
             {/* ─── Chambres (colocation uniquement) ─── */}
