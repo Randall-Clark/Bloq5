@@ -114,6 +114,10 @@ export type PropertyDetail = Property & {
   /** @nullable */
   dpeAnnualCostMax?: number | null;
   attachments: PropertyDetailAttachmentsItem[];
+  /** @nullable */
+  moveInDate?: string | null;
+  /** @nullable */
+  rentalOffer?: string | null;
 };
 
 export interface PropertyListResponse {
@@ -196,6 +200,10 @@ export interface CreatePropertyBody {
   attachments?: CreatePropertyBodyAttachmentsItem[];
   /** @nullable */
   floorPlan?: string | null;
+  /** @nullable */
+  moveInDate?: string | null;
+  /** @nullable */
+  rentalOffer?: string | null;
 }
 
 export type UpdatePropertyBodyStatus =
@@ -218,6 +226,10 @@ export interface UpdatePropertyBody {
   amenities?: string[];
   availableDates?: string[];
   isFeatured?: boolean;
+  /** @nullable */
+  moveInDate?: string | null;
+  /** @nullable */
+  rentalOffer?: string | null;
 }
 
 export type PropertyWithStats = Property & {
