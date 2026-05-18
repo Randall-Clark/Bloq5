@@ -1,150 +1,302 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  LayoutDashboard, Users, Building2, MessageSquare, LogOut, ExternalLink,
-  BarChart2, CreditCard, MessageCircle, MapPin, Settings,
+  LayoutDashboard, Users, MessageSquare, Building2, FileText,
+  Calendar, TrendingUp, BarChart2, UserCog, Shield, Settings,
+  MapPin, HelpCircle, Trash2, ChevronDown, ChevronRight,
+  Bell, Plus, RefreshCw, Download, Share2, Search,
+  LogOut, Menu, X,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
-const DARK = "#1A1A1A";
-const RED  = "#ef4444";
+/* ── Nav definition ─────────────────────────────────────────── */
+type NavItem = {
+  href?: string;
+  label: string;
+  icon: any;
+  color: string;
+  badge?: number;
+  children?: { href: string; label: string }[];
+};
 
-const NAV_SECTIONS = [
+const NAV_ITEMS: NavItem[] = [
+  { href: "/admin/dashboard",     label: "Dashboard",         icon: LayoutDashboard, color: "#3b82f6" },
   {
-    label: "Vue d'ensemble",
-    items: [
-      { href: "/admin/dashboard",      label: "Dashboard",        icon: LayoutDashboard },
-      { href: "/admin/stats",          label: "Statistiques",     icon: BarChart2 },
+    label: "Contacts",            icon: Users,                color: "#22c55e",
+    children: [
+      { href: "/admin/users",     label: "Tous les contacts" },
     ],
   },
   {
-    label: "Gestion",
-    items: [
-      { href: "/admin/users",          label: "Utilisateurs",     icon: Users },
-      { href: "/admin/properties",     label: "Propriétés",       icon: Building2 },
-      { href: "/admin/requests",       label: "Demandes",         icon: MessageSquare },
-      { href: "/admin/subscriptions",  label: "Abonnements",      icon: CreditCard },
-      { href: "/admin/messages",       label: "Messages",         icon: MessageCircle },
+    label: "Messages",            icon: MessageSquare,        color: "#a855f7",
+    children: [
+      { href: "/admin/messages",  label: "Conversations" },
     ],
   },
   {
-    label: "Configuration",
-    items: [
-      { href: "/admin/cities",         label: "Villes",           icon: MapPin },
-      { href: "/admin/settings",       label: "Paramètres",       icon: Settings },
+    label: "Propriétés",          icon: Building2,            color: "#f97316",
+    children: [
+      { href: "/admin/properties",label: "Toutes les annonces" },
+      { href: "/admin/cities",    label: "Villes actives" },
     ],
   },
+  {
+    label: "Transactions",        icon: FileText,             color: "#eab308",
+    children: [
+      { href: "/admin/requests",  label: "Demandes" },
+    ],
+  },
+  { href: "/admin/stats",         label: "Calendrier",        icon: Calendar,    color: "#6366f1" },
+  {
+    label: "Marketing",           icon: TrendingUp,           color: "#ec4899",
+    children: [
+      { href: "/admin/subscriptions", label: "Abonnements" },
+    ],
+  },
+  { href: "/admin/stats",         label: "Rapports",          icon: BarChart2,   color: "#2563eb" },
+  {
+    label: "Comptes utilisateurs",icon: UserCog,              color: "#6b7280",
+    children: [
+      { href: "/admin/users",     label: "Gestion des rôles" },
+    ],
+  },
+  { href: "/admin/settings",      label: "Paramètres",        icon: Settings,    color: "#374151" },
+  { href: "/admin/settings",      label: "Support",           icon: HelpCircle,  color: "#0ea5e9" },
 ];
 
+const PAGE_TITLES: Record<string, string> = {
+  "/admin/dashboard":     "Dashboard",
+  "/admin/stats":         "Statistiques",
+  "/admin/users":         "Contacts",
+  "/admin/properties":    "Propriétés",
+  "/admin/requests":      "Transactions",
+  "/admin/subscriptions": "Marketing — Abonnements",
+  "/admin/messages":      "Messages",
+  "/admin/cities":        "Villes actives",
+  "/admin/settings":      "Paramètres",
+};
+
+/* ── Sidebar nav item ───────────────────────────────────────── */
+function NavEntry({ item, location, collapsed }: { item: NavItem; location: string; collapsed: boolean }) {
+  const isChildActive = item.children?.some(c => location === c.href || location.startsWith(c.href + "/"));
+  const isSelfActive  = item.href && (location === item.href || location.startsWith(item.href + "/"));
+  const isActive = isSelfActive || isChildActive;
+
+  const [open, setOpen] = useState(!!isActive);
+
+  if (item.href && !item.children) {
+    return (
+      <Link
+        href={item.href}
+        className="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all group cursor-pointer select-none"
+        style={isActive
+          ? { background: "#e8f0fe", color: "#1d4ed8" }
+          : { color: "#374151" }}
+        onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "#f3f4f6"; }}
+        onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = ""; }}
+      >
+        <span className="w-5 h-5 rounded flex items-center justify-center shrink-0" style={{ background: item.color + "22" }}>
+          <item.icon className="h-3 w-3" style={{ color: item.color }} />
+        </span>
+        {!collapsed && <span className="text-sm font-medium truncate">{item.label}</span>}
+      </Link>
+    );
+  }
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all"
+        style={isActive
+          ? { background: "#e8f0fe", color: "#1d4ed8" }
+          : { color: "#374151" }}
+        onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "#f3f4f6"; }}
+        onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = ""; }}
+      >
+        <span className="w-5 h-5 rounded flex items-center justify-center shrink-0" style={{ background: item.color + "22" }}>
+          <item.icon className="h-3 w-3" style={{ color: item.color }} />
+        </span>
+        {!collapsed && (
+          <>
+            <span className="text-sm font-medium truncate flex-1 text-left">{item.label}</span>
+            {open
+              ? <ChevronDown className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+              : <ChevronRight className="h-3.5 w-3.5 text-gray-400 shrink-0" />}
+          </>
+        )}
+      </button>
+
+      {!collapsed && open && item.children && (
+        <div className="ml-7 mt-0.5 space-y-0.5 border-l border-gray-200 pl-3">
+          {item.children.map(child => {
+            const childActive = location === child.href || location.startsWith(child.href + "/");
+            return (
+              <Link
+                key={child.href}
+                href={child.href}
+                className="block px-2 py-1.5 rounded text-sm transition-all"
+                style={childActive ? { color: "#1d4ed8", fontWeight: 600 } : { color: "#6b7280" }}
+                onMouseEnter={e => { if (!childActive) (e.currentTarget as HTMLElement).style.color = "#374151"; }}
+                onMouseLeave={e => { if (!childActive) (e.currentTarget as HTMLElement).style.color = "#6b7280"; }}
+              >
+                {child.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Layout ─────────────────────────────────────────────────── */
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const [location, navigate] = useLocation();
   const { data: session } = authClient.useSession();
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  function isActive(href: string) {
-    return location === href || location.startsWith(href + "/");
-  }
+  const pageTitle = PAGE_TITLES[location] ?? "Admin";
 
   async function handleLogout() {
     await authClient.signOut();
     navigate("/sign-in");
   }
 
+  const sidebarWidth = collapsed ? 56 : 220;
+
   return (
-    <div className="h-[100dvh] flex flex-col overflow-hidden" style={{ background: "#F5F5F5" }}>
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+    <div className="h-[100dvh] flex overflow-hidden bg-gray-50">
 
-        {/* Sidebar */}
-        <aside className="w-56 shrink-0 flex flex-col overflow-hidden" style={{ background: DARK }}>
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setMobileOpen(false)} />
+      )}
 
-          {/* Logo */}
-          <div className="px-5 py-4 border-b border-white/10">
-            <Link href="/admin/dashboard" className="inline-flex items-center gap-2">
-              <span className="text-xl font-black tracking-tight text-white">
+      {/* Sidebar */}
+      <aside
+        className="shrink-0 flex flex-col bg-white border-r border-gray-200 overflow-hidden transition-all duration-200 z-50"
+        style={{ width: sidebarWidth }}
+      >
+        {/* Logo + collapse */}
+        <div className="flex items-center justify-between px-3 py-3 border-b border-gray-100">
+          {!collapsed && (
+            <Link href="/admin/dashboard" className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#1d4ed8" }}>
+                <span className="text-white text-[10px] font-black">B5</span>
+              </div>
+              <span className="text-sm font-extrabold text-gray-900 tracking-tight truncate">
                 BLOQ<span style={{ color: "#F5A623" }}>5</span>
               </span>
-              <span
-                className="text-[9px] font-bold tracking-widest uppercase px-2 py-0.5 rounded"
-                style={{ background: RED, color: "#fff" }}
-              >
-                Admin
-              </span>
             </Link>
-          </div>
+          )}
+          {collapsed && (
+            <Link href="/admin/dashboard" className="mx-auto flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#1d4ed8" }}>
+                <span className="text-white text-[10px] font-black">B5</span>
+              </div>
+            </Link>
+          )}
+          {!collapsed && (
+            <button
+              onClick={() => setCollapsed(true)}
+              className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
 
-          {/* User chip */}
-          {session?.user && (
-            <div className="px-4 py-3 border-b border-white/10">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ background: RED, color: "#fff" }}>
-                  {session.user.name?.charAt(0).toUpperCase() ?? "A"}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-white text-xs font-semibold truncate">{session.user.name}</p>
-                  <p className="text-white/40 text-[10px] truncate">{session.user.email}</p>
-                </div>
+        {/* Expand button when collapsed */}
+        {collapsed && (
+          <button onClick={() => setCollapsed(false)} className="flex items-center justify-center py-2 hover:bg-gray-50 text-gray-400 hover:text-gray-600 transition-colors">
+            <Menu className="h-4 w-4" />
+          </button>
+        )}
+
+        {/* Nav */}
+        <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto scrollbar-none">
+          {NAV_ITEMS.map((item, i) => (
+            <NavEntry key={i} item={item} location={location} collapsed={collapsed} />
+          ))}
+
+          {/* Divider */}
+          <div className="my-2 border-t border-gray-100" />
+
+          {/* Trash / logout */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all text-gray-400 hover:text-red-500 hover:bg-red-50"
+            onMouseEnter={e => (e.currentTarget.style.background = "#fef2f2")}
+            onMouseLeave={e => (e.currentTarget.style.background = "")}
+          >
+            <span className="w-5 h-5 rounded flex items-center justify-center shrink-0 bg-red-50">
+              <LogOut className="h-3 w-3 text-red-400" />
+            </span>
+            {!collapsed && <span className="text-sm font-medium">Déconnexion</span>}
+          </button>
+        </nav>
+
+        {/* User footer */}
+        {!collapsed && session?.user && (
+          <div className="px-3 py-3 border-t border-gray-100">
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 text-white"
+                style={{ background: "#1d4ed8" }}
+              >
+                {session.user.name?.charAt(0).toUpperCase() ?? "A"}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-gray-900 truncate">{session.user.name}</p>
+                <p className="text-[10px] text-gray-400 truncate">{session.user.email}</p>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Nav sections */}
-          <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto scrollbar-none">
-            {NAV_SECTIONS.map(section => (
-              <div key={section.label}>
-                <p className="px-3 mb-1 text-[9px] font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>
-                  {section.label}
-                </p>
-                <div className="space-y-0.5">
-                  {section.items.map(({ href, label, icon: Icon }) => {
-                    const active = isActive(href);
-                    return (
-                      <Link
-                        key={href}
-                        href={href}
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-                        style={active ? { background: RED, color: "#fff", fontWeight: 700 } : { color: "rgba(255,255,255,0.55)" }}
-                        onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.color = "#fff"; }}
-                        onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
-                      >
-                        <Icon className="h-4 w-4 flex-shrink-0" />
-                        {label}
-                      </Link>
-                    );
-                  })}
-                </div>
+        {/* Bottom quick-action icons */}
+        <div className="px-3 py-2 border-t border-gray-100 flex items-center justify-around">
+          <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors" title="Ajouter"><Plus className="h-3.5 w-3.5" /></button>
+          <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors" title="Voir le site">
+            <a href="/" target="_blank" rel="noopener noreferrer"><Share2 className="h-3.5 w-3.5" /></a>
+          </button>
+          <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors" title="Exporter"><Download className="h-3.5 w-3.5" /></button>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        {/* Top Header */}
+        <header className="shrink-0 h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-4">
+          <h1 className="text-sm font-bold text-gray-900">{pageTitle}</h1>
+          <div className="flex-1" />
+          {/* Actions */}
+          <div className="flex items-center gap-1">
+            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><Plus className="h-4 w-4" /></button>
+            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><RefreshCw className="h-4 w-4" /></button>
+            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><Search className="h-4 w-4" /></button>
+            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><BarChart2 className="h-4 w-4" /></button>
+            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><Bell className="h-4 w-4" /></button>
+            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><HelpCircle className="h-4 w-4" /></button>
+            {session?.user && (
+              <div className="ml-1 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0" style={{ background: "#1d4ed8" }}>
+                {session.user.name?.charAt(0).toUpperCase() ?? "A"}
               </div>
-            ))}
-          </nav>
-
-          {/* Bottom actions */}
-          <div className="px-3 py-3 border-t border-white/10 space-y-0.5">
-            <a
-              href="/"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{ color: "rgba(255,255,255,0.45)" }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = "#fff"; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)"; }}
-            >
-              <ExternalLink className="h-4 w-4 flex-shrink-0" />
-              Voir le site
-            </a>
-            <button
-              onClick={handleLogout}
-              className="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all"
-              style={{ color: "rgba(255,255,255,0.45)" }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = RED; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.45)"; }}
-            >
-              <LogOut className="h-4 w-4 flex-shrink-0" />
-              Déconnexion
-            </button>
+            )}
+            {session?.user && (
+              <span className="text-xs font-semibold text-gray-700 hidden md:block">
+                Hi, {session.user.name?.split(" ")[0] ?? "Admin"}
+              </span>
+            )}
           </div>
-        </aside>
+        </header>
 
-        {/* Main content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-6 lg:p-8 max-w-screen-xl">
-            {children}
-          </div>
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-6">
+          {children}
         </main>
       </div>
     </div>
