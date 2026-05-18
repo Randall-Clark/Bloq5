@@ -1,4 +1,3 @@
-import AdminLayout from "@/components/layout/admin-layout";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
@@ -408,7 +407,7 @@ export default function AdminDashboardPage() {
   });
 
   return (
-    <AdminLayout>
+<>
       {/* Row 1: Summary + Calendar */}
       <div style={{ display: "flex", gap: 16, marginBottom: 16, minHeight: 440 }}>
         <SummaryWidget s={stats} />
@@ -421,6 +420,6 @@ export default function AdminDashboardPage() {
         <TasksCard />
         <StatsCard s={stats} />
       </div>
-    </AdminLayout>
+</>
   );
 }
