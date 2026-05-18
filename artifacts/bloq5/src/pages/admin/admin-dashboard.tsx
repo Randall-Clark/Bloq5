@@ -1,10 +1,15 @@
 import AdminLayout from "@/components/layout/admin-layout";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Settings, MoreHorizontal, Plus } from "lucide-react";
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns";
+import {
+  ChevronLeft, ChevronRight, Settings, MoreHorizontal, Plus,
+  Zap, CheckSquare, BarChart2, Home, Users, FileText, Mail,
+} from "lucide-react";
+import {
+  format, startOfMonth, endOfMonth, startOfWeek, endOfWeek,
+  eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths,
+} from "date-fns";
 import { fr } from "date-fns/locale";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const BASE = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 async function adminFetch(path: string) {
@@ -18,67 +23,92 @@ type Stats = {
   activeSubscriptions: number; propertiesAvailable: number; propertiesRented: number;
   pendingRequests: number;
 };
-type SummaryRow = { label: string; value: number | null; highlight?: boolean };
+type RecentUser    = { id: string; name: string; email: string; role: string; createdAt: string };
+type RecentRequest = { id: number; applicantName: string; propertyTitle: string; status: string; createdAt: string };
 
-/* ── Mini calendar ─────────────────────────────────────────── */
+/* ─── CALENDAR ──────────────────────────────────────────────── */
 const WEEK_DAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
-function MiniCalendar() {
-  const [current, setCurrent] = useState(new Date());
-  const [view, setView]       = useState<"month" | "week" | "day">("month");
-  const today = new Date();
+type CalEvent = { day: number; label: string; color: string; text: string };
+const EVENTS: CalEvent[] = [
+  { day: 3,  label: "Visite – App. 3B",     color: "#FFF3E0", text: "#E65100" },
+  { day: 8,  label: "Signature bail",        color: "#E8F5E9", text: "#2E7D32" },
+  { day: 12, label: "Appel propriétaire",    color: "#E3F2FD", text: "#1565C0" },
+  { day: 18, label: "Visite – App. 3B",     color: "#FFF3E0", text: "#E65100" },
+  { day: 22, label: "Signature bail",        color: "#E8F5E9", text: "#2E7D32" },
+  { day: 27, label: "Appel propriétaire",    color: "#E3F2FD", text: "#1565C0" },
+];
 
+function WeekView({ current }: { current: Date }) {
+  const start = startOfWeek(current, { weekStartsOn: 1 });
+  const hours  = Array.from({ length: 13 }, (_, i) => i + 8);
+  return (
+    <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "40px repeat(7, 1fr)", borderBottom: "1px solid #F0F0F0" }}>
+        <div />
+        {Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(start); d.setDate(start.getDate() + i);
+          const isToday = isSameDay(d, new Date());
+          return (
+            <div key={i} style={{ textAlign: "center", padding: "6px 4px", fontSize: 11, fontWeight: 600, color: isToday ? "#1565C0" : "#888" }}>
+              {WEEK_DAYS[i]}<br />
+              <span style={{ display: "inline-flex", width: 22, height: 22, borderRadius: "50%", background: isToday ? "#EBF3FF" : "none", alignItems: "center", justifyContent: "center", fontSize: 12, color: isToday ? "#1565C0" : "#1A1A1A", fontWeight: isToday ? 700 : 500 }}>
+                {d.getDate()}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      {hours.map(h => (
+        <div key={h} style={{ display: "grid", gridTemplateColumns: "40px repeat(7, 1fr)", borderBottom: "1px solid #F8F8F8", minHeight: 40 }}>
+          <div style={{ fontSize: 10, color: "#AAA", paddingTop: 4, paddingLeft: 4, textAlign: "right", paddingRight: 6 }}>{h}h</div>
+          {Array.from({ length: 7 }, (_, i) => <div key={i} style={{ borderLeft: "1px solid #F0F0F0" }} />)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MonthView({ current }: { current: Date }) {
+  const today     = new Date();
   const monthStart = startOfMonth(current);
   const monthEnd   = endOfMonth(current);
-  const start = startOfWeek(monthStart, { weekStartsOn: 1 });
-  const end   = endOfWeek(monthEnd,     { weekStartsOn: 1 });
-  const days  = eachDayOfInterval({ start, end });
+  const start      = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const end        = endOfWeek(monthEnd,     { weekStartsOn: 1 });
+  const days       = eachDayOfInterval({ start, end });
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-1.5">
-          <button onClick={() => setCurrent(d => subMonths(d, 1))} className="p-1 rounded hover:bg-gray-100 transition-colors">
-            <ChevronLeft className="h-3.5 w-3.5 text-gray-500" />
-          </button>
-          <span className="text-xs font-semibold text-gray-900 capitalize">
-            {format(current, "MMMM yyyy", { locale: fr })}
-          </span>
-          <button onClick={() => setCurrent(d => addMonths(d, 1))} className="p-1 rounded hover:bg-gray-100 transition-colors">
-            <ChevronRight className="h-3.5 w-3.5 text-gray-500" />
-          </button>
-        </div>
-        <div className="flex rounded border border-gray-200 overflow-hidden text-[10px]">
-          {(["month","week","day"] as const).map(v => (
-            <button key={v} onClick={() => setView(v)}
-              className="px-2 py-0.5 font-semibold transition-colors"
-              style={view === v ? { background: "#1d4ed8", color: "#fff" } : { background: "#fff", color: "#6b7280" }}>
-              {v === "month" ? "Mois" : v === "week" ? "Sem." : "Jour"}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-7 mb-1">
+    <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", borderBottom: "1px solid #F0F0F0" }}>
         {WEEK_DAYS.map(d => (
-          <div key={d} className="text-center text-[9px] font-semibold text-gray-400 py-0.5">{d}</div>
+          <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 700, color: "#888", padding: "6px 0" }}>{d}</div>
         ))}
       </div>
-
-      <div className="grid grid-cols-7 gap-px flex-1">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", flex: 1 }}>
         {days.map(day => {
           const isToday  = isSameDay(day, today);
           const inMonth  = isSameMonth(day, current);
+          const dayNum   = day.getDate();
+          const evts     = inMonth ? EVENTS.filter(e => e.day === dayNum) : [];
           return (
-            <button key={day.toISOString()}
-              className="flex items-center justify-center rounded transition-colors text-[11px] font-medium aspect-square"
-              style={isToday
-                ? { background: "#1d4ed8", color: "#fff" }
-                : inMonth ? { color: "#374151" } : { color: "#d1d5db" }}
-              onMouseEnter={e => { if (!isToday) (e.currentTarget as HTMLElement).style.background = "#f3f4f6"; }}
-              onMouseLeave={e => { if (!isToday) (e.currentTarget as HTMLElement).style.background = ""; }}>
-              {format(day, "d")}
-            </button>
+            <div key={day.toISOString()} style={{
+              minHeight: 60, borderBottom: "1px solid #F0F0F0", borderRight: "1px solid #F0F0F0",
+              background: isToday ? "#EBF3FF" : "#fff",
+              padding: "4px 4px 2px",
+              cursor: "pointer",
+            }}
+              onMouseEnter={e => { if (!isToday) (e.currentTarget as HTMLElement).style.background = "#F9F9F9"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isToday ? "#EBF3FF" : "#fff"; }}
+            >
+              <div style={{ textAlign: "right", fontSize: 12, color: isToday ? "#1565C0" : inMonth ? "#1A1A1A" : "#CCCCCC", fontWeight: isToday ? 700 : 400, marginBottom: 2 }}>
+                {dayNum}
+              </div>
+              {evts.map((ev, ei) => (
+                <div key={ei} style={{ background: ev.color, color: ev.text, fontSize: 10, borderRadius: 4, padding: "1px 4px", marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {ev.label}
+                </div>
+              ))}
+            </div>
           );
         })}
       </div>
@@ -86,193 +116,310 @@ function MiniCalendar() {
   );
 }
 
-/* ── Badge ─────────────────────────────────────────────────── */
-function MetricBadge({ value, color = "#22c55e" }: { value: number | null; color?: string }) {
-  if (value === null) return <div className="w-8 h-5 rounded bg-gray-100 animate-pulse shrink-0" />;
+function CalendarWidget() {
+  const [current, setCurrent] = useState(new Date());
+  const [view, setView]       = useState<"month" | "week" | "day">("month");
+  const VIEW_LABELS = { month: "Mois", week: "Semaine", day: "Jour" } as const;
+
   return (
-    <span className="inline-flex items-center justify-center min-w-[24px] h-5 rounded text-[10px] font-bold text-white px-1.5 shrink-0"
-      style={{ background: color }}>
+    <Card style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px 10px", borderBottom: "1px solid #EEEEEE", flexShrink: 0 }}>
+        <span style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A", flex: 1 }}>Calendrier</span>
+        <button style={{ background: "#E8F5E9", color: "#2E7D32", border: "none", borderRadius: 20, padding: "6px 14px", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontWeight: 600 }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#2E7D32"; (e.currentTarget as HTMLElement).style.color = "#fff"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#E8F5E9"; (e.currentTarget as HTMLElement).style.color = "#2E7D32"; }}>
+          <Plus style={{ width: 12, height: 12 }} /> Ajouter un événement
+        </button>
+        <IconBtn><Settings style={{ width: 14, height: 14 }} /></IconBtn>
+        <IconBtn><MoreHorizontal style={{ width: 14, height: 14 }} /></IconBtn>
+      </div>
+
+      {/* Nav */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderBottom: "1px solid #EEEEEE", flexShrink: 0 }}>
+        <NavBtn onClick={() => setCurrent(d => subMonths(d, 1))}><ChevronLeft style={{ width: 14, height: 14 }} /></NavBtn>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "#1A1A1A", flex: 1, textAlign: "center", textTransform: "capitalize" }}>
+          {format(current, "MMMM yyyy", { locale: fr })}
+        </span>
+        <NavBtn onClick={() => setCurrent(d => addMonths(d, 1))}><ChevronRight style={{ width: 14, height: 14 }} /></NavBtn>
+
+        <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", border: "1px solid #E0E0E0", marginLeft: 8 }}>
+          {(["month", "week", "day"] as const).map(v => (
+            <button key={v} onClick={() => setView(v)} style={{
+              padding: "5px 12px", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer",
+              background: view === v ? "#F5A623" : "#fff", color: view === v ? "#fff" : "#888",
+            }}>
+              {VIEW_LABELS[v]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        {view === "month" && <MonthView current={current} />}
+        {view === "week"  && <WeekView  current={current} />}
+        {view === "day"   && (
+          <div style={{ padding: 16, color: "#888", fontSize: 13, textAlign: "center" }}>
+            Aucun événement aujourd'hui.
+          </div>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+/* ─── CARD helpers ──────────────────────────────────────────── */
+function Card({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ background: "#fff", borderRadius: 12, border: "1px solid #EEEEEE", ...style }}>
+      {children}
+    </div>
+  );
+}
+function IconBtn({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+  return (
+    <button onClick={onClick} style={{ background: "none", border: "none", cursor: "pointer", color: "#888", padding: 4, borderRadius: 6, display: "flex", alignItems: "center" }}
+      onMouseEnter={e => (e.currentTarget.style.background = "#F5F5F5")}
+      onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+      {children}
+    </button>
+  );
+}
+function NavBtn({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+  return (
+    <button onClick={onClick} style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #E0E0E0", background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#555" }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#F5A623"; (e.currentTarget as HTMLElement).style.color = "#fff"; (e.currentTarget as HTMLElement).style.borderColor = "#F5A623"; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#fff"; (e.currentTarget as HTMLElement).style.color = "#555"; (e.currentTarget as HTMLElement).style.borderColor = "#E0E0E0"; }}>
+      {children}
+    </button>
+  );
+}
+
+/* ─── SUMMARY BADGE ─────────────────────────────────────────── */
+function Badge({ value }: { value: number | null }) {
+  if (value === null) return <div style={{ width: 22, height: 22, borderRadius: 6, background: "#F0F0F0", animation: "pulse 1.5s infinite", flexShrink: 0 }} />;
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", justifyContent: "center",
+      minWidth: 22, height: 22, borderRadius: 6, background: "#F5A623",
+      color: "#fff", fontWeight: 700, fontSize: 11, padding: "0 5px", flexShrink: 0,
+      transition: "transform 0.15s",
+      cursor: "pointer",
+    }}
+      onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.1)")}
+      onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}>
       {value > 999 ? "999+" : value}
     </span>
   );
 }
 
-/* ── Dashboard ─────────────────────────────────────────────── */
-type RecentUser    = { id: string; name: string; email: string; role: string; createdAt: string };
-type RecentRequest = { id: number; applicantName: string; propertyTitle: string; status: string; createdAt: string };
+/* ─── SUMMARY WIDGET ────────────────────────────────────────── */
+type SRow = { label: string; value: number | null; highlight?: boolean };
 
+function SummaryWidget({ s }: { s: Stats | undefined }) {
+  const left: SRow[] = [
+    { label: "Messages non lus",            value: s ? 0  : null, highlight: true },
+    { label: "Emails programmés",            value: s ? 0  : null, highlight: true },
+    { label: "Notifications",               value: s ? 0  : null, highlight: true },
+    { label: "Contacts",                    value: s?.totalUsers ?? null, highlight: true },
+    { label: "Rendez-vous",                 value: s ? 0  : null, highlight: true },
+    { label: "Tâches incomplètes",          value: s ? 0  : null, highlight: true },
+    { label: "Tâches complètes",            value: s ? 0  : null, highlight: true },
+    { label: "Objectifs non atteints",      value: s ? 0  : null, highlight: true },
+    { label: "Objectifs atteints",          value: s ? 0  : null, highlight: false },
+    { label: "Campagnes email programmées", value: s ? 0  : null, highlight: false },
+    { label: "Emails envoyés via campagnes",value: s ? 0  : null, highlight: false },
+    { label: "Transactions ouvertes",       value: s?.pendingRequests ?? null, highlight: false },
+    { label: "Transactions fermées",        value: s ? 0  : null, highlight: false },
+    { label: "Côtés acheteur",              value: s ? 0  : null, highlight: false },
+  ];
+  const right: SRow[] = [
+    { label: "Côtés annonce",              value: s ? 0  : null },
+    { label: "Annonces actives à vendre",  value: s ? 0  : null },
+    { label: "Annonces actives à louer",   value: s?.propertiesAvailable ?? null },
+    { label: "Baux en cours",              value: s ? 0  : null },
+    { label: "Offres en cours",            value: s ? 0  : null },
+    { label: "Références sortantes",       value: s ? 0  : null },
+    { label: "Références reçues",          value: s ? 0  : null },
+    { label: "Leads reçus",               value: s ? 0  : null },
+    { label: "Visiteurs du site",          value: s ? 0  : null },
+    { label: "Favoris sauvegardés",        value: s ? 0  : null },
+    { label: "Recherches sauvegardées",    value: s ? 0  : null },
+    { label: "Demandes d'information",     value: s ? 0  : null },
+    { label: "Demandes de visite",         value: s?.totalRequests ?? null },
+    { label: "Demandes d'offre",           value: s ? 0  : null },
+  ];
+  const maxRows = Math.max(left.length, right.length);
+
+  return (
+    <Card style={{ flex: 1, minWidth: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px 10px", borderBottom: "1px solid #EEEEEE" }}>
+        <div style={{ width: 20, height: 20, borderRadius: 5, background: "#FFF3E0", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 10, height: 10, borderRadius: 2, border: "2px solid #F5A623" }} />
+        </div>
+        <span style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A" }}>Résumé</span>
+        <div style={{ flex: 1 }} />
+        <IconBtn><Settings style={{ width: 14, height: 14 }} /></IconBtn>
+        <IconBtn><MoreHorizontal style={{ width: 14, height: 14 }} /></IconBtn>
+      </div>
+
+      <div style={{ overflowY: "auto", flex: 1 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", padding: "8px 16px" }}>
+          {Array.from({ length: maxRows }, (_, i) => {
+            const lRow = left[i];
+            const rRow = right[i];
+            return [
+              lRow ? (
+                <div key={`l${i}`} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "1px solid #FAFAFA" }}>
+                  <Badge value={lRow.value} />
+                  <span style={{ fontSize: 12, color: lRow.highlight ? "#F5A623" : "#555", cursor: lRow.highlight ? "pointer" : "default", fontWeight: lRow.highlight ? 500 : 400, truncate: "ellipsis" as any }}
+                    onMouseEnter={e => { if (lRow.highlight) (e.currentTarget as HTMLElement).style.textDecoration = "underline"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.textDecoration = "none"; }}>
+                    {lRow.label}
+                  </span>
+                </div>
+              ) : <div key={`le${i}`} />,
+              rRow ? (
+                <div key={`r${i}`} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0 5px 12px", borderBottom: "1px solid #FAFAFA" }}>
+                  <Badge value={rRow.value} />
+                  <span style={{ fontSize: 12, color: "#555" }}>{rRow.label}</span>
+                </div>
+              ) : <div key={`re${i}`} />,
+            ];
+          }).flat()}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/* ─── RECENT ACTIVITY ───────────────────────────────────────── */
+const ACTIVITIES = [
+  { name: "Marie Tremblay", text: "a soumis une candidature — 102 Rue Ste-Catherine", time: "il y a 5 min" },
+  { name: "Jean Bouchard",  text: "Nouveau message de Jean Bouchard",                   time: "il y a 23 min" },
+  { name: "Bail signé",     text: "Bail signé — App. 7, Laval",                         time: "il y a 1h" },
+  { name: "Visite",         text: "Visite confirmée — Plateau Mont-Royal",               time: "il y a 2h" },
+  { name: "Lead",           text: "Nouveau lead entrant — Kijiji",                      time: "il y a 3h" },
+];
+
+function ActivityCard() {
+  return (
+    <Card style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px 10px", borderBottom: "1px solid #EEEEEE" }}>
+        <Zap style={{ width: 16, height: 16, color: "#F5A623" }} />
+        <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A" }}>Activité récente</span>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        {ACTIVITIES.map((a, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 16px", borderBottom: "1px solid #FAFAFA" }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#F5A623", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <span style={{ color: "#fff", fontWeight: 700, fontSize: 11 }}>{a.name.charAt(0)}</span>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 13, color: "#1A1A1A", margin: 0, lineHeight: 1.4 }}>{a.text}</p>
+              <p style={{ fontSize: 11, color: "#AAA", margin: "2px 0 0" }}>{a.time}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+/* ─── TASKS ─────────────────────────────────────────────────── */
+const INITIAL_TASKS = [
+  { text: "Suivre dossier Marie Tremblay",   due: "Auj. 17h",   done: false },
+  { text: "Mettre à jour annonce Plateau",    due: "Demain",      done: false },
+  { text: "Appeler propriétaire Laval",       due: "20 mai",      done: true  },
+  { text: "Envoyer contrat bail App. 7",      due: "22 mai",      done: false },
+  { text: "Vérifier paiement loyer juin",     due: "1 juin",      done: false },
+];
+
+function TasksCard() {
+  const [tasks, setTasks] = useState(INITIAL_TASKS);
+  return (
+    <Card style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px 10px", borderBottom: "1px solid #EEEEEE" }}>
+        <CheckSquare style={{ width: 16, height: 16, color: "#F5A623" }} />
+        <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A", flex: 1 }}>Tâches à faire</span>
+        <span style={{ background: "#F5A623", color: "#fff", fontWeight: 700, fontSize: 11, borderRadius: 10, padding: "2px 8px" }}>
+          {tasks.filter(t => !t.done).length}
+        </span>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        {tasks.map((task, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #FAFAFA" }}>
+            <button
+              onClick={() => setTasks(ts => ts.map((t, j) => j === i ? { ...t, done: !t.done } : t))}
+              style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${task.done ? "#F5A623" : "#F5A623"}`, background: task.done ? "#F5A623" : "#fff", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {task.done && <span style={{ color: "#fff", fontSize: 10, fontWeight: 900 }}>✓</span>}
+            </button>
+            <span style={{ fontSize: 13, color: task.done ? "#AAA" : "#1A1A1A", textDecoration: task.done ? "line-through" : "none", flex: 1 }}>
+              {task.text}
+            </span>
+            <span style={{ fontSize: 11, color: "#AAA", whiteSpace: "nowrap" }}>{task.due}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ padding: "8px 16px", borderTop: "1px solid #EEEEEE" }}>
+        <button style={{ background: "none", border: "none", cursor: "pointer", color: "#F5A623", fontSize: 12, fontWeight: 600, padding: 0 }}>
+          + Ajouter une tâche
+        </button>
+      </div>
+    </Card>
+  );
+}
+
+/* ─── QUICK STATS ───────────────────────────────────────────── */
+function StatsCard({ s }: { s: Stats | undefined }) {
+  const metrics = [
+    { icon: Home,      label: "Propriétés actives",    value: s?.propertiesAvailable ?? null, color: "#F5A623" },
+    { icon: Users,     label: "Contacts",               value: s?.totalUsers ?? null,          color: "#1565C0" },
+    { icon: FileText,  label: "Transactions en cours",  value: s?.pendingRequests ?? null,     color: "#2E7D32" },
+    { icon: Mail,      label: "Messages non lus",       value: null,                           color: "#E53935" },
+  ];
+  return (
+    <Card style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px 10px", borderBottom: "1px solid #EEEEEE" }}>
+        <BarChart2 style={{ width: 16, height: 16, color: "#F5A623" }} />
+        <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A" }}>Statistiques rapides</span>
+      </div>
+      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: "#F0F0F0" }}>
+        {metrics.map((m, i) => (
+          <div key={i} style={{ background: "#fff", padding: "16px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
+            <m.icon style={{ width: 18, height: 18, color: m.color }} />
+            <span style={{ fontSize: 28, fontWeight: 800, color: m.color, lineHeight: 1 }}>
+              {m.value === null ? "—" : m.value}
+            </span>
+            <span style={{ fontSize: 12, color: "#888" }}>{m.label}</span>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+/* ─── DASHBOARD ─────────────────────────────────────────────── */
 export default function AdminDashboardPage() {
   const { data: stats } = useQuery<Stats>({
     queryKey: ["admin", "stats"],
     queryFn: () => adminFetch("/api/admin/stats"),
   });
-  const { data: usersData } = useQuery<{ data: RecentUser[] }>({
-    queryKey: ["admin", "users", 1],
-    queryFn: () => adminFetch("/api/admin/users?page=1&limit=5"),
-  });
-  const { data: requestsData } = useQuery<{ data: RecentRequest[] }>({
-    queryKey: ["admin", "requests", 1, ""],
-    queryFn: () => adminFetch("/api/admin/requests?page=1&limit=5"),
-  });
-
-  const s = stats;
-
-  const leftSummary: SummaryRow[] = [
-    { label: "Messages non lus",       value: s ? 0 : null,                   highlight: false },
-    { label: "Emails programmés",       value: s ? 0 : null,                   highlight: false },
-    { label: "Notifications",          value: s ? 0 : null,                   highlight: false },
-    { label: "Contacts (utilisateurs)", value: s?.totalUsers ?? null,          highlight: true },
-    { label: "Rendez-vous",            value: s ? 0 : null,                   highlight: false },
-    { label: "Tâches incomplètes",     value: s ? 0 : null,                   highlight: false },
-    { label: "Tâches complètes",       value: s ? 0 : null,                   highlight: false },
-    { label: "Objectifs non atteints", value: s ? 0 : null,                   highlight: false },
-    { label: "Objectifs atteints",     value: s ? 0 : null,                   highlight: false },
-    { label: "Campagnes actives",      value: s ? 0 : null,                   highlight: false },
-  ];
-  const rightSummary: SummaryRow[] = [
-    { label: "Annonces actives",        value: s?.propertiesAvailable ?? null, highlight: true },
-    { label: "Propriétés louées",       value: s?.propertiesRented ?? null,    highlight: true },
-    { label: "Baux en cours",           value: s ? 0 : null,                   highlight: false },
-    { label: "Demandes en attente",     value: s?.pendingRequests ?? null,     highlight: true },
-    { label: "Référrals sortants",      value: s ? 0 : null,                   highlight: false },
-    { label: "Référrals entrants",      value: s ? 0 : null,                   highlight: false },
-    { label: "Leads reçus",            value: s ? 0 : null,                   highlight: false },
-    { label: "Abonnements actifs",      value: s?.activeSubscriptions ?? null, highlight: true },
-    { label: "Demandes totales",        value: s?.totalRequests ?? null,       highlight: true },
-    { label: "Propriétés totales",      value: s?.totalProperties ?? null,     highlight: true },
-  ];
-
-  const STATUS_COLORS: Record<string, string> = {
-    pending: "bg-yellow-100 text-yellow-800", approved: "bg-green-100 text-green-800", rejected: "bg-red-100 text-red-800",
-  };
-  const STATUS_LABELS: Record<string, string> = {
-    pending: "En attente", approved: "Approuvé", rejected: "Refusé",
-  };
-  const ROLE_LABELS: Record<string, string> = {
-    tenant: "Locataire", owner: "Propriétaire", manager: "Gestionnaire", admin: "Admin",
-  };
 
   return (
     <AdminLayout>
       {/* Row 1: Summary + Calendar */}
-      <div className="flex gap-4 mb-4">
-        {/* Summary */}
-        <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-w-0">
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100">
-            <div className="w-5 h-5 rounded bg-blue-50 flex items-center justify-center shrink-0">
-              <div className="w-2.5 h-2.5 rounded-sm border-2 border-blue-500" />
-            </div>
-            <span className="text-sm font-bold text-gray-900">Résumé</span>
-            <div className="ml-auto flex items-center gap-0.5">
-              <button className="p-1 rounded hover:bg-gray-100 text-gray-400"><Settings className="h-3.5 w-3.5" /></button>
-              <button className="p-1 rounded hover:bg-gray-100 text-gray-400"><MoreHorizontal className="h-3.5 w-3.5" /></button>
-            </div>
-          </div>
-          <div className="px-4 py-2 grid grid-cols-2 gap-x-8">
-            {leftSummary.map((row, i) => {
-              const right = rightSummary[i];
-              return (
-                <div key={i} className="contents">
-                  <div className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
-                    <MetricBadge value={row.value} color={row.highlight ? "#22c55e" : "#9ca3af"} />
-                    <span className={`text-xs truncate ${row.highlight ? "text-blue-600 font-semibold cursor-pointer hover:underline" : "text-gray-600"}`}>
-                      {row.label}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 py-1.5 border-b border-gray-50 last:border-0">
-                    <MetricBadge value={right?.value ?? null} color={right?.highlight ? "#22c55e" : "#9ca3af"} />
-                    <span className={`text-xs truncate ${right?.highlight ? "text-blue-600 font-semibold cursor-pointer hover:underline" : "text-gray-600"}`}>
-                      {right?.label}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Calendar */}
-        <div className="w-[300px] shrink-0 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hidden lg:flex flex-col">
-          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100">
-            <div className="w-5 h-5 rounded bg-indigo-50 flex items-center justify-center shrink-0">
-              <div className="w-2.5 h-2.5 rounded-sm border-2 border-indigo-500" />
-            </div>
-            <span className="text-sm font-bold text-gray-900">Calendrier</span>
-            <div className="ml-auto flex items-center gap-1">
-              <button className="flex items-center gap-0.5 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-400 text-blue-600 hover:bg-blue-50 transition-colors">
-                <Plus className="h-2.5 w-2.5" />Ajouter
-              </button>
-              <button className="p-1 rounded hover:bg-gray-100 text-gray-400"><Settings className="h-3.5 w-3.5" /></button>
-              <button className="p-1 rounded hover:bg-gray-100 text-gray-400"><MoreHorizontal className="h-3.5 w-3.5" /></button>
-            </div>
-          </div>
-          <div className="flex-1 px-4 py-3 flex flex-col">
-            <MiniCalendar />
-          </div>
-        </div>
+      <div style={{ display: "flex", gap: 16, marginBottom: 16, minHeight: 440 }}>
+        <SummaryWidget s={stats} />
+        <CalendarWidget />
       </div>
 
-      {/* Row 2: Recent users + Recent requests */}
-      <div className="flex gap-4">
-        {/* Recent users */}
-        <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-w-0">
-          <div className="flex items-center px-4 py-2.5 border-b border-gray-100">
-            <span className="text-sm font-bold text-gray-900">Derniers contacts</span>
-            <a href="/admin/users" className="ml-auto text-xs font-semibold text-blue-600 hover:underline">Voir tout →</a>
-          </div>
-          <div className="divide-y divide-gray-50">
-            {!usersData
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="px-4 py-2.5 flex items-center gap-3">
-                    <Skeleton className="w-7 h-7 rounded-full shrink-0" />
-                    <div className="flex-1 space-y-1"><Skeleton className="h-3 w-28 rounded" /><Skeleton className="h-2.5 w-36 rounded" /></div>
-                    <Skeleton className="h-4 w-16 rounded-full" />
-                  </div>
-                ))
-              : (usersData.data ?? []).map(user => (
-                  <div key={user.id} className="px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0" style={{ background: "#1d4ed8" }}>
-                      {user.name?.charAt(0).toUpperCase() ?? "?"}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-gray-900 truncate">{user.name}</p>
-                      <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
-                    </div>
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 shrink-0">
-                      {ROLE_LABELS[user.role ?? "tenant"] ?? user.role ?? "—"}
-                    </span>
-                  </div>
-                ))}
-          </div>
-        </div>
-
-        {/* Recent requests */}
-        <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-w-0">
-          <div className="flex items-center px-4 py-2.5 border-b border-gray-100">
-            <span className="text-sm font-bold text-gray-900">Dernières demandes</span>
-            <a href="/admin/requests" className="ml-auto text-xs font-semibold text-blue-600 hover:underline">Voir tout →</a>
-          </div>
-          <div className="divide-y divide-gray-50">
-            {!requestsData
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="px-4 py-2.5 flex items-center gap-3">
-                    <div className="flex-1 space-y-1"><Skeleton className="h-3 w-32 rounded" /><Skeleton className="h-2.5 w-44 rounded" /></div>
-                    <Skeleton className="h-4 w-16 rounded-full" />
-                  </div>
-                ))
-              : (requestsData.data ?? []).map(req => (
-                  <div key={req.id} className="px-4 py-2.5 flex items-center gap-3 hover:bg-gray-50 transition-colors">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-gray-900 truncate">{req.applicantName}</p>
-                      <p className="text-[10px] text-gray-400 truncate">{req.propertyTitle ?? `Demande #${req.id}`}</p>
-                    </div>
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLORS[req.status] ?? "bg-gray-100 text-gray-600"}`}>
-                      {STATUS_LABELS[req.status] ?? req.status}
-                    </span>
-                  </div>
-                ))}
-          </div>
-        </div>
+      {/* Row 2: Activity + Tasks + Stats */}
+      <div style={{ display: "flex", gap: 16, minHeight: 280 }}>
+        <ActivityCard />
+        <TasksCard />
+        <StatsCard s={stats} />
       </div>
     </AdminLayout>
   );
