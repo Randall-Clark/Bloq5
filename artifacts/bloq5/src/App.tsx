@@ -46,6 +46,11 @@ import AdminDashboardPage from "@/pages/admin/admin-dashboard";
 import AdminUsersPage from "@/pages/admin/admin-users";
 import AdminPropertiesPage from "@/pages/admin/admin-properties";
 import AdminRequestsPage from "@/pages/admin/admin-requests";
+import AdminStatsPage from "@/pages/admin/admin-stats";
+import AdminSubscriptionsPage from "@/pages/admin/admin-subscriptions";
+import AdminMessagesPage from "@/pages/admin/admin-messages";
+import AdminCitiesPage from "@/pages/admin/admin-cities";
+import AdminSettingsPage from "@/pages/admin/admin-settings";
 
 const queryClient = new QueryClient();
 
@@ -766,10 +771,15 @@ function AppRoutes() {
         <Route path="/pro/profile"      component={() => <ProtectedRoute component={ProProfilePage} />} />
 
         {/* Admin Protected Routes */}
-        <Route path="/admin/dashboard"  component={() => <AdminRoute component={AdminDashboardPage} />} />
-        <Route path="/admin/users"      component={() => <AdminRoute component={AdminUsersPage} />} />
-        <Route path="/admin/properties" component={() => <AdminRoute component={AdminPropertiesPage} />} />
-        <Route path="/admin/requests"   component={() => <AdminRoute component={AdminRequestsPage} />} />
+        <Route path="/admin/dashboard"     component={() => <AdminRoute component={AdminDashboardPage} />} />
+        <Route path="/admin/stats"         component={() => <AdminRoute component={AdminStatsPage} />} />
+        <Route path="/admin/users"         component={() => <AdminRoute component={AdminUsersPage} />} />
+        <Route path="/admin/properties"    component={() => <AdminRoute component={AdminPropertiesPage} />} />
+        <Route path="/admin/requests"      component={() => <AdminRoute component={AdminRequestsPage} />} />
+        <Route path="/admin/subscriptions" component={() => <AdminRoute component={AdminSubscriptionsPage} />} />
+        <Route path="/admin/messages"      component={() => <AdminRoute component={AdminMessagesPage} />} />
+        <Route path="/admin/cities"        component={() => <AdminRoute component={AdminCitiesPage} />} />
+        <Route path="/admin/settings"      component={() => <AdminRoute component={AdminSettingsPage} />} />
 
         <Route component={NotFound} />
       </Switch>
