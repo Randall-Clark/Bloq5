@@ -1,5 +1,4 @@
 import { useState } from "react";
-import AdminLayout from "@/components/layout/admin-layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,7 +57,7 @@ export default function AdminSubscriptionsPage() {
   const totalPages = data?.totalPages ?? 1;
 
   return (
-    <AdminLayout>
+<>
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
           <CreditCard className="h-5 w-5 text-green-500" />
@@ -153,6 +152,6 @@ export default function AdminSubscriptionsPage() {
           </div>
         )}
       </Card>
-    </AdminLayout>
+</>
   );
 }
