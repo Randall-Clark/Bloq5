@@ -42,6 +42,10 @@ import RecrutementPage from "@/pages/recrutement";
 import MentionsLegalesPage from "@/pages/mentions-legales";
 import EvenementsPage from "@/pages/evenements";
 import ArticleDetailPage from "@/pages/article-detail";
+import AdminDashboardPage from "@/pages/admin/admin-dashboard";
+import AdminUsersPage from "@/pages/admin/admin-users";
+import AdminPropertiesPage from "@/pages/admin/admin-properties";
+import AdminRequestsPage from "@/pages/admin/admin-requests";
 
 const queryClient = new QueryClient();
 
@@ -687,6 +691,31 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   return <Component />;
 }
 
+function AdminRoute({ component: Component }: { component: React.ComponentType<any> }) {
+  const { data: session, isPending } = authClient.useSession();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    if (isPending) return;
+    if (!session?.user) { setIsAdmin(false); setChecked(true); return; }
+    fetch(`${basePath}/api/admin/me`, { credentials: "include" })
+      .then(r => { setIsAdmin(r.ok); setChecked(true); })
+      .catch(() => { setIsAdmin(false); setChecked(true); });
+  }, [session?.user?.id, isPending]);
+
+  if (isPending || !checked) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500" />
+      </div>
+    );
+  }
+  if (!session) return <Redirect to="/sign-in" />;
+  if (!isAdmin)  return <Redirect to="/" />;
+  return <Component />;
+}
+
 /* ── App Routes ── */
 function AppRoutes() {
   return (
@@ -736,6 +765,12 @@ function AppRoutes() {
         <Route path="/pro/subscription" component={() => <ProtectedRoute component={ProSubscriptionPage} />} />
         <Route path="/pro/profile"      component={() => <ProtectedRoute component={ProProfilePage} />} />
 
+        {/* Admin Protected Routes */}
+        <Route path="/admin/dashboard"  component={() => <AdminRoute component={AdminDashboardPage} />} />
+        <Route path="/admin/users"      component={() => <AdminRoute component={AdminUsersPage} />} />
+        <Route path="/admin/properties" component={() => <AdminRoute component={AdminPropertiesPage} />} />
+        <Route path="/admin/requests"   component={() => <AdminRoute component={AdminRequestsPage} />} />
+
         <Route component={NotFound} />
       </Switch>
     </QueryClientProvider>
@@ -744,7 +779,7 @@ function AppRoutes() {
 
 function ConditionalLocationPopup() {
   const [location] = useLocation();
-  if (location.startsWith("/pro")) return null;
+  if (location.startsWith("/pro") || location.startsWith("/admin")) return null;
   return <LocationPopup />;
 }
 
