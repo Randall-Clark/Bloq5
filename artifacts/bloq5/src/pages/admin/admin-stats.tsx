@@ -1,5 +1,4 @@
 import { useState } from "react";
-import AdminLayout from "@/components/layout/admin-layout";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -77,7 +76,7 @@ export default function AdminStatsPage() {
   ];
 
   return (
-    <AdminLayout>
+<>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -188,6 +187,6 @@ export default function AdminStatsPage() {
           )}
         </CardContent>
       </Card>
-    </AdminLayout>
+</>
   );
 }
