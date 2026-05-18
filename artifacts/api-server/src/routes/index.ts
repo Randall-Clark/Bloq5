@@ -11,9 +11,11 @@ import managersRouter from "./managers";
 import subscriptionsRouter from "./subscriptions";
 import profileRouter from "./profile";
 import proAuthRouter from "./pro-auth";
+import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
+router.use(adminRouter);
 router.use(healthRouter);
 router.use(authRouter);
 router.use(propertiesRouter);
