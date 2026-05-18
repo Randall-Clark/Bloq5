@@ -1,4 +1,3 @@
-import AdminLayout from "@/components/layout/admin-layout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,7 +34,7 @@ export default function AdminCitiesPage() {
   const inactiveCities = (cities ?? []).filter(c => !c.is_active).length;
 
   return (
-    <AdminLayout>
+<>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
@@ -104,6 +103,6 @@ export default function AdminCitiesPage() {
           </table>
         </div>
       </Card>
-    </AdminLayout>
+</>
   );
 }
