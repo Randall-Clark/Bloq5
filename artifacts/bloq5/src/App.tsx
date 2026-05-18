@@ -51,6 +51,7 @@ import AdminSubscriptionsPage from "@/pages/admin/admin-subscriptions";
 import AdminMessagesPage from "@/pages/admin/admin-messages";
 import AdminCitiesPage from "@/pages/admin/admin-cities";
 import AdminSettingsPage from "@/pages/admin/admin-settings";
+import AdminLayout from "@/components/layout/admin-layout";
 
 const queryClient = new QueryClient();
 
@@ -696,7 +697,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   return <Component />;
 }
 
-function AdminRoute({ component: Component }: { component: React.ComponentType<any> }) {
+function AdminSection() {
   const { data: session, isPending } = authClient.useSession();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [checked, setChecked] = useState(false);
@@ -712,13 +713,29 @@ function AdminRoute({ component: Component }: { component: React.ComponentType<a
   if (isPending || !checked) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F5A623]" />
       </div>
     );
   }
   if (!session) return <Redirect to="/sign-in" />;
   if (!isAdmin)  return <Redirect to="/" />;
-  return <Component />;
+
+  return (
+    <AdminLayout>
+      <Switch>
+        <Route path="/admin/dashboard"     component={AdminDashboardPage} />
+        <Route path="/admin/stats"         component={AdminStatsPage} />
+        <Route path="/admin/users"         component={AdminUsersPage} />
+        <Route path="/admin/properties"    component={AdminPropertiesPage} />
+        <Route path="/admin/requests"      component={AdminRequestsPage} />
+        <Route path="/admin/subscriptions" component={AdminSubscriptionsPage} />
+        <Route path="/admin/messages"      component={AdminMessagesPage} />
+        <Route path="/admin/cities"        component={AdminCitiesPage} />
+        <Route path="/admin/settings"      component={AdminSettingsPage} />
+        <Route component={() => <Redirect to="/admin/dashboard" />} />
+      </Switch>
+    </AdminLayout>
+  );
 }
 
 /* ── App Routes ── */
@@ -770,16 +787,8 @@ function AppRoutes() {
         <Route path="/pro/subscription" component={() => <ProtectedRoute component={ProSubscriptionPage} />} />
         <Route path="/pro/profile"      component={() => <ProtectedRoute component={ProProfilePage} />} />
 
-        {/* Admin Protected Routes */}
-        <Route path="/admin/dashboard"     component={() => <AdminRoute component={AdminDashboardPage} />} />
-        <Route path="/admin/stats"         component={() => <AdminRoute component={AdminStatsPage} />} />
-        <Route path="/admin/users"         component={() => <AdminRoute component={AdminUsersPage} />} />
-        <Route path="/admin/properties"    component={() => <AdminRoute component={AdminPropertiesPage} />} />
-        <Route path="/admin/requests"      component={() => <AdminRoute component={AdminRequestsPage} />} />
-        <Route path="/admin/subscriptions" component={() => <AdminRoute component={AdminSubscriptionsPage} />} />
-        <Route path="/admin/messages"      component={() => <AdminRoute component={AdminMessagesPage} />} />
-        <Route path="/admin/cities"        component={() => <AdminRoute component={AdminCitiesPage} />} />
-        <Route path="/admin/settings"      component={() => <AdminRoute component={AdminSettingsPage} />} />
+        {/* Admin Protected Routes — single persistent section */}
+        <Route path="/admin/:rest*" component={AdminSection} />
 
         <Route component={NotFound} />
       </Switch>
