@@ -143,6 +143,40 @@ export async function runMigrations(): Promise<void> {
       }
       logger.info("Co-living rooms seeded.");
     }
+
+    /* ── site_settings table ────────────────────────────────── */
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS site_settings (
+        key TEXT PRIMARY KEY,
+        value JSONB NOT NULL DEFAULT 'null'::jsonb,
+        label TEXT,
+        description TEXT,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query(`
+      INSERT INTO site_settings (key, value, label, description) VALUES
+        ('maintenance_mode',    'false',              'Mode maintenance',    'Active le mode maintenance sur le site'),
+        ('announcement_text',   '""',                 'Texte bannière',      'Texte affiché dans la bannière d''annonce'),
+        ('announcement_visible','false',              'Bannière visible',    'Affiche ou masque la bannière d''annonce'),
+        ('announcement_color',  '"#F5A623"',          'Couleur bannière',    'Couleur de fond de la bannière'),
+        ('support_email',       '"contact@bloq5.com"','Email support',       'Adresse email de support affichée aux utilisateurs'),
+        ('support_phone',       '""',                 'Téléphone support',   'Numéro de téléphone de support'),
+        ('hero_title',          '""',                 'Titre page d''accueil','Override du titre principal de la home'),
+        ('hero_subtitle',       '""',                 'Sous-titre accueil',  'Override du sous-titre de la home')
+      ON CONFLICT (key) DO NOTHING
+    `);
+
+    /* ── admin_cities table ─────────────────────────────────── */
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS admin_cities (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
   } catch (err) {
     logger.error({ err }, "Migration error");
   } finally {
