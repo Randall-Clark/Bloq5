@@ -61,6 +61,9 @@ export async function runMigrations(): Promise<void> {
       )
     `);
 
+    /* ── user_role enum: add 'admin' value ─────────────────── */
+    await client.query(`ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'admin'`);
+
     /* ── subscriptions: stripe columns ────────────────────── */
     const subStripeCols: [string, string][] = [
       ["stripe_customer_id",     "text"],
