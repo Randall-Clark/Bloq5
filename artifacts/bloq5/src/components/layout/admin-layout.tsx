@@ -2,12 +2,13 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard, Users, MessageSquare, Building2, FileText,
-  Calendar, TrendingUp, BarChart2, UserCog, Shield, Settings,
-  MapPin, HelpCircle, Trash2, ChevronDown, ChevronRight,
+  Calendar, TrendingUp, BarChart2, UserCog, Settings,
+  HelpCircle, Trash2, ChevronDown, ChevronRight,
   Bell, Plus, RefreshCw, Download, Share2, Search,
   LogOut, Menu, X,
   Phone, Upload, Printer, MoreHorizontal, Mail, Star,
   FolderDown, BookOpen, Megaphone, BarChart, Tag, Filter,
+  Bookmark, LayoutGrid, SlidersHorizontal,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
@@ -252,7 +253,7 @@ function SidebarToolbar({ location, collapsed }: { location: string; collapsed: 
         <button
           key={label}
           title={label}
-          className="flex-1 flex items-center justify-center p-1.5 rounded transition-all text-gray-400 hover:text-[#F5A623] hover:bg-amber-50"
+          className="flex-1 flex items-center justify-center p-1.5 rounded transition-all text-gray-400 hover:text-[#1d4ed8] hover:bg-blue-50"
         >
           <Icon className="h-3.5 w-3.5 shrink-0" />
         </button>
@@ -364,29 +365,67 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        {/* Top Header */}
-        <header className="shrink-0 h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-4">
-          <h1 className="text-sm font-bold text-gray-900">{pageTitle}</h1>
+        {/* Top Header — title + Add New + icons */}
+        <header className="shrink-0 h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-3">
+          <h1 className="text-sm font-bold text-gray-900 shrink-0">{pageTitle}</h1>
+          <button
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-colors"
+            style={{ background: "#22c55e" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "#16a34a")}
+            onMouseLeave={e => (e.currentTarget.style.background = "#22c55e")}
+          >
+            <Plus className="h-3.5 w-3.5" /> Ajouter
+          </button>
           <div className="flex-1" />
-          <div className="flex items-center gap-1">
-            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><Plus className="h-4 w-4" /></button>
-            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><RefreshCw className="h-4 w-4" /></button>
-            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><Search className="h-4 w-4" /></button>
-            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><BarChart2 className="h-4 w-4" /></button>
-            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><Bell className="h-4 w-4" /></button>
-            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"><HelpCircle className="h-4 w-4" /></button>
+          <div className="flex items-center gap-0.5">
+            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#1d4ed8] transition-colors" title="Grille"><LayoutGrid className="h-4 w-4" /></button>
+            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#1d4ed8] transition-colors" title="Graphiques"><BarChart2 className="h-4 w-4" /></button>
+            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#1d4ed8] transition-colors" title="Notifications"><Bell className="h-4 w-4" /></button>
+            <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#1d4ed8] transition-colors" title="Aide"><HelpCircle className="h-4 w-4" /></button>
             {session?.user && (
-              <div className="ml-1 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0" style={{ background: "#F5A623" }}>
+              <div className="ml-1 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0" style={{ background: "#1d4ed8" }}>
                 {session.user.name?.charAt(0).toUpperCase() ?? "A"}
               </div>
             )}
             {session?.user && (
-              <span className="text-xs font-semibold text-gray-700 hidden md:block">
+              <span className="text-xs font-semibold text-gray-700 hidden md:block ml-1">
                 Hi, {session.user.name?.split(" ")[0] ?? "Admin"}
               </span>
             )}
           </div>
         </header>
+
+        {/* Filter Toolbar — search + dropdowns + action icons */}
+        <div className="shrink-0 h-10 bg-white border-b border-gray-200 flex items-center px-4 gap-2">
+          {/* Search */}
+          <div className="flex items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1 bg-gray-50 min-w-0" style={{ minWidth: 140 }}>
+            <Search className="h-3 w-3 text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Rechercher…"
+              className="bg-transparent text-xs text-gray-700 outline-none w-full placeholder-gray-400"
+            />
+          </div>
+
+          {/* Context dropdowns */}
+          <FilterDropdown label="Statut" />
+          <FilterDropdown label="Note" />
+          <FilterDropdown label="Groupe" />
+          <FilterDropdown label="Assigné à" />
+
+          <div className="flex-1" />
+
+          {/* Right action icons */}
+          <div className="flex items-center gap-0.5">
+            <ToolBtn title="Favoris"><Bookmark className="h-3.5 w-3.5" /></ToolBtn>
+            <ToolBtn title="Partager"><Share2 className="h-3.5 w-3.5" /></ToolBtn>
+            <ToolBtn title="Exporter"><Download className="h-3.5 w-3.5" /></ToolBtn>
+            <ToolBtn title="Imprimer"><Printer className="h-3.5 w-3.5" /></ToolBtn>
+            <ToolBtn title="Filtres avancés"><SlidersHorizontal className="h-3.5 w-3.5" /></ToolBtn>
+            <ToolBtn title="Paramètres"><Settings className="h-3.5 w-3.5" /></ToolBtn>
+            <ToolBtn title="Plus"><MoreHorizontal className="h-3.5 w-3.5" /></ToolBtn>
+          </div>
+        </div>
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-gray-50 p-4 lg:p-6">
@@ -394,5 +433,25 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </main>
       </div>
     </div>
+  );
+}
+
+function FilterDropdown({ label }: { label: string }) {
+  return (
+    <button className="flex items-center gap-1 border border-gray-200 rounded-md px-2 py-1 text-xs text-gray-600 bg-white hover:border-gray-300 hover:bg-gray-50 transition-colors shrink-0">
+      {label}
+      <ChevronDown className="h-3 w-3 text-gray-400" />
+    </button>
+  );
+}
+
+function ToolBtn({ children, title }: { children: React.ReactNode; title?: string }) {
+  return (
+    <button
+      title={title}
+      className="p-1.5 rounded-lg text-gray-400 hover:text-[#1d4ed8] hover:bg-blue-50 transition-colors"
+    >
+      {children}
+    </button>
   );
 }
