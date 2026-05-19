@@ -8,7 +8,7 @@ import {
   LogOut, Menu, X,
   Phone, Upload, Printer, MoreHorizontal, Mail, Star,
   FolderDown, BookOpen, Megaphone, BarChart, Tag, Filter,
-  Bookmark, LayoutGrid, SlidersHorizontal,
+  Bookmark, LayoutGrid, SlidersHorizontal, CalendarRange,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
@@ -395,23 +395,31 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        {/* Filter Toolbar — search + dropdowns + action icons */}
-        <div className="shrink-0 h-10 bg-white border-b border-gray-200 flex items-center px-4 gap-2">
+        {/* Filter Toolbar — search + dropdowns + date range + action icons */}
+        <div className="shrink-0 bg-white border-b border-gray-200 flex items-center px-4 gap-1.5" style={{ height: 40 }}>
           {/* Search */}
-          <div className="flex items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1 bg-gray-50 min-w-0" style={{ minWidth: 140 }}>
+          <div className="flex items-center gap-1.5 border border-gray-200 rounded-md px-2 py-1 bg-gray-50" style={{ minWidth: 130 }}>
             <Search className="h-3 w-3 text-gray-400 shrink-0" />
             <input
               type="text"
               placeholder="Rechercher…"
               className="bg-transparent text-xs text-gray-700 outline-none w-full placeholder-gray-400"
+              style={{ width: 90 }}
             />
           </div>
 
-          {/* Context dropdowns */}
+          <div className="w-px h-5 bg-gray-200 shrink-0" />
+
+          {/* Dropdowns */}
           <FilterDropdown label="Statut" />
-          <FilterDropdown label="Note" />
-          <FilterDropdown label="Groupe" />
-          <FilterDropdown label="Assigné à" />
+          <FilterDropdown label="Rating" />
+          <FilterDropdown label="Group" />
+          <FilterDropdown label="Assign to" />
+
+          <div className="w-px h-5 bg-gray-200 shrink-0" />
+
+          {/* Date range */}
+          <DateRangePicker />
 
           <div className="flex-1" />
 
@@ -453,5 +461,38 @@ function ToolBtn({ children, title }: { children: React.ReactNode; title?: strin
     >
       {children}
     </button>
+  );
+}
+
+function DateRangePicker() {
+  const today = new Date();
+  const fmt = (d: Date) =>
+    `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}/${d.getFullYear()}`;
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  const [from, setFrom] = useState(fmt(firstOfMonth));
+  const [to,   setTo]   = useState(fmt(today));
+
+  return (
+    <div className="flex items-center gap-1 border border-gray-200 rounded-md px-2 py-1 bg-gray-50 shrink-0">
+      <CalendarRange className="h-3 w-3 text-gray-400 shrink-0" />
+      <input
+        type="text"
+        value={from}
+        onChange={e => setFrom(e.target.value)}
+        className="bg-transparent text-xs text-gray-700 outline-none text-center"
+        style={{ width: 76 }}
+        placeholder="MM/JJ/AAAA"
+      />
+      <span className="text-gray-300 text-xs">–</span>
+      <input
+        type="text"
+        value={to}
+        onChange={e => setTo(e.target.value)}
+        className="bg-transparent text-xs text-gray-700 outline-none text-center"
+        style={{ width: 76 }}
+        placeholder="MM/JJ/AAAA"
+      />
+    </div>
   );
 }
