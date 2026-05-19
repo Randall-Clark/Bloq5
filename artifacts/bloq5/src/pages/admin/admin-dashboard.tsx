@@ -30,12 +30,12 @@ const WEEK_DAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
 type CalEvent = { day: number; label: string; color: string; text: string };
 const EVENTS: CalEvent[] = [
-  { day: 3,  label: "Visite – App. 3B",     color: "#FFF3E0", text: "#E65100" },
+  { day: 3,  label: "Visite – App. 3B",     color: "#E3F2FD", text: "#1565C0" },
   { day: 8,  label: "Signature bail",        color: "#E8F5E9", text: "#2E7D32" },
-  { day: 12, label: "Appel propriétaire",    color: "#E3F2FD", text: "#1565C0" },
-  { day: 18, label: "Visite – App. 3B",     color: "#FFF3E0", text: "#E65100" },
+  { day: 12, label: "Appel propriétaire",    color: "#EDE7F6", text: "#4527A0" },
+  { day: 18, label: "Visite – App. 3B",     color: "#E3F2FD", text: "#1565C0" },
   { day: 22, label: "Signature bail",        color: "#E8F5E9", text: "#2E7D32" },
-  { day: 27, label: "Appel propriétaire",    color: "#E3F2FD", text: "#1565C0" },
+  { day: 27, label: "Appel propriétaire",    color: "#EDE7F6", text: "#4527A0" },
 ];
 
 function WeekView({ current }: { current: Date }) {
@@ -49,9 +49,9 @@ function WeekView({ current }: { current: Date }) {
           const d = new Date(start); d.setDate(start.getDate() + i);
           const isToday = isSameDay(d, new Date());
           return (
-            <div key={i} style={{ textAlign: "center", padding: "6px 4px", fontSize: 11, fontWeight: 600, color: isToday ? "#1565C0" : "#888" }}>
+            <div key={i} style={{ textAlign: "center", padding: "6px 4px", fontSize: 11, fontWeight: 600, color: isToday ? "#1d4ed8" : "#888" }}>
               {WEEK_DAYS[i]}<br />
-              <span style={{ display: "inline-flex", width: 22, height: 22, borderRadius: "50%", background: isToday ? "#EBF3FF" : "none", alignItems: "center", justifyContent: "center", fontSize: 12, color: isToday ? "#1565C0" : "#1A1A1A", fontWeight: isToday ? 700 : 500 }}>
+              <span style={{ display: "inline-flex", width: 22, height: 22, borderRadius: "50%", background: isToday ? "#EBF3FF" : "none", alignItems: "center", justifyContent: "center", fontSize: 12, color: isToday ? "#1d4ed8" : "#1A1A1A", fontWeight: isToday ? 700 : 500 }}>
                 {d.getDate()}
               </span>
             </div>
@@ -99,7 +99,7 @@ function MonthView({ current }: { current: Date }) {
               onMouseEnter={e => { if (!isToday) (e.currentTarget as HTMLElement).style.background = "#F9F9F9"; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = isToday ? "#EBF3FF" : "#fff"; }}
             >
-              <div style={{ textAlign: "right", fontSize: 12, color: isToday ? "#1565C0" : inMonth ? "#1A1A1A" : "#CCCCCC", fontWeight: isToday ? 700 : 400, marginBottom: 2 }}>
+              <div style={{ textAlign: "right", fontSize: 12, color: isToday ? "#1d4ed8" : inMonth ? "#1A1A1A" : "#CCCCCC", fontWeight: isToday ? 700 : 400, marginBottom: 2 }}>
                 {dayNum}
               </div>
               {evts.map((ev, ei) => (
@@ -122,7 +122,6 @@ function CalendarWidget() {
 
   return (
     <Card style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px 10px", borderBottom: "1px solid #EEEEEE", flexShrink: 0 }}>
         <span style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A", flex: 1 }}>Calendrier</span>
         <button style={{ background: "#E8F5E9", color: "#2E7D32", border: "none", borderRadius: 20, padding: "6px 14px", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontWeight: 600 }}
@@ -134,7 +133,6 @@ function CalendarWidget() {
         <IconBtn><MoreHorizontal style={{ width: 14, height: 14 }} /></IconBtn>
       </div>
 
-      {/* Nav */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", borderBottom: "1px solid #EEEEEE", flexShrink: 0 }}>
         <NavBtn onClick={() => setCurrent(d => subMonths(d, 1))}><ChevronLeft style={{ width: 14, height: 14 }} /></NavBtn>
         <span style={{ fontSize: 15, fontWeight: 700, color: "#1A1A1A", flex: 1, textAlign: "center", textTransform: "capitalize" }}>
@@ -146,7 +144,7 @@ function CalendarWidget() {
           {(["month", "week", "day"] as const).map(v => (
             <button key={v} onClick={() => setView(v)} style={{
               padding: "5px 12px", fontSize: 12, fontWeight: 600, border: "none", cursor: "pointer",
-              background: view === v ? "#F5A623" : "#fff", color: view === v ? "#fff" : "#888",
+              background: view === v ? "#1d4ed8" : "#fff", color: view === v ? "#fff" : "#888",
             }}>
               {VIEW_LABELS[v]}
             </button>
@@ -154,7 +152,6 @@ function CalendarWidget() {
         </div>
       </div>
 
-      {/* Grid */}
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         {view === "month" && <MonthView current={current} />}
         {view === "week"  && <WeekView  current={current} />}
@@ -188,7 +185,7 @@ function IconBtn({ children, onClick }: { children: React.ReactNode; onClick?: (
 function NavBtn({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   return (
     <button onClick={onClick} style={{ width: 28, height: 28, borderRadius: "50%", border: "1px solid #E0E0E0", background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#555" }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#F5A623"; (e.currentTarget as HTMLElement).style.color = "#fff"; (e.currentTarget as HTMLElement).style.borderColor = "#F5A623"; }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#1d4ed8"; (e.currentTarget as HTMLElement).style.color = "#fff"; (e.currentTarget as HTMLElement).style.borderColor = "#1d4ed8"; }}
       onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#fff"; (e.currentTarget as HTMLElement).style.color = "#555"; (e.currentTarget as HTMLElement).style.borderColor = "#E0E0E0"; }}>
       {children}
     </button>
@@ -201,7 +198,7 @@ function Badge({ value }: { value: number | null }) {
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", justifyContent: "center",
-      minWidth: 22, height: 22, borderRadius: 6, background: "#F5A623",
+      minWidth: 22, height: 22, borderRadius: 6, background: "#1d4ed8",
       color: "#fff", fontWeight: 700, fontSize: 11, padding: "0 5px", flexShrink: 0,
       transition: "transform 0.15s",
       cursor: "pointer",
@@ -254,8 +251,8 @@ function SummaryWidget({ s }: { s: Stats | undefined }) {
   return (
     <Card style={{ flex: 1, minWidth: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px 10px", borderBottom: "1px solid #EEEEEE" }}>
-        <div style={{ width: 20, height: 20, borderRadius: 5, background: "#FFF3E0", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ width: 10, height: 10, borderRadius: 2, border: "2px solid #F5A623" }} />
+        <div style={{ width: 20, height: 20, borderRadius: 5, background: "#EBF3FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 10, height: 10, borderRadius: 2, border: "2px solid #1d4ed8" }} />
         </div>
         <span style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1A" }}>Résumé</span>
         <div style={{ flex: 1 }} />
@@ -272,7 +269,7 @@ function SummaryWidget({ s }: { s: Stats | undefined }) {
               lRow ? (
                 <div key={`l${i}`} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderBottom: "1px solid #FAFAFA" }}>
                   <Badge value={lRow.value} />
-                  <span style={{ fontSize: 12, color: lRow.highlight ? "#F5A623" : "#555", cursor: lRow.highlight ? "pointer" : "default", fontWeight: lRow.highlight ? 500 : 400, truncate: "ellipsis" as any }}
+                  <span style={{ fontSize: 12, color: lRow.highlight ? "#1d4ed8" : "#555", cursor: lRow.highlight ? "pointer" : "default", fontWeight: lRow.highlight ? 500 : 400 }}
                     onMouseEnter={e => { if (lRow.highlight) (e.currentTarget as HTMLElement).style.textDecoration = "underline"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.textDecoration = "none"; }}>
                     {lRow.label}
@@ -295,24 +292,24 @@ function SummaryWidget({ s }: { s: Stats | undefined }) {
 
 /* ─── RECENT ACTIVITY ───────────────────────────────────────── */
 const ACTIVITIES = [
-  { name: "Marie Tremblay", text: "a soumis une candidature — 102 Rue Ste-Catherine", time: "il y a 5 min" },
-  { name: "Jean Bouchard",  text: "Nouveau message de Jean Bouchard",                   time: "il y a 23 min" },
-  { name: "Bail signé",     text: "Bail signé — App. 7, Laval",                         time: "il y a 1h" },
-  { name: "Visite",         text: "Visite confirmée — Plateau Mont-Royal",               time: "il y a 2h" },
-  { name: "Lead",           text: "Nouveau lead entrant — Kijiji",                      time: "il y a 3h" },
+  { name: "Marie Tremblay", text: "a soumis une candidature — 102 Rue Ste-Catherine", time: "il y a 5 min",  color: "#1d4ed8" },
+  { name: "Jean Bouchard",  text: "Nouveau message de Jean Bouchard",                   time: "il y a 23 min", color: "#2E7D32" },
+  { name: "Bail signé",     text: "Bail signé — App. 7, Laval",                         time: "il y a 1h",    color: "#6b7280" },
+  { name: "Visite",         text: "Visite confirmée — Plateau Mont-Royal",               time: "il y a 2h",    color: "#1d4ed8" },
+  { name: "Lead",           text: "Nouveau lead entrant — Kijiji",                      time: "il y a 3h",    color: "#2E7D32" },
 ];
 
 function ActivityCard() {
   return (
     <Card style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px 10px", borderBottom: "1px solid #EEEEEE" }}>
-        <Zap style={{ width: 16, height: 16, color: "#F5A623" }} />
+        <Zap style={{ width: 16, height: 16, color: "#1d4ed8" }} />
         <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A" }}>Activité récente</span>
       </div>
       <div style={{ flex: 1, overflowY: "auto" }}>
         {ACTIVITIES.map((a, i) => (
           <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 16px", borderBottom: "1px solid #FAFAFA" }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#F5A623", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: a.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <span style={{ color: "#fff", fontWeight: 700, fontSize: 11 }}>{a.name.charAt(0)}</span>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -340,9 +337,9 @@ function TasksCard() {
   return (
     <Card style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px 10px", borderBottom: "1px solid #EEEEEE" }}>
-        <CheckSquare style={{ width: 16, height: 16, color: "#F5A623" }} />
+        <CheckSquare style={{ width: 16, height: 16, color: "#1d4ed8" }} />
         <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A", flex: 1 }}>Tâches à faire</span>
-        <span style={{ background: "#F5A623", color: "#fff", fontWeight: 700, fontSize: 11, borderRadius: 10, padding: "2px 8px" }}>
+        <span style={{ background: "#1d4ed8", color: "#fff", fontWeight: 700, fontSize: 11, borderRadius: 10, padding: "2px 8px" }}>
           {tasks.filter(t => !t.done).length}
         </span>
       </div>
@@ -351,7 +348,7 @@ function TasksCard() {
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #FAFAFA" }}>
             <button
               onClick={() => setTasks(ts => ts.map((t, j) => j === i ? { ...t, done: !t.done } : t))}
-              style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid ${task.done ? "#F5A623" : "#F5A623"}`, background: task.done ? "#F5A623" : "#fff", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              style={{ width: 18, height: 18, borderRadius: "50%", border: `2px solid #1d4ed8`, background: task.done ? "#1d4ed8" : "#fff", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
               {task.done && <span style={{ color: "#fff", fontSize: 10, fontWeight: 900 }}>✓</span>}
             </button>
             <span style={{ fontSize: 13, color: task.done ? "#AAA" : "#1A1A1A", textDecoration: task.done ? "line-through" : "none", flex: 1 }}>
@@ -362,7 +359,7 @@ function TasksCard() {
         ))}
       </div>
       <div style={{ padding: "8px 16px", borderTop: "1px solid #EEEEEE" }}>
-        <button style={{ background: "none", border: "none", cursor: "pointer", color: "#F5A623", fontSize: 12, fontWeight: 600, padding: 0 }}>
+        <button style={{ background: "none", border: "none", cursor: "pointer", color: "#1d4ed8", fontSize: 12, fontWeight: 600, padding: 0 }}>
           + Ajouter une tâche
         </button>
       </div>
@@ -373,15 +370,15 @@ function TasksCard() {
 /* ─── QUICK STATS ───────────────────────────────────────────── */
 function StatsCard({ s }: { s: Stats | undefined }) {
   const metrics = [
-    { icon: Home,      label: "Propriétés actives",    value: s?.propertiesAvailable ?? null, color: "#F5A623" },
-    { icon: Users,     label: "Contacts",               value: s?.totalUsers ?? null,          color: "#1565C0" },
-    { icon: FileText,  label: "Transactions en cours",  value: s?.pendingRequests ?? null,     color: "#2E7D32" },
-    { icon: Mail,      label: "Messages non lus",       value: null,                           color: "#E53935" },
+    { icon: Home,      label: "Propriétés actives",    value: s?.propertiesAvailable ?? null, color: "#1d4ed8" },
+    { icon: Users,     label: "Contacts",               value: s?.totalUsers ?? null,          color: "#2E7D32" },
+    { icon: FileText,  label: "Transactions en cours",  value: s?.pendingRequests ?? null,     color: "#6b7280" },
+    { icon: Mail,      label: "Messages non lus",       value: null,                           color: "#1d4ed8" },
   ];
   return (
     <Card style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "14px 16px 10px", borderBottom: "1px solid #EEEEEE" }}>
-        <BarChart2 style={{ width: 16, height: 16, color: "#F5A623" }} />
+        <BarChart2 style={{ width: 16, height: 16, color: "#1d4ed8" }} />
         <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1A" }}>Statistiques rapides</span>
       </div>
       <div style={{ flex: 1, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1, background: "#F0F0F0" }}>
