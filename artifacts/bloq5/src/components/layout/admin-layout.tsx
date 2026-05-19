@@ -368,14 +368,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         {/* Top Header — title + Add New + icons */}
         <header className="shrink-0 h-12 bg-white border-b border-gray-200 flex items-center px-4 gap-3">
           <h1 className="text-sm font-bold text-gray-900 shrink-0">{pageTitle}</h1>
-          <button
-            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-colors"
-            style={{ background: "#22c55e" }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#16a34a")}
-            onMouseLeave={e => (e.currentTarget.style.background = "#22c55e")}
-          >
-            <Plus className="h-3.5 w-3.5" /> Ajouter
-          </button>
           <div className="flex-1" />
           <div className="flex items-center gap-0.5">
             <button className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#1d4ed8] transition-colors" title="Grille"><LayoutGrid className="h-4 w-4" /></button>
