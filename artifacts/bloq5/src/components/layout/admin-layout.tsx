@@ -6,6 +6,8 @@ import {
   MapPin, HelpCircle, Trash2, ChevronDown, ChevronRight,
   Bell, Plus, RefreshCw, Download, Share2, Search,
   LogOut, Menu, X,
+  Phone, Upload, Printer, MoreHorizontal, Mail, Star,
+  FolderDown, BookOpen, Megaphone, BarChart, Tag, Filter,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
@@ -148,6 +150,117 @@ function NavEntry({ item, location, collapsed }: { item: NavItem; location: stri
   );
 }
 
+/* ── Context-sensitive sidebar toolbar ─────────────────────── */
+type ToolAction = { icon: any; label: string };
+
+function getToolbarActions(location: string): ToolAction[] {
+  if (location.startsWith("/admin/users") || location.startsWith("/admin/contacts")) {
+    return [
+      { icon: Plus,           label: "Nouveau contact" },
+      { icon: Phone,          label: "Appeler" },
+      { icon: Mail,           label: "Envoyer un email" },
+      { icon: Upload,         label: "Importer" },
+      { icon: Download,       label: "Exporter" },
+      { icon: Printer,        label: "Imprimer" },
+      { icon: MoreHorizontal, label: "Plus d'actions" },
+    ];
+  }
+  if (location.startsWith("/admin/messages")) {
+    return [
+      { icon: Plus,           label: "Nouveau message" },
+      { icon: Mail,           label: "Composer" },
+      { icon: Star,           label: "Favoris" },
+      { icon: Download,       label: "Exporter" },
+      { icon: Trash2,         label: "Supprimer" },
+      { icon: Settings,       label: "Paramètres" },
+      { icon: MoreHorizontal, label: "Plus" },
+    ];
+  }
+  if (location.startsWith("/admin/properties") || location.startsWith("/admin/cities")) {
+    return [
+      { icon: Plus,           label: "Nouvelle propriété" },
+      { icon: Filter,         label: "Filtrer" },
+      { icon: Tag,            label: "Étiquetter" },
+      { icon: Download,       label: "Exporter" },
+      { icon: Share2,         label: "Partager" },
+      { icon: Printer,        label: "Imprimer" },
+      { icon: MoreHorizontal, label: "Plus" },
+    ];
+  }
+  if (location.startsWith("/admin/requests")) {
+    return [
+      { icon: Plus,           label: "Nouvelle demande" },
+      { icon: Filter,         label: "Filtrer" },
+      { icon: FolderDown,     label: "Archiver" },
+      { icon: Download,       label: "Exporter" },
+      { icon: Printer,        label: "Imprimer" },
+      { icon: Settings,       label: "Paramètres" },
+      { icon: MoreHorizontal, label: "Plus" },
+    ];
+  }
+  if (location.startsWith("/admin/subscriptions")) {
+    return [
+      { icon: Plus,           label: "Nouvel abonnement" },
+      { icon: Megaphone,      label: "Campagne" },
+      { icon: BarChart,       label: "Statistiques" },
+      { icon: Download,       label: "Exporter" },
+      { icon: Printer,        label: "Imprimer" },
+      { icon: Settings,       label: "Paramètres" },
+      { icon: MoreHorizontal, label: "Plus" },
+    ];
+  }
+  if (location.startsWith("/admin/stats")) {
+    return [
+      { icon: RefreshCw,      label: "Actualiser" },
+      { icon: BarChart2,      label: "Graphiques" },
+      { icon: Download,       label: "Exporter" },
+      { icon: Share2,         label: "Partager" },
+      { icon: Printer,        label: "Imprimer" },
+      { icon: Settings,       label: "Paramètres" },
+      { icon: MoreHorizontal, label: "Plus" },
+    ];
+  }
+  if (location.startsWith("/admin/settings")) {
+    return [
+      { icon: Settings,       label: "Sauvegarder" },
+      { icon: RefreshCw,      label: "Réinitialiser" },
+      { icon: Download,       label: "Exporter config" },
+      { icon: Upload,         label: "Importer config" },
+      { icon: BookOpen,       label: "Documentation" },
+      { icon: MoreHorizontal, label: "Plus" },
+    ];
+  }
+  /* default / dashboard */
+  return [
+    { icon: Plus,           label: "Ajouter" },
+    { icon: RefreshCw,      label: "Actualiser" },
+    { icon: Download,       label: "Exporter" },
+    { icon: Share2,         label: "Partager" },
+    { icon: Printer,        label: "Imprimer" },
+    { icon: Settings,       label: "Paramètres" },
+    { icon: MoreHorizontal, label: "Plus" },
+  ];
+}
+
+function SidebarToolbar({ location, collapsed }: { location: string; collapsed: boolean }) {
+  const actions = getToolbarActions(location);
+  const visible = collapsed ? actions.slice(0, 3) : actions;
+
+  return (
+    <div className="border-t border-gray-100 px-2 py-2 flex items-center justify-around gap-0.5">
+      {visible.map(({ icon: Icon, label }) => (
+        <button
+          key={label}
+          title={label}
+          className="flex-1 flex items-center justify-center p-1.5 rounded transition-all text-gray-400 hover:text-[#F5A623] hover:bg-amber-50"
+        >
+          <Icon className="h-3.5 w-3.5 shrink-0" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const [location, navigate] = useLocation();
   const { data: session } = authClient.useSession();
@@ -244,14 +357,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        {/* Bottom quick-action icons */}
-        <div className="px-3 py-2 border-t border-gray-100 flex items-center justify-around">
-          <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors" title="Ajouter"><Plus className="h-3.5 w-3.5" /></button>
-          <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors" title="Voir le site">
-            <a href="/" target="_blank" rel="noopener noreferrer"><Share2 className="h-3.5 w-3.5" /></a>
-          </button>
-          <button className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors" title="Exporter"><Download className="h-3.5 w-3.5" /></button>
-        </div>
+        {/* Context-sensitive bottom toolbar */}
+        <SidebarToolbar location={location} collapsed={collapsed} />
       </aside>
 
       {/* Main */}
