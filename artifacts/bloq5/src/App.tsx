@@ -52,6 +52,7 @@ import AdminMessagesPage from "@/pages/admin/admin-messages";
 import AdminCitiesPage from "@/pages/admin/admin-cities";
 import AdminSettingsPage from "@/pages/admin/admin-settings";
 import AdminLayout from "@/components/layout/admin-layout";
+import AdminComingSoonPage from "@/pages/admin/admin-coming-soon";
 
 const queryClient = new QueryClient();
 
@@ -731,7 +732,13 @@ function AdminSection() {
         <Route path="/admin/subscriptions" component={AdminSubscriptionsPage} />
         <Route path="/admin/messages"      component={AdminMessagesPage} />
         <Route path="/admin/cities"        component={AdminCitiesPage} />
-        <Route path="/admin/settings"      component={AdminSettingsPage} />
+        <Route path="/admin/settings"               component={AdminSettingsPage} />
+        <Route path="/admin/contacts/providers"      component={AdminComingSoonPage} />
+        <Route path="/admin/contacts/groups"         component={AdminComingSoonPage} />
+        <Route path="/admin/contacts/company-leads"  component={AdminComingSoonPage} />
+        <Route path="/admin/contacts/leads-provider" component={AdminComingSoonPage} />
+        <Route path="/admin/contacts/import-export"  component={AdminComingSoonPage} />
+        <Route path="/admin/contacts/playbook"       component={AdminComingSoonPage} />
         <Route component={() => <Redirect to="/admin/dashboard" />} />
       </Switch>
     </AdminLayout>
